@@ -22,7 +22,6 @@ class AppButton extends StatelessWidget {
     this.iconSize,
   });
 
-  /// Primary Button - Green background with black text
   const AppButton.primary({
     super.key,
     required this.onPressed,
@@ -43,7 +42,6 @@ class AppButton extends StatelessWidget {
     this.iconSize,
   });
 
-  /// Secondary Button - Black background with green text
   const AppButton.secondary({
     super.key,
     required this.onPressed,
@@ -64,7 +62,6 @@ class AppButton extends StatelessWidget {
     this.iconSize,
   });
 
-  /// Outlined Button - Transparent with green border
   const AppButton.outlined({
     super.key,
     required this.onPressed,
@@ -85,7 +82,6 @@ class AppButton extends StatelessWidget {
     this.iconSize,
   });
 
-  /// Small Button - Compact size
   const AppButton.small({
     super.key,
     required this.onPressed,
@@ -106,7 +102,6 @@ class AppButton extends StatelessWidget {
     this.iconSize = 18,
   });
 
-  /// Text Button - No background
   const AppButton.text({
     super.key,
     required this.onPressed,

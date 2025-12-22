@@ -13,10 +13,13 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    // Simulate API call
     await Future.delayed(Duration(seconds: 2));
 
-    _user = {'email': email, 'name': email.split('@')[0]};
+    _user = {
+      'email': email,
+      'name': email.split('@')[0],
+      'profileImage': null,
+    };
     _isLoggedIn = true;
     _isLoading = false;
     notifyListeners();
@@ -26,10 +29,13 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    // Simulate API call
     await Future.delayed(Duration(seconds: 2));
 
-    _user = {'email': email, 'name': name};
+    _user = {
+      'email': email,
+      'name': name,
+      'profileImage': null,
+    };
     _isLoggedIn = true;
     _isLoading = false;
     notifyListeners();

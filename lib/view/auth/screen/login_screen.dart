@@ -9,10 +9,7 @@ import '../../../view_model/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   final VoidCallback onSwitchToRegister;
-
-  const LoginScreen({Key? key, required this.onSwitchToRegister})
-    : super(key: key);
-
+  const LoginScreen({Key? key, required this.onSwitchToRegister}) : super(key: key);
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
@@ -28,7 +25,6 @@ class _LoginScreenState extends State<LoginScreen> {
       _emailError = null;
       _passwordError = null;
     });
-
     if (_emailController.text.isEmpty) {
       setState(() => _emailError = 'Email is required');
       return;
@@ -45,17 +41,13 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _passwordError = 'Password must be at least 6 characters');
       return;
     }
-
-    Provider.of<AuthProvider>(
-      context,
-      listen: false,
-    ).login(_emailController.text, _passwordController.text);
+    Provider.of<AuthProvider>(context, listen: false)
+        .login(_emailController.text, _passwordController.text);
   }
 
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
-
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -71,20 +63,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     color: Color(0xFF00FF00).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20.r),
                   ),
-                  child: Icon(
-                    Icons.trending_up,
-                    color: Color(0xFF00FF00),
-                    size: 60.sp,
-                  ),
+                  child: Icon(Icons.trending_up, color: Color(0xFF00FF00), size: 60.sp),
                 ),
               ),
               SizedBox(height: 40.h),
               AppText.large('Welcome Back!', fontWeight: FontWeight.w700),
               SizedBox(height: 8.h),
-              AppText.medium(
-                'Login to continue investing',
-                color: Colors.grey[600],
-              ),
+              AppText.medium('Login to continue investing', color: Colors.grey[600]),
               SizedBox(height: 40.h),
               CustomTextField(
                 hint: 'Email Address',
@@ -103,8 +88,9 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               SizedBox(height: 12.h),
               Align(
-                  alignment: Alignment.centerLeft,
-                  child: AppButton.text(onPressed: () {}, text: 'Forget PassWord ?')),
+                alignment: Alignment.centerRight,
+                child: AppButton.text(onPressed: () {}, text: 'Forgot Password?'),
+              ),
               SizedBox(height: 24.h),
               AppButton.primary(
                 onPressed: _handleLogin,
@@ -112,28 +98,21 @@ class _LoginScreenState extends State<LoginScreen> {
                 isLoading: authProvider.isLoading,
                 icon: Icons.login,
               ),
-              /*SizedBox(height: 16.h),
+              SizedBox(height: 16.h),
               AppButton.outlined(
                 onPressed: () {},
                 text: 'Login with Google',
                 icon: Icons.g_mobiledata,
                 iconSize: 24,
-              ),*/
+              ),
               SizedBox(height: 24.h),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  AppText.medium(
-                    "Don't have an account? ",
-                    color: Colors.grey[600],
-                  ),
+                  AppText.medium("Don't have an account? ", color: Colors.grey[600]),
                   GestureDetector(
                     onTap: widget.onSwitchToRegister,
-                    child: AppText.medium(
-                      'Register',
-                      color: Color(0xFF00FF00),
-                      fontWeight: FontWeight.w700,
-                    ),
+                    child: AppText.medium('Register', color: Color(0xFF00FF00), fontWeight: FontWeight.w700),
                   ),
                 ],
               ),

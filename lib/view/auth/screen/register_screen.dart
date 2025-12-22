@@ -9,9 +9,7 @@ import '../../../view_model/auth_provider.dart';
 
 class RegisterScreen extends StatefulWidget {
   final VoidCallback onSwitchToLogin;
-
   const RegisterScreen({Key? key, required this.onSwitchToLogin}) : super(key: key);
-
   @override
   _RegisterScreenState createState() => _RegisterScreenState();
 }
@@ -33,7 +31,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _passwordError = null;
       _confirmPasswordError = null;
     });
-
     if (_nameController.text.isEmpty) {
       setState(() => _nameError = 'Name is required');
       return;
@@ -58,7 +55,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       setState(() => _confirmPasswordError = 'Passwords do not match');
       return;
     }
-
     Provider.of<AuthProvider>(context, listen: false).register(
       _nameController.text,
       _emailController.text,
@@ -69,7 +65,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
-
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -91,10 +86,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               SizedBox(height: 40.h),
               AppText.large('Create Account', fontWeight: FontWeight.w700),
               SizedBox(height: 8.h),
-              AppText.medium(
-                'Start your investment journey',
-                color: Colors.grey[600],
-              ),
+              AppText.medium('Start your investment journey', color: Colors.grey[600]),
               SizedBox(height: 40.h),
               CustomTextField(
                 hint: 'Full Name',
@@ -133,12 +125,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 isLoading: authProvider.isLoading,
                 icon: Icons.person_add,
               ),
-             /* SizedBox(height: 16.h),
+              SizedBox(height: 16.h),
               AppButton.secondary(
                 onPressed: () {},
                 text: 'Sign up with Apple',
                 icon: Icons.apple,
-              ),*/
+              ),
               SizedBox(height: 24.h),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -146,11 +138,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   AppText.medium("Already have an account? ", color: Colors.grey[600]),
                   GestureDetector(
                     onTap: widget.onSwitchToLogin,
-                    child: AppText.medium(
-                      'Login',
-                      color: Color(0xFF00FF00),
-                      fontWeight: FontWeight.w700,
-                    ),
+                    child: AppText.medium('Login', color: Color(0xFF00FF00), fontWeight: FontWeight.w700),
                   ),
                 ],
               ),

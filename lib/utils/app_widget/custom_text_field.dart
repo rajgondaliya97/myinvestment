@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'custom_app_text.dart';
-
 class CustomTextField extends StatefulWidget {
   final String hint;
   final IconData icon;
@@ -38,9 +37,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
             color: Color(0xFF1A1A1A),
             borderRadius: BorderRadius.circular(16.r),
             border: Border.all(
-              color: widget.errorText != null
-                  ? Colors.red
-                  : Color(0xFF2A2A2A),
+              color: widget.errorText != null ? Colors.red : Color(0xFF2A2A2A),
               width: 2.w,
             ),
           ),
@@ -71,10 +68,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
         if (widget.errorText != null)
           Padding(
             padding: EdgeInsets.only(left: 8.w, top: 8.h),
-            child: AppText.small(
-              widget.errorText!,
-              color: Colors.red,
-            ),
+            child: AppText.small(widget.errorText!, color: Colors.red),
           ),
       ],
     );

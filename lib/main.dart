@@ -1,29 +1,22 @@
-// main.dart
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:myinvestment/view/auth/screen/auth_wrapper.dart';
+import 'package:myinvestment/view/home/screen/home_screen.dart';
 import 'package:myinvestment/view_model/auth_provider.dart';
+import 'package:myinvestment/view_model/home_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-void main() async {
-
-  WidgetsFlutterBinding.ensureInitialized();
-
-  // Lock app to portrait only
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
-
+void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => AuthProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => HomeProvider()),
+      ],
       child: MyApp(),
     ),
   );
 }
-
 
 class MyApp extends StatelessWidget {
   @override
@@ -44,7 +37,7 @@ class MyApp extends StatelessWidget {
               secondary: Color(0xFF00CC00),
             ),
           ),
-          home: AuthWrapper(),
+          home: HomeScreen(),
         );
       },
     );
