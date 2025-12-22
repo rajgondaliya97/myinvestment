@@ -1,10 +1,10 @@
-/*
 
 
 class DependencyLocator {
   static final DependencyLocator _instance = DependencyLocator._internal();
   factory DependencyLocator() => _instance;
   DependencyLocator._internal();
+/*
 
   // Repositories
   late HomePageRepo homePageRepo;
@@ -18,9 +18,10 @@ class DependencyLocator {
   // Services
   late ApiService apiService;
   late AutoSyncService autoSyncService;
+*/
 
   Future<void> init() async {
-    // Initialize API Service
+   /* // Initialize API Service
     apiService = ApiService();
 
     // Initialize Repositories
@@ -35,20 +36,7 @@ class DependencyLocator {
     // Initialize Auto Sync Service
     autoSyncService = AutoSyncService();
     autoSyncService.initialize();
-
+*/
     print('✅ All dependencies initialized');
   }
-
-  // Start auto sync (call this after login or app start)
-  void startAutoSync() {
-    autoSyncService.startAutoSync(interval: Duration(seconds: 10));
-    print('🚀 Auto-sync service started');
-  }
-
-  // Stop auto sync (call this on logout or app close)
-  void stopAutoSync() {
-    autoSyncService.stopAutoSync();
-    print('🛑 Auto-sync service stopped');
-  }
 }
-*/

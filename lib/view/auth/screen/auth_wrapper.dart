@@ -15,13 +15,54 @@ class _AuthWrapperState extends State<AuthWrapper> {
   bool showLogin = true;
 
   @override
+  void initState() {
+    super.initState();
+    // Initialize auth state when app starts
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<AuthProvider>(context, listen: false).initializeAuth();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
 
+    // Show loading screen while checking auth state
+    if (!authProvider.isInitialized) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Color(0xFF00FF00).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Icon(
+                  Icons.trending_up,
+                  color: Color(0xFF00FF00),
+                  size: 60,
+                ),
+              ),
+              SizedBox(height: 24),
+              CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF00FF00)),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Show home screen if logged in
     if (authProvider.isLoggedIn) {
       return HomeScreen();
     }
 
+    // Show login or register screen
     return showLogin
         ? LoginScreen(onSwitchToRegister: () => setState(() => showLogin = false))
         : RegisterScreen(onSwitchToLogin: () => setState(() => showLogin = true));

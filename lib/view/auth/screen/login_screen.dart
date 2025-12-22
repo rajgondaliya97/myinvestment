@@ -98,13 +98,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 isLoading: authProvider.isLoading,
                 icon: Icons.login,
               ),
-              SizedBox(height: 16.h),
-              AppButton.outlined(
-                onPressed: () {},
-                text: 'Login with Google',
-                icon: Icons.g_mobiledata,
-                iconSize: 24,
-              ),
               SizedBox(height: 24.h),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,

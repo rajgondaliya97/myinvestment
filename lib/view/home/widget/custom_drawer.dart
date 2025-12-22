@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../res/app_widget/custom_app_button.dart';
 import '../../../res/app_widget/custom_app_text.dart';
 import '../../../view_model/auth_provider.dart';
+import '../../auth/screen/auth_wrapper.dart';
 import '../../profile/screen/profile_screen.dart';
 import '../screen/home_screen.dart';
 import 'drawer_menuItem.dart';
@@ -16,6 +17,60 @@ class CustomDrawer extends StatelessWidget {
     Key? key,
     required this.currentRoute,
   }) : super(key: key);
+
+  void _handleLogout(BuildContext context) async {
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Color(0xFF1A1A1A),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+          side: BorderSide(color: Color(0xFF2A2A2A)),
+        ),
+        title: AppText.large(
+          'Logout',
+          fontWeight: FontWeight.w700,
+        ),
+        content: AppText.medium(
+          'Are you sure you want to logout?',
+          color: Colors.grey[400],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: AppText.medium(
+              'Cancel',
+              color: Colors.grey[400],
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: AppText.medium(
+              'Logout',
+              color: Color(0xFF00FF00),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      // Close drawer first
+      Navigator.pop(context);
+
+      // Perform logout
+      await Provider.of<AuthProvider>(context, listen: false).logout();
+
+      // Navigate to auth wrapper (which will show login screen)
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => AuthWrapper()),
+            (route) => false, // Remove all previous routes
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -178,10 +233,7 @@ class CustomDrawer extends StatelessWidget {
                 ),
               ),
               child: AppButton.outlined(
-                onPressed: () {
-                  Navigator.pop(context);
-                  authProvider.logout();
-                },
+                onPressed: () => _handleLogout(context),
                 text: 'Logout',
                 icon: Icons.logout,
                 height: 50,

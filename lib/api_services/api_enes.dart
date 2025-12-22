@@ -1,3 +1,3 @@
 class ApiEnv{
-  static const String baseUrl = "http://65.1.37.182:4200/";
+  static const String baseUrl = "https://karmen-nonpreventible-unobservedly.ngrok-free.dev/";
 }

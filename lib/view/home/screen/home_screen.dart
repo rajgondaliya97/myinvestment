@@ -25,6 +25,7 @@ class HomeScreen extends StatelessWidget {
           // Navigate to profile screen
         },
       ),
+      // Add this drawer property
       drawer: CustomDrawer(
         currentRoute: 'home',
       ),
