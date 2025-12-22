@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
-import '../../../utils/app_widget/custom_app_text.dart';
+import '../../../res/app_widget/custom_app_text.dart';
 import 'chart_painter.dart';
 
 class ProfitChartCard extends StatelessWidget {

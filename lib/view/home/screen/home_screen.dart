@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
-import '../../../utils/app_widget/custom_app_bar.dart';
-import '../../../utils/app_widget/custom_app_button.dart';
-import '../../../utils/app_widget/custom_app_text.dart';
+import '../../../res/app_widget/custom_app_bar.dart';
+import '../../../res/app_widget/custom_app_button.dart';
+import '../../../res/app_widget/custom_app_text.dart';
 import '../../../view_model/auth_provider.dart';
 import '../../../view_model/home_provider.dart';
 import '../widget/balance_card_widget.dart';
 import '../widget/profit_chart_card.dart';
+import '../widget/custom_drawer.dart'; // Add this import
 
 class HomeScreen extends StatelessWidget {
   @override
@@ -24,9 +25,12 @@ class HomeScreen extends StatelessWidget {
           // Navigate to profile screen
         },
       ),
+      drawer: CustomDrawer(
+        currentRoute: 'home',
+      ),
       body: RefreshIndicator(
         onRefresh: () async {
-      //    await homeProvider.refreshData();
+          //    await homeProvider.refreshData();
         },
         color: Color(0xFF00FF00),
         child: SingleChildScrollView(

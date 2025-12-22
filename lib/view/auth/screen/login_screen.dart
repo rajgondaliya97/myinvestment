@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
-import '../../../utils/app_widget/custom_app_button.dart';
-import '../../../utils/app_widget/custom_app_text.dart';
-import '../../../utils/app_widget/custom_text_field.dart';
+import '../../../res/app_widget/custom_app_button.dart';
+import '../../../res/app_widget/custom_app_text.dart';
+import '../../../res/app_widget/custom_text_field.dart';
 import '../../../view_model/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {

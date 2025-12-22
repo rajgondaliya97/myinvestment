@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../utils/app_widget/custom_app_text.dart';
+import '../../../res/app_widget/custom_app_text.dart';
 
 class BalanceCard extends StatelessWidget {
   final double balance;

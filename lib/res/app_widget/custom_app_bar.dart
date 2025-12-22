@@ -1,5 +1,7 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:myinvestment/res/app_widget/custom_app_text.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? title;
@@ -25,11 +27,16 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       backgroundColor: Colors.black,
       elevation: 0,
-      automaticallyImplyLeading: false,
+      leading: Builder(
+        builder: (context) => IconButton(
+          icon: Icon(Icons.menu, color: Color(0xFF00FF00), size: 28.sp),
+          onPressed: () => Scaffold.of(context).openDrawer(),
+        ),
+      ),
       toolbarHeight: 70.h,
       title: Row(
         children: [
-          if (showLogo)
+        /*  if (showLogo)
             Container(
               padding: EdgeInsets.all(8.w),
               decoration: BoxDecoration(
@@ -41,7 +48,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 color: Color(0xFF00FF00),
                 size: 28.sp,
               ),
-            ),
+            ),*/
           if (showLogo && title != null) SizedBox(width: 12.w),
           if (title != null)
             Expanded(
@@ -60,7 +67,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         if (actions != null)
           ...actions!
         else
-          GestureDetector(
+       /*   GestureDetector(
             onTap: onProfileTap,
             child: Container(
               margin: EdgeInsets.only(right: 16.w),
@@ -88,7 +95,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               )
                   : null,
             ),
-          ),
+          ),*/
+      AppText.small('')
       ],
     );
   }

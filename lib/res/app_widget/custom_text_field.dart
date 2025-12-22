@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
 import 'custom_app_text.dart';
 class CustomTextField extends StatefulWidget {
   final String hint;
