@@ -1,9 +1,15 @@
 
 
+import '../api_services/api_service.dart';
+import '../repo/auth_repo.dart';
+
 class DependencyLocator {
   static final DependencyLocator _instance = DependencyLocator._internal();
   factory DependencyLocator() => _instance;
   DependencyLocator._internal();
+
+  late ApiService apiService;
+  late AuthRepository authRepository;
 /*
 
   // Repositories
@@ -21,9 +27,10 @@ class DependencyLocator {
 */
 
   Future<void> init() async {
-   /* // Initialize API Service
+    // Initialize API Service
     apiService = ApiService();
-
+    authRepository = AuthRepository(apiService: apiService);
+/*
     // Initialize Repositories
     homePageRepo = HomePageRepo(apiService: apiService);
     ticketBookingRepository = TicketBookingRepository(apiService: apiService);

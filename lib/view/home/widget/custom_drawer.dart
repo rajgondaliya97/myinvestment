@@ -63,7 +63,7 @@ class CustomDrawer extends StatelessWidget {
       Navigator.pop(context);
 
       // Perform logout
-      await Provider.of<AuthProvider>(context, listen: false).logout();
+      await Provider.of<AuthController>(context, listen: false).logout();
 
       // Navigate to auth wrapper (which will show login screen)
       Navigator.pushAndRemoveUntil(
@@ -76,8 +76,8 @@ class CustomDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
-    final user = authProvider.user;
+    final authController = Provider.of<AuthController>(context);
+    final user = authController.user;
 
     return Drawer(
       backgroundColor: Color(0xFF1A1A1A),

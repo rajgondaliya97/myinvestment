@@ -13,8 +13,8 @@ import '../widget/profile_info_row.dart';
 class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
-    final user = authProvider.user;
+    final authController = Provider.of<AuthController>(context);
+    final user = authController.user;
 
     return Scaffold(
       appBar: CustomAppBar(

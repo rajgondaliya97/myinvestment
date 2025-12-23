@@ -14,13 +14,13 @@ import '../widget/custom_drawer.dart'; // Add this import
 class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
+    final authController = Provider.of<AuthController>(context);
     final homeProvider = Provider.of<HomeProvider>(context);
 
     return Scaffold(
       appBar: CustomAppBar(
         title: 'Investment App',
-        profileImageUrl: authProvider.user?['profileImage'],
+        profileImageUrl: authController.user?['profileImage'],
         onProfileTap: () {
           // Navigate to profile screen
         },
@@ -48,7 +48,7 @@ class HomeScreen extends StatelessWidget {
               ),
               SizedBox(height: 4.h),
               AppText.large(
-                authProvider.user?['name'] ?? 'User',
+                authController.user?['name'] ?? 'User',
                 fontWeight: FontWeight.w700,
               ),
               SizedBox(height: 24.h),

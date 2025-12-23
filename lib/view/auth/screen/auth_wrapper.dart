@@ -19,16 +19,16 @@ class _AuthWrapperState extends State<AuthWrapper> {
     super.initState();
     // Initialize auth state when app starts
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<AuthProvider>(context, listen: false).initializeAuth();
+      Provider.of<AuthController>(context, listen: false).initializeAuth();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
+    final authController = Provider.of<AuthController>(context);
 
     // Show loading screen while checking auth state
-    if (!authProvider.isInitialized) {
+    if (!authController.isInitialized) {
       return Scaffold(
         backgroundColor: Colors.black,
         body: Center(
@@ -58,7 +58,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
     }
 
     // Show home screen if logged in
-    if (authProvider.isLoggedIn) {
+    if (authController.isLoggedIn) {
       return HomeScreen();
     }
 

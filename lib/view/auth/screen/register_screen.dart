@@ -15,56 +15,75 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final _nameController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  String? _nameError;
+  final _referralCodeController = TextEditingController();
+
+  String? _firstNameError;
+  String? _lastNameError;
   String? _emailError;
   String? _passwordError;
   String? _confirmPasswordError;
 
   void _handleRegister() {
     setState(() {
-      _nameError = null;
+      _firstNameError = null;
+      _lastNameError = null;
       _emailError = null;
       _passwordError = null;
       _confirmPasswordError = null;
     });
-    if (_nameController.text.isEmpty) {
-      setState(() => _nameError = 'Name is required');
+
+    if (_firstNameController.text.isEmpty) {
+      setState(() => _firstNameError = 'First name is required');
       return;
     }
+
+    if (_lastNameController.text.isEmpty) {
+      setState(() => _lastNameError = 'Last name is required');
+      return;
+    }
+
     if (_emailController.text.isEmpty) {
       setState(() => _emailError = 'Email is required');
       return;
     }
+
     if (!_emailController.text.contains('@')) {
       setState(() => _emailError = 'Please enter a valid email');
       return;
     }
+
     if (_passwordController.text.isEmpty) {
       setState(() => _passwordError = 'Password is required');
       return;
     }
+
     if (_passwordController.text.length < 6) {
       setState(() => _passwordError = 'Password must be at least 6 characters');
       return;
     }
+
     if (_confirmPasswordController.text != _passwordController.text) {
       setState(() => _confirmPasswordError = 'Passwords do not match');
       return;
     }
-    Provider.of<AuthProvider>(context, listen: false).register(
-      _nameController.text,
+
+    Provider.of<AuthController>(context, listen: false).register(
+      _firstNameController.text,
+      _lastNameController.text,
       _emailController.text,
       _passwordController.text,
+      _referralCodeController.text.isNotEmpty ? _referralCodeController.text : null,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
+    final authController = Provider.of<AuthController>(context);
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -89,10 +108,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
               AppText.medium('Start your investment journey', color: Colors.grey[600]),
               SizedBox(height: 40.h),
               CustomTextField(
-                hint: 'Full Name',
+                hint: 'First Name',
                 icon: Icons.person_outline,
-                controller: _nameController,
-                errorText: _nameError,
+                controller: _firstNameController,
+                errorText: _firstNameError,
+              ),
+              SizedBox(height: 20.h),
+              CustomTextField(
+                hint: 'Last Name',
+                icon: Icons.person_outline,
+                controller: _lastNameController,
+                errorText: _lastNameError,
               ),
               SizedBox(height: 20.h),
               CustomTextField(
@@ -118,18 +144,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 controller: _confirmPasswordController,
                 errorText: _confirmPasswordError,
               ),
+              SizedBox(height: 20.h),
+              CustomTextField(
+                hint: 'Referral Code (Optional)',
+                icon: Icons.card_giftcard_outlined,
+                controller: _referralCodeController,
+              ),
               SizedBox(height: 32.h),
               AppButton.primary(
                 onPressed: _handleRegister,
                 text: 'Create Account',
-                isLoading: authProvider.isLoading,
+                isLoading: authController.isLoading,
                 icon: Icons.person_add,
-              ),
-              SizedBox(height: 16.h),
-              AppButton.secondary(
-                onPressed: () {},
-                text: 'Sign up with Apple',
-                icon: Icons.apple,
               ),
               SizedBox(height: 24.h),
               Row(
@@ -151,10 +177,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _referralCodeController.dispose();
     super.dispose();
   }
 }

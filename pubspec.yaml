@@ -38,6 +38,7 @@ dependencies:
   flutter_screenutil: ^5.9.0
   shared_preferences: ^2.5.4
   http:
+  another_flushbar: ^1.12.30
 
 dev_dependencies:
   flutter_test:

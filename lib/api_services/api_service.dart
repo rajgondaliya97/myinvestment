@@ -23,8 +23,7 @@ class ApiService {
   // Load token from SharedPreferences
   Future<void> _loadToken() async {
     final prefs = await SharedPreferences.getInstance();
-    // FIX: Use the actual enum key value, not toString()
-    final tokenKey = LocalDataKey.accessToken.name; // or use the actual key string
+    final tokenKey = LocalDataKey.accessToken.name;
     _bearerToken = prefs.getString(tokenKey);
 
     debugPrint('🔑 Token Key: $tokenKey');
@@ -37,11 +36,10 @@ class ApiService {
     }
   }
 
-  // Save token to SharedPreferences
-  Future<void> _saveToken(String token) async {
+  // Save token to SharedPreferences - Made public for manual token saving
+  Future<void> saveToken(String token) async {
     _bearerToken = token;
     final prefs = await SharedPreferences.getInstance();
-    // FIX: Use the actual enum key value, not toString()
     final tokenKey = LocalDataKey.accessToken.name;
     await prefs.setString(tokenKey, token);
     debugPrint('✅ Token saved to storage: ${token.substring(0, 20)}...');
@@ -61,7 +59,6 @@ class ApiService {
   // Get current token (for debugging)
   String? get currentToken => _bearerToken;
 
-  // FIX: Updated _getHeaders to properly merge headers
   Future<Map<String, String>> _getHeadersAsync(Map<String, String>? customHeaders) async {
     Map<String, String> headers = {
       'Content-Type': 'application/json',
@@ -209,7 +206,6 @@ class ApiService {
       String endpoint, {
         Map<String, dynamic>? body,
         Map<String, String>? headers,
-        bool isLogin = false,
       }) async {
     await _loadToken();
     final url = '$baseUrl$endpoint';
@@ -224,21 +220,6 @@ class ApiService {
         headers: requestHeaders,
         body: json.encode(body),
       );
-
-      // Save token if it's a login request
-      if (isLogin &&
-          (response.statusCode >= 200 && response.statusCode < 300)) {
-        final token = response.headers['authorization'] ??
-            response.headers['Authorization'] ??
-            response.headers['token'];
-        if (token != null) {
-          final cleanToken =
-          token.startsWith('Bearer ') ? token.substring(7) : token;
-          await _saveToken(cleanToken);
-        } else {
-          debugPrint('⚠️ Warning: No token found in response headers');
-        }
-      }
 
       _printApiLog(
         method: 'POST',
