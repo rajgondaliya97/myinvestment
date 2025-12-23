@@ -135,12 +135,14 @@ class CustomDrawer extends StatelessWidget {
                   SizedBox(height: 16.h),
                   // User Name
                   AppText.large(
+                    fontSize: 16,
                     user?['name'] ?? 'User',
                     fontWeight: FontWeight.w700,
                   ),
                   SizedBox(height: 4.h),
                   // User Email
-                  AppText.small(
+                  AppText.medium(
+                    fontSize: 12,
                     user?['email'] ?? 'user@example.com',
                     color: Colors.grey[400],
                   ),
