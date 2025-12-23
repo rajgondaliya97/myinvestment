@@ -145,27 +145,42 @@ class AuthController extends ChangeNotifier {
         password: password,
       );
 
+      // ADD THESE DEBUG PRINTS
+      print('📊 Raw Response Status: ${response.status}');
+      print('📊 Status Type: ${response.status.runtimeType}');
+      print('📊 Status == 200: ${response.status == 200}');
+      print('📊 Status == 1: ${response.status == 1}');
+      print('📊 Token: ${response.token}');
+      print('📊 Data: ${response.data}');
+      print('📊 Message: ${response.message}');
+
       // Check if response and status are valid
-      if (response.status != null && (response.status == 200 || response.status == 1)) {
+      if (response.status == 0) {
+        print('✅ Status check passed');
 
         // Check if token exists
-        if (response.token == null || response.token!.isEmpty) {
+        if (response.token?.isEmpty ?? true) {
+          print('🔴 Token is empty');
           _errorMessage = 'Authentication token not received';
           _isLoading = false;
           notifyListeners();
           return false;
         }
+        print('✅ Token exists: ${response.token}');
 
         // Check if user data exists
         if (response.data == null) {
+          print('🔴 User data is null');
           _errorMessage = response.message ?? 'User data not received';
           _isLoading = false;
           notifyListeners();
           return false;
         }
+        print('✅ User data exists');
 
         // Save token to local storage
         await AppLocalData.setString(LocalDataKey.accessToken, response.token!);
+        print('✅ Token saved to local storage');
 
         // Prepare user data from LoginResponseModelData
         _user = {
@@ -193,14 +208,18 @@ class AuthController extends ChangeNotifier {
 
         // Save to local storage
         await AppLocalData.setBool(LocalDataKey.isLoggedIn, true);
-        await AppLocalData.setMap(LocalDataKey.userData, _user!);
+        await AppLocalData.setMap(LocalDataKey.userData, _user ?? {});
+        print('✅ User data saved to local storage');
 
         _isLoggedIn = true;
         _isLoading = false;
+        print('✅ Login successful, isLoggedIn: $_isLoggedIn');
         notifyListeners();
         return true;
 
-      } else {
+      }
+      else {
+        print('🔴 Status check failed');
         // Handle error response
         _errorMessage = response.message ?? 'Login failed. Please check your credentials.';
         _isLoading = false;
@@ -209,13 +228,13 @@ class AuthController extends ChangeNotifier {
       }
 
     } on ApiException catch (e) {
-      // API exceptions are already handled by ApiService
+      print('🔴 ApiException: ${e.message}');
       _errorMessage = e.message;
       _isLoading = false;
       notifyListeners();
       return false;
     } catch (e) {
-      print('Login error: $e');
+      print('🔴 Exception: $e');
       _errorMessage = 'An unexpected error occurred. Please try again.';
       _isLoading = false;
       notifyListeners();
