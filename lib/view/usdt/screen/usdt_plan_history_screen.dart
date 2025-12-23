@@ -299,7 +299,7 @@ class _UsdtPlanHistoryScreenState extends State<UsdtPlanHistoryScreen> {
                                     child: Icon(
                                       Icons.attach_money,
                                       color: Color(0xFF00FF00),
-                                      size: 24.sp,
+                                      size: 18.sp,
                                     ),
                                   ),
                                 ],
