@@ -155,6 +155,7 @@ class _DepositScreenState extends State<DepositScreen> {
             _buildTariffCard(),
             SizedBox(height: 20.h),
 
+
             // Deposit Amount
             _buildDepositAmountCard(selectedTariffData),
             SizedBox(height: 20.h),
