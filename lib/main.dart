@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:myinvestment/res/database/local_database.dart';
 import 'package:myinvestment/res/dependency_locator.dart';
+import 'package:myinvestment/view_model/deposit_provider.dart';
+import 'package:myinvestment/view_model/investment_controller.dart';
 import 'package:provider/provider.dart';
 import 'view/auth/screen/auth_wrapper.dart';
 import 'view_model/auth_provider.dart';
@@ -27,6 +29,8 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => HomeProvider()),
+        ChangeNotifierProvider(create: (_) => InvestmentProvider()),
+        ChangeNotifierProvider(create: (_) => DepositProvider()),
       ],
       child: ScreenUtilInit(
         designSize: Size(375, 812),
@@ -40,7 +44,7 @@ class MyApp extends StatelessWidget {
               primaryColor: Color(0xFF00FF00),
               scaffoldBackgroundColor: Colors.black,
               brightness: Brightness.dark,
-              fontFamily: 'Inter', // Optional: Add custom font
+              fontFamily: 'Inter',
             ),
             home: AuthWrapper(),
           );

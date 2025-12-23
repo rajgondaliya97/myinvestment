@@ -1,26 +1,25 @@
-// crypto_plan_history_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:myinvestment/res/app_widget/custom_app_bar.dart';
 import 'package:provider/provider.dart';
+import '../../../res/app_widget/custom_app_bar.dart';
 import '../../../res/app_widget/custom_app_text.dart';
 import '../../../view_model/investment_controller.dart';
 import '../../home/widget/custom_drawer.dart';
 
-class CryptoPlanHistoryScreen extends StatefulWidget {
-  const CryptoPlanHistoryScreen({Key? key}) : super(key: key);
+class UsdtPlanHistoryScreen extends StatefulWidget {
+  const UsdtPlanHistoryScreen({Key? key}) : super(key: key);
 
   @override
-  State<CryptoPlanHistoryScreen> createState() => _CryptoPlanHistoryScreenState();
+  State<UsdtPlanHistoryScreen> createState() => _UsdtPlanHistoryScreenState();
 }
 
-class _CryptoPlanHistoryScreenState extends State<CryptoPlanHistoryScreen> {
+class _UsdtPlanHistoryScreenState extends State<UsdtPlanHistoryScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch crypto plans when screen loads
+    // Fetch USDT plans when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<InvestmentProvider>(context, listen: false).fetchCryptoPlans();
+      Provider.of<InvestmentProvider>(context, listen: false).fetchUsdtPlans();
     });
   }
 
@@ -39,35 +38,14 @@ class _CryptoPlanHistoryScreenState extends State<CryptoPlanHistoryScreen> {
     }
   }
 
-  IconData _getCoinIcon(String coinSymbol) {
-    switch (coinSymbol.toUpperCase()) {
-      case 'BTC':
-        return Icons.currency_bitcoin;
-      case 'ETH':
-        return Icons.currency_exchange;
-      case 'XRP':
-        return Icons.waves;
-      case 'ADA':
-        return Icons.account_balance;
-      case 'BNB':
-        return Icons.local_fire_department;
-      case 'SOL':
-        return Icons.wb_sunny;
-      case 'DOT':
-        return Icons.circle;
-      default:
-        return Icons.monetization_on;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFF0A0A0A),
       appBar: CustomAppBar(
-        title: 'Crypto Plans History',
+        title: 'USDT Plans History',
       ),
-      drawer: CustomDrawer(currentRoute: 'crypto'),
+      drawer: CustomDrawer(currentRoute: 'usdt'),
       body: Consumer<InvestmentProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading) {
@@ -96,7 +74,7 @@ class _CryptoPlanHistoryScreenState extends State<CryptoPlanHistoryScreen> {
                   ),
                   SizedBox(height: 24.h),
                   ElevatedButton(
-                    onPressed: () => provider.fetchCryptoPlans(),
+                    onPressed: () => provider.fetchUsdtPlans(),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFF00FF00),
                       foregroundColor: Colors.black,
@@ -116,7 +94,7 @@ class _CryptoPlanHistoryScreenState extends State<CryptoPlanHistoryScreen> {
             );
           }
 
-          if (provider.cryptoPlans.isEmpty) {
+          if (provider.usdtPlans.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -132,19 +110,19 @@ class _CryptoPlanHistoryScreenState extends State<CryptoPlanHistoryScreen> {
                       ),
                     ),
                     child: Icon(
-                      Icons.currency_bitcoin,
+                      Icons.account_balance_wallet,
                       size: 60.sp,
                       color: Color(0xFF00FF00).withOpacity(0.5),
                     ),
                   ),
                   SizedBox(height: 24.h),
                   AppText.large(
-                    'No Crypto Plans Yet',
+                    'No USDT Plans Yet',
                     fontWeight: FontWeight.w700,
                   ),
                   SizedBox(height: 8.h),
                   AppText.medium(
-                    'Your cryptocurrency investment\nhistory will appear here',
+                    'Your USDT stablecoin investment\nhistory will appear here',
                     color: Colors.grey[500],
                     textAlign: TextAlign.center,
                   ),
@@ -156,12 +134,12 @@ class _CryptoPlanHistoryScreenState extends State<CryptoPlanHistoryScreen> {
           return RefreshIndicator(
             color: Color(0xFF00FF00),
             backgroundColor: Color(0xFF1A1A1A),
-            onRefresh: () => provider.fetchCryptoPlans(),
+            onRefresh: () => provider.fetchUsdtPlans(),
             child: ListView.builder(
               padding: EdgeInsets.all(16.w),
-              itemCount: provider.cryptoPlans.length,
+              itemCount: provider.usdtPlans.length,
               itemBuilder: (context, index) {
-                final plan = provider.cryptoPlans[index];
+                final plan = provider.usdtPlans[index];
                 final status = plan['status'] ?? 'Pending';
                 final statusColor = _getStatusColor(status);
 
@@ -184,7 +162,7 @@ class _CryptoPlanHistoryScreenState extends State<CryptoPlanHistoryScreen> {
                   ),
                   child: Column(
                     children: [
-                      // Header with coin info
+                      // Header with USDT info
                       Container(
                         padding: EdgeInsets.all(16.w),
                         decoration: BoxDecoration(
@@ -203,7 +181,7 @@ class _CryptoPlanHistoryScreenState extends State<CryptoPlanHistoryScreen> {
                         ),
                         child: Row(
                           children: [
-                            // Coin Icon
+                            // USDT Icon
                             Container(
                               width: 40.w,
                               height: 40.w,
@@ -226,27 +204,27 @@ class _CryptoPlanHistoryScreenState extends State<CryptoPlanHistoryScreen> {
                                 ],
                               ),
                               child: Icon(
-                                _getCoinIcon(plan['coinSymbol'] ?? ''),
+                                Icons.account_balance_wallet,
                                 color: Colors.black,
                                 size: 20.sp,
                               ),
                             ),
                             SizedBox(width: 16.w),
-                            // Coin Name & Symbol
+                            // Plan Name
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   AppText.medium(
-                                    plan['coinName'] ?? 'Unknown',
+                                    plan['planName'] ?? 'USDT Plan',
                                     fontWeight: FontWeight.w700,
                                   ),
                                   SizedBox(height: 4.h),
                                   AppText.small(
-                                    fontSize: 10,
-                                    plan['coinSymbol'] ?? '',
+                                    'Stablecoin Investment',
                                     color: Color(0xFF00FF00),
-                                    fontWeight: FontWeight.w600,
+                                    fontWeight: FontWeight.w400,
+                                    fontSize: 10,
                                   ),
                                 ],
                               ),
@@ -267,7 +245,7 @@ class _CryptoPlanHistoryScreenState extends State<CryptoPlanHistoryScreen> {
                               ),
                               child: AppText.small(
                                 status,
-                                fontSize: 10,
+                                fontSize: 9,
                                 color: statusColor,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -295,15 +273,33 @@ class _CryptoPlanHistoryScreenState extends State<CryptoPlanHistoryScreen> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  AppText.small(
-                                    fontSize: 10,
-                                    'Investment Amount',
-                                    color: Colors.grey[500],
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      AppText.small(
+                                        'Investment Amount',
+                                        fontSize: 10,
+                                        color: Colors.grey[500],
+                                      ),
+                                      SizedBox(height: 4.h),
+                                      AppText.medium(
+                                        '${plan['amount']?.toStringAsFixed(2) ?? '0.00'}',
+                                        fontWeight: FontWeight.w700,
+                                        color: Color(0xFF00FF00),
+                                      ),
+                                    ],
                                   ),
-                                  AppText.medium(
-                                    '\$${plan['amount']?.toStringAsFixed(2) ?? '0.00'}',
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF00FF00),
+                                  Container(
+                                    padding: EdgeInsets.all(8.w),
+                                    decoration: BoxDecoration(
+                                      color: Color(0xFF00FF00).withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8.r),
+                                    ),
+                                    child: Icon(
+                                      Icons.attach_money,
+                                      color: Color(0xFF00FF00),
+                                      size: 18.sp,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -330,6 +326,47 @@ class _CryptoPlanHistoryScreenState extends State<CryptoPlanHistoryScreen> {
                                 ),
                               ],
                             ),
+
+                            // Additional Info (if available)
+                            if (plan['interestRate'] != null) ...[
+                              SizedBox(height: 12.h),
+                              Container(
+                                padding: EdgeInsets.all(12.w),
+                                decoration: BoxDecoration(
+                                  color: Color(0xFF0A0A0A),
+                                  borderRadius: BorderRadius.circular(12.r),
+                                  border: Border.all(
+                                    color: Color(0xFF2A2A2A),
+                                    width: 1.w,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.trending_up,
+                                          size: 16.sp,
+                                          color: Color(0xFF00FF00),
+                                        ),
+                                        SizedBox(width: 8.w),
+                                        AppText.medium(
+                                          fontSize: 12,
+                                          'Interest Rate',
+                                          color: Colors.grey[400],
+                                        ),
+                                      ],
+                                    ),
+                                    AppText.medium(
+                                      '${plan['interestRate']}%',
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF00FF00),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),

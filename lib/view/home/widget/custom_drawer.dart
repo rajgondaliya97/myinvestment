@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
-
 import '../../../res/app_widget/custom_app_button.dart';
 import '../../../res/app_widget/custom_app_text.dart';
 import '../../../view_model/auth_provider.dart';
 import '../../auth/screen/auth_wrapper.dart';
+import '../../crypto/screen/crypto_plan_history_screen.dart';
+import '../../deposit/screen/deposit_screen.dart';
 import '../../profile/screen/profile_screen.dart';
+import '../../usdt/screen/usdt_plan_history_screen.dart';
 import '../screen/home_screen.dart';
 import 'drawer_menuItem.dart';
 
@@ -19,6 +21,7 @@ class CustomDrawer extends StatelessWidget {
   }) : super(key: key);
 
   void _handleLogout(BuildContext context) async {
+    // Show confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -69,195 +72,6 @@ class CustomDrawer extends StatelessWidget {
             (route) => false, // Remove all previous routes
       );
     }
-  }
-
-  void _showHistoryOptions(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: Color(0xFF1A1A1A),
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(24.r),
-            topRight: Radius.circular(24.r),
-          ),
-          border: Border(
-            top: BorderSide(color: Color(0xFF00FF00).withOpacity(0.3), width: 2.w),
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle bar
-            Container(
-              margin: EdgeInsets.only(top: 12.h),
-              width: 40.w,
-              height: 4.h,
-              decoration: BoxDecoration(
-                color: Color(0xFF2A2A2A),
-                borderRadius: BorderRadius.circular(2.r),
-              ),
-            ),
-            SizedBox(height: 20.h),
-
-            // Title
-            AppText.large(
-              'Investment History',
-              fontWeight: FontWeight.w700,
-            ),
-            SizedBox(height: 8.h),
-            AppText.small(
-              'Choose a plan type to view',
-              color: Colors.grey[500],
-            ),
-            SizedBox(height: 20.h),
-
-            // Crypto Plan Option
-            InkWell(
-              onTap: () {
-                Navigator.pop(context); // Close bottom sheet
-                Navigator.pop(context); // Close drawer
-                /*Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => CryptoPlanHistoryScreen(),
-                  ),
-                );*/
-              },
-              child: Container(
-                margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                padding: EdgeInsets.all(16.w),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Color(0xFF00FF00).withOpacity(0.15),
-                      Color(0xFF00FF00).withOpacity(0.05),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(
-                    color: Color(0xFF00FF00).withOpacity(0.3),
-                    width: 1.5.w,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 50.w,
-                      height: 50.w,
-                      decoration: BoxDecoration(
-                        color: Color(0xFF00FF00).withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      child: Icon(
-                        Icons.currency_bitcoin,
-                        color: Color(0xFF00FF00),
-                        size: 26.sp,
-                      ),
-                    ),
-                    SizedBox(width: 16.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          AppText.medium(
-                            'Crypto Plans',
-                            fontWeight: FontWeight.w700,
-                          ),
-                          SizedBox(height: 4.h),
-                          AppText.small(
-                            'View your cryptocurrency investments',
-                            color: Colors.grey[400],
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(
-                      Icons.arrow_forward_ios,
-                      color: Color(0xFF00FF00),
-                      size: 16.sp,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // USDT Plan Option
-            InkWell(
-              onTap: () {
-                Navigator.pop(context); // Close bottom sheet
-                Navigator.pop(context); // Close drawer
-                /*Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => UsdtPlanHistoryScreen(),
-                  ),
-                );*/
-              },
-              child: Container(
-                margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                padding: EdgeInsets.all(16.w),
-                decoration: BoxDecoration(
-                  color: Color(0xFF1A1A1A),
-                  borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(
-                    color: Color(0xFF2A2A2A),
-                    width: 1.5.w,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 50.w,
-                      height: 50.w,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Color(0xFF00FF00),
-                            Color(0xFF00CC00),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      child: Icon(
-                        Icons.account_balance_wallet,
-                        color: Colors.black,
-                        size: 26.sp,
-                      ),
-                    ),
-                    SizedBox(width: 16.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          AppText.medium(
-                            'USDT Plans',
-                            fontWeight: FontWeight.w700,
-                          ),
-                          SizedBox(height: 4.h),
-                          AppText.small(
-                            'View your USDT stablecoin plans',
-                            color: Colors.grey[400],
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(
-                      Icons.arrow_forward_ios,
-                      color: Colors.grey[400],
-                      size: 16.sp,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            SizedBox(height: 24.h),
-          ],
-        ),
-      ),
-    );
   }
 
   @override
@@ -321,12 +135,14 @@ class CustomDrawer extends StatelessWidget {
                   SizedBox(height: 16.h),
                   // User Name
                   AppText.large(
+                    fontSize: 16,
                     user?['name'] ?? 'User',
                     fontWeight: FontWeight.w700,
                   ),
                   SizedBox(height: 4.h),
                   // User Email
-                  AppText.small(
+                  AppText.medium(
+                    fontSize: 12,
                     user?['email'] ?? 'user@example.com',
                     color: Colors.grey[400],
                   ),
@@ -368,10 +184,46 @@ class CustomDrawer extends StatelessWidget {
                     },
                   ),
                   DrawerMenuItem(
-                    icon: Icons.history,
-                    title: 'Investment History',
-                    isSelected: currentRoute == 'history',
-                    onTap: () => _showHistoryOptions(context),
+                    icon: Icons.account_balance_wallet_outlined,
+                    title: 'Deposit',
+                    isSelected: currentRoute == 'deposit',
+                    onTap: () {
+                      Navigator.pop(context);
+                      if (currentRoute != 'deposit') {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => DepositScreen()),
+                        );
+                      }
+                    },
+                  ),
+                  DrawerMenuItem(
+                    icon: Icons.currency_bitcoin,
+                    title: 'Crypto Plans',
+                    isSelected: currentRoute == 'crypto',
+                    onTap: () {
+                      Navigator.pop(context);
+                      if (currentRoute != 'crypto') {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => CryptoPlanHistoryScreen()),
+                        );
+                      }
+                    },
+                  ),
+                  DrawerMenuItem(
+                    icon: Icons.account_balance_wallet,
+                    title: 'USDT Plans',
+                    isSelected: currentRoute == 'usdt',
+                    onTap: () {
+                      Navigator.pop(context);
+                      if (currentRoute != 'usdt') {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => UsdtPlanHistoryScreen()),
+                        );
+                      }
+                    },
                   ),
                   Divider(
                     color: Color(0xFF2A2A2A),
@@ -415,7 +267,7 @@ class CustomDrawer extends StatelessWidget {
                 onPressed: () => _handleLogout(context),
                 text: 'Logout',
                 icon: Icons.logout,
-                height: 50,
+                height: 45,
               ),
             ),
           ],
