@@ -12,8 +12,6 @@ class AuthWrapper extends StatefulWidget {
 }
 
 class _AuthWrapperState extends State<AuthWrapper> {
-  bool showLogin = true;
-
   @override
   void initState() {
     super.initState();
@@ -62,9 +60,9 @@ class _AuthWrapperState extends State<AuthWrapper> {
       return HomeScreen();
     }
 
-    // Show login or register screen
-    return showLogin
-        ? LoginScreen(onSwitchToRegister: () => setState(() => showLogin = false))
-        : RegisterScreen(onSwitchToLogin: () => setState(() => showLogin = true));
+    // Show login or register screen based on controller state
+    return authController.showLoginScreen
+        ? LoginScreen()
+        : RegisterScreen();
   }
 }

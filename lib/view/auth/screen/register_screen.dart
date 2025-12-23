@@ -8,8 +8,8 @@ import '../../../res/app_widget/custom_text_field.dart';
 import '../../../view_model/auth_provider.dart';
 
 class RegisterScreen extends StatefulWidget {
-  final VoidCallback onSwitchToLogin;
-  const RegisterScreen({Key? key, required this.onSwitchToLogin}) : super(key: key);
+  const RegisterScreen({Key? key}) : super(key: key);
+
   @override
   _RegisterScreenState createState() => _RegisterScreenState();
 }
@@ -22,61 +22,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _confirmPasswordController = TextEditingController();
   final _referralCodeController = TextEditingController();
 
-  String? _firstNameError;
-  String? _lastNameError;
-  String? _emailError;
-  String? _passwordError;
-  String? _confirmPasswordError;
+  @override
+  void initState() {
+    super.initState();
+    // Clear errors when screen is initialized
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<AuthController>(context, listen: false).clearRegisterErrors();
+    });
+  }
 
   void _handleRegister() {
-    setState(() {
-      _firstNameError = null;
-      _lastNameError = null;
-      _emailError = null;
-      _passwordError = null;
-      _confirmPasswordError = null;
-    });
+    final authController = Provider.of<AuthController>(context, listen: false);
 
-    if (_firstNameController.text.isEmpty) {
-      setState(() => _firstNameError = 'First name is required');
-      return;
-    }
-
-    if (_lastNameController.text.isEmpty) {
-      setState(() => _lastNameError = 'Last name is required');
-      return;
-    }
-
-    if (_emailController.text.isEmpty) {
-      setState(() => _emailError = 'Email is required');
-      return;
-    }
-
-    if (!_emailController.text.contains('@')) {
-      setState(() => _emailError = 'Please enter a valid email');
-      return;
-    }
-
-    if (_passwordController.text.isEmpty) {
-      setState(() => _passwordError = 'Password is required');
-      return;
-    }
-
-    if (_passwordController.text.length < 6) {
-      setState(() => _passwordError = 'Password must be at least 6 characters');
-      return;
-    }
-
-    if (_confirmPasswordController.text != _passwordController.text) {
-      setState(() => _confirmPasswordError = 'Passwords do not match');
-      return;
-    }
-
-    Provider.of<AuthController>(context, listen: false).register(
+    authController.register(
       _firstNameController.text,
       _lastNameController.text,
       _emailController.text,
       _passwordController.text,
+      _confirmPasswordController.text,
       _referralCodeController.text.isNotEmpty ? _referralCodeController.text : null,
     );
   }
@@ -84,7 +47,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final authController = Provider.of<AuthController>(context);
+
     return Scaffold(
+      backgroundColor: Colors.black,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.all(24.w),
@@ -99,7 +64,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     color: Color(0xFF00FF00).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20.r),
                   ),
-                  child: Icon(Icons.trending_up, color: Color(0xFF00FF00), size: 60.sp),
+                  child: Icon(
+                      Icons.trending_up,
+                      color: Color(0xFF00FF00),
+                      size: 60.sp
+                  ),
                 ),
               ),
               SizedBox(height: 40.h),
@@ -107,64 +76,87 @@ class _RegisterScreenState extends State<RegisterScreen> {
               SizedBox(height: 8.h),
               AppText.medium('Start your investment journey', color: Colors.grey[600]),
               SizedBox(height: 40.h),
+
+              // First Name Field - Error from controller
               CustomTextField(
                 hint: 'First Name',
                 icon: Icons.person_outline,
                 controller: _firstNameController,
-                errorText: _firstNameError,
+                errorText: authController.firstNameError,
               ),
               SizedBox(height: 20.h),
+
+              // Last Name Field - Error from controller
               CustomTextField(
                 hint: 'Last Name',
                 icon: Icons.person_outline,
                 controller: _lastNameController,
-                errorText: _lastNameError,
+                errorText: authController.lastNameError,
               ),
               SizedBox(height: 20.h),
+
+              // Email Field - Error from controller
               CustomTextField(
                 hint: 'Email Address',
                 icon: Icons.email_outlined,
                 controller: _emailController,
-                errorText: _emailError,
+                errorText: authController.emailError,
                 keyboardType: TextInputType.emailAddress,
               ),
               SizedBox(height: 20.h),
+
+              // Password Field - Error from controller
               CustomTextField(
                 hint: 'Password',
                 icon: Icons.lock_outline,
                 isPassword: true,
                 controller: _passwordController,
-                errorText: _passwordError,
+                errorText: authController.passwordError,
               ),
               SizedBox(height: 20.h),
+
+              // Confirm Password Field - Error from controller
               CustomTextField(
                 hint: 'Confirm Password',
                 icon: Icons.lock_outline,
                 isPassword: true,
                 controller: _confirmPasswordController,
-                errorText: _confirmPasswordError,
+                errorText: authController.confirmPasswordError,
               ),
               SizedBox(height: 20.h),
+
+              // Referral Code Field
               CustomTextField(
                 hint: 'Referral Code (Optional)',
                 icon: Icons.card_giftcard_outlined,
                 controller: _referralCodeController,
               ),
               SizedBox(height: 32.h),
+
+              // Register Button - Loading state from controller
               AppButton.primary(
-                onPressed: _handleRegister,
+                onPressed: authController.isLoading ? null : _handleRegister,
                 text: 'Create Account',
                 isLoading: authController.isLoading,
                 icon: Icons.person_add,
               ),
               SizedBox(height: 24.h),
+
+              // Login Link - Uses controller method
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  AppText.medium("Already have an account? ", color: Colors.grey[600]),
+                  AppText.medium(
+                      "Already have an account? ",
+                      color: Colors.grey[600]
+                  ),
                   GestureDetector(
-                    onTap: widget.onSwitchToLogin,
-                    child: AppText.medium('Login', color: Color(0xFF00FF00), fontWeight: FontWeight.w700),
+                    onTap: () => authController.toggleAuthScreen(),
+                    child: AppText.medium(
+                        'Login',
+                        color: Color(0xFF00FF00),
+                        fontWeight: FontWeight.w700
+                    ),
                   ),
                 ],
               ),

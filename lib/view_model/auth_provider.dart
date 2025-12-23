@@ -8,17 +8,64 @@ class AuthController extends ChangeNotifier {
   final AuthRepository authRepository;
   AuthController({required this.authRepository});
 
+  // Auth state
   bool _isLoggedIn = false;
   Map<String, dynamic>? _user;
   bool _isLoading = false;
   bool _isInitialized = false;
   String? _errorMessage;
+  bool _showLoginScreen = true;
 
+  // Login validation errors
+  String? _emailError;
+  String? _passwordError;
+
+  // Register validation errors
+  String? _firstNameError;
+  String? _lastNameError;
+  String? _confirmPasswordError;
+
+  // Getters
   bool get isLoggedIn => _isLoggedIn;
   Map<String, dynamic>? get user => _user;
   bool get isLoading => _isLoading;
   bool get isInitialized => _isInitialized;
   String? get errorMessage => _errorMessage;
+  bool get showLoginScreen => _showLoginScreen;
+
+  // Login error getters
+  String? get emailError => _emailError;
+  String? get passwordError => _passwordError;
+
+  // Register error getters
+  String? get firstNameError => _firstNameError;
+  String? get lastNameError => _lastNameError;
+  String? get confirmPasswordError => _confirmPasswordError;
+
+  // Toggle between login and register screens
+  void toggleAuthScreen() {
+    _showLoginScreen = !_showLoginScreen;
+    clearLoginErrors();
+    clearRegisterErrors();
+    notifyListeners();
+  }
+
+  // Clear login validation errors
+  void clearLoginErrors() {
+    _emailError = null;
+    _passwordError = null;
+    notifyListeners();
+  }
+
+  // Clear register validation errors
+  void clearRegisterErrors() {
+    _firstNameError = null;
+    _lastNameError = null;
+    _emailError = null;
+    _passwordError = null;
+    _confirmPasswordError = null;
+    notifyListeners();
+  }
 
   // Initialize auth state from local storage
   Future<void> initializeAuth() async {
@@ -51,7 +98,42 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Validate login inputs
+  bool _validateLogin(String email, String password) {
+    clearLoginErrors();
+    bool isValid = true;
+
+    // Validate email
+    if (email.isEmpty) {
+      _emailError = 'Email is required';
+      isValid = false;
+    } else if (!email.contains('@')) {
+      _emailError = 'Please enter a valid email';
+      isValid = false;
+    }
+
+    // Validate password
+    if (password.isEmpty) {
+      _passwordError = 'Password is required';
+      isValid = false;
+    } else if (password.length < 6) {
+      _passwordError = 'Password must be at least 6 characters';
+      isValid = false;
+    }
+
+    if (!isValid) {
+      notifyListeners();
+    }
+
+    return isValid;
+  }
+
   Future<bool> login(String email, String password) async {
+    // Validate inputs first
+    if (!_validateLogin(email, password)) {
+      return false;
+    }
+
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -141,7 +223,60 @@ class AuthController extends ChangeNotifier {
     }
   }
 
-  Future<void> register(String firstName, String lastName, String email, String password, String? referralCode) async {
+  // Validate register inputs
+  bool _validateRegister(String firstName, String lastName, String email, String password, String confirmPassword) {
+    clearRegisterErrors();
+    bool isValid = true;
+
+    // Validate first name
+    if (firstName.isEmpty) {
+      _firstNameError = 'First name is required';
+      isValid = false;
+    }
+
+    // Validate last name
+    if (lastName.isEmpty) {
+      _lastNameError = 'Last name is required';
+      isValid = false;
+    }
+
+    // Validate email
+    if (email.isEmpty) {
+      _emailError = 'Email is required';
+      isValid = false;
+    } else if (!email.contains('@')) {
+      _emailError = 'Please enter a valid email';
+      isValid = false;
+    }
+
+    // Validate password
+    if (password.isEmpty) {
+      _passwordError = 'Password is required';
+      isValid = false;
+    } else if (password.length < 6) {
+      _passwordError = 'Password must be at least 6 characters';
+      isValid = false;
+    }
+
+    // Validate confirm password
+    if (confirmPassword != password) {
+      _confirmPasswordError = 'Passwords do not match';
+      isValid = false;
+    }
+
+    if (!isValid) {
+      notifyListeners();
+    }
+
+    return isValid;
+  }
+
+  Future<void> register(String firstName, String lastName, String email, String password, String confirmPassword, String? referralCode) async {
+    // Validate inputs first
+    if (!_validateRegister(firstName, lastName, email, password, confirmPassword)) {
+      return;
+    }
+
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -185,6 +320,9 @@ class AuthController extends ChangeNotifier {
       _user = null;
       _isLoggedIn = false;
       _errorMessage = null;
+      _showLoginScreen = true;
+      clearLoginErrors();
+      clearRegisterErrors();
       notifyListeners();
     } catch (e) {
       print('Logout error: $e');

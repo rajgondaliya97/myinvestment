@@ -10,8 +10,7 @@ import '../../../res/app_widget/custom_text_field.dart';
 import '../../../view_model/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
-  final VoidCallback onSwitchToRegister;
-  const LoginScreen({Key? key, required this.onSwitchToRegister}) : super(key: key);
+  const LoginScreen({Key? key}) : super(key: key);
 
   @override
   _LoginScreenState createState() => _LoginScreenState();
@@ -20,38 +19,19 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  String? _emailError;
-  String? _passwordError;
+
+  @override
+  void initState() {
+    super.initState();
+    // Clear errors when screen is initialized
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<AuthController>(context, listen: false).clearLoginErrors();
+    });
+  }
 
   void _handleLogin() async {
-    // Clear previous errors
-    setState(() {
-      _emailError = null;
-      _passwordError = null;
-    });
-
-    // Validate email
-    if (_emailController.text.isEmpty) {
-      setState(() => _emailError = 'Email is required');
-      return;
-    }
-    if (!_emailController.text.contains('@')) {
-      setState(() => _emailError = 'Please enter a valid email');
-      return;
-    }
-
-    // Validate password
-    if (_passwordController.text.isEmpty) {
-      setState(() => _passwordError = 'Password is required');
-      return;
-    }
-    if (_passwordController.text.length < 6) {
-      setState(() => _passwordError = 'Password must be at least 6 characters');
-      return;
-    }
-
-    // Call login API
     final authController = Provider.of<AuthController>(context, listen: false);
+
     final success = await authController.login(
       _emailController.text.trim(),
       _passwordController.text,
@@ -114,23 +94,23 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               SizedBox(height: 40.h),
 
-              // Email Field
+              // Email Field - Error from controller
               CustomTextField(
                 hint: 'Email Address',
                 icon: Icons.email_outlined,
                 controller: _emailController,
-                errorText: _emailError,
+                errorText: authController.emailError,
                 keyboardType: TextInputType.emailAddress,
               ),
               SizedBox(height: 20.h),
 
-              // Password Field
+              // Password Field - Error from controller
               CustomTextField(
                 hint: 'Password',
                 icon: Icons.lock_outline,
                 isPassword: true,
                 controller: _passwordController,
-                errorText: _passwordError,
+                errorText: authController.passwordError,
               ),
               SizedBox(height: 12.h),
 
@@ -146,7 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               SizedBox(height: 24.h),
 
-              // Login Button
+              // Login Button - Loading state from controller
               AppButton.primary(
                 onPressed: authController.isLoading ? null : _handleLogin,
                 text: 'Login',
@@ -155,7 +135,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               SizedBox(height: 24.h),
 
-              // Register Link
+              // Register Link - Uses controller method
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -164,7 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     color: Colors.grey[600],
                   ),
                   GestureDetector(
-                    onTap: widget.onSwitchToRegister,
+                    onTap: () => authController.toggleAuthScreen(),
                     child: AppText.medium(
                       'Register',
                       color: Color(0xFF00FF00),
