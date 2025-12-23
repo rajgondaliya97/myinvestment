@@ -9,28 +9,60 @@ import '../../../view_model/auth_provider.dart';
 import '../../../view_model/home_provider.dart';
 import '../widget/balance_card_widget.dart';
 import '../widget/profit_chart_card.dart';
-import '../widget/custom_drawer.dart'; // Add this import
+import '../widget/custom_drawer.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Load user data from local storage when screen initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authController = Provider.of<AuthController>(context, listen: false);
+      final homeProvider = Provider.of<HomeProvider>(context, listen: false);
+
+      authController.loadUserFromStorage();
+
+      // Initialize home provider with user's wallet data
+      if (authController.user != null) {
+        homeProvider.initializeWithUserData(
+          walletBalance: authController.user?.user?.walletBalance,
+          investmentAmount: authController.user?.user?.investmentAmount,
+        );
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final authController = Provider.of<AuthController>(context);
     final homeProvider = Provider.of<HomeProvider>(context);
 
+    // Get user data from model
+    final userName = authController.user?.user?.name ??
+        '${authController.user?.user?.firstName ?? ''} ${authController.user?.user?.lastName ?? ''}'.trim();
+    final userEmail = authController.user?.user?.email ?? 'user@example.com';
+    final profileImage = '';
+
     return Scaffold(
       appBar: CustomAppBar(
         title: 'Investment App',
-        profileImageUrl: authController.user?['profileImage'],
+        profileImageUrl: profileImage,
         onProfileTap: () {
           // Navigate to profile screen
         },
       ),
-      // Add this drawer property
       drawer: CustomDrawer(
         currentRoute: 'home',
       ),
       body: RefreshIndicator(
         onRefresh: () async {
+          // Refresh user data from storage
+          await authController.loadUserFromStorage();
           //    await homeProvider.refreshData();
         },
         color: Color(0xFF00FF00),
@@ -40,7 +72,7 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Welcome message
+              // Welcome message with user name
               AppText.medium(
                 'Welcome back,',
                 color: Colors.grey[400],
@@ -48,8 +80,15 @@ class HomeScreen extends StatelessWidget {
               ),
               SizedBox(height: 4.h),
               AppText.large(
-                authController.user?['name'] ?? 'User',
+                userName.isNotEmpty ? userName : 'User',
                 fontWeight: FontWeight.w700,
+              ),
+              SizedBox(height: 4.h),
+              // User email
+              AppText.small(
+                userEmail,
+                color: Colors.grey[500],
+                fontSize: 12,
               ),
               SizedBox(height: 24.h),
 

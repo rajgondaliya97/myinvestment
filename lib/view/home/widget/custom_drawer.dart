@@ -12,13 +12,27 @@ import '../../usdt/screen/usdt_plan_history_screen.dart';
 import '../screen/home_screen.dart';
 import 'drawer_menuItem.dart';
 
-class CustomDrawer extends StatelessWidget {
+class CustomDrawer extends StatefulWidget {
   final String currentRoute;
 
   const CustomDrawer({
     Key? key,
     required this.currentRoute,
   }) : super(key: key);
+
+  @override
+  _CustomDrawerState createState() => _CustomDrawerState();
+}
+
+class _CustomDrawerState extends State<CustomDrawer> {
+  @override
+  void initState() {
+    super.initState();
+    // Load user data from local storage when drawer opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<AuthController>(context, listen: false).loadUserFromStorage();
+    });
+  }
 
   void _handleLogout(BuildContext context) async {
     // Show confirmation dialog
@@ -79,6 +93,12 @@ class CustomDrawer extends StatelessWidget {
     final authController = Provider.of<AuthController>(context);
     final user = authController.user;
 
+    // Get user name and email from model
+    final userName = user?.user?.name ??
+        '${user?.user?.firstName ?? ''} ${user?.user?.lastName ?? ''}'.trim();
+    final userEmail = user?.user?.email ?? 'user@example.com';
+    final profileImage = '';
+
     return Drawer(
       backgroundColor: Color(0xFF1A1A1A),
       child: SafeArea(
@@ -119,11 +139,18 @@ class CustomDrawer extends StatelessWidget {
                       ),
                       color: Color(0xFF2A2A2A),
                     ),
-                    child: user?['profileImage'] != null
+                    child: profileImage != null && profileImage.isNotEmpty
                         ? ClipOval(
                       child: Image.network(
-                        user!['profileImage'],
+                        profileImage,
                         fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(
+                            Icons.person,
+                            color: Color(0xFF00FF00),
+                            size: 35.sp,
+                          );
+                        },
                       ),
                     )
                         : Icon(
@@ -136,14 +163,14 @@ class CustomDrawer extends StatelessWidget {
                   // User Name
                   AppText.large(
                     fontSize: 16,
-                    user?['name'] ?? 'User',
+                    userName.isNotEmpty ? userName : 'User',
                     fontWeight: FontWeight.w700,
                   ),
                   SizedBox(height: 4.h),
                   // User Email
                   AppText.medium(
                     fontSize: 12,
-                    user?['email'] ?? 'user@example.com',
+                    userEmail,
                     color: Colors.grey[400],
                   ),
                 ],
@@ -158,10 +185,10 @@ class CustomDrawer extends StatelessWidget {
                   DrawerMenuItem(
                     icon: Icons.dashboard_outlined,
                     title: 'Dashboard',
-                    isSelected: currentRoute == 'home',
+                    isSelected: widget.currentRoute == 'home',
                     onTap: () {
                       Navigator.pop(context);
-                      if (currentRoute != 'home') {
+                      if (widget.currentRoute != 'home') {
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(builder: (_) => HomeScreen()),
@@ -172,10 +199,10 @@ class CustomDrawer extends StatelessWidget {
                   DrawerMenuItem(
                     icon: Icons.person_outline,
                     title: 'Profile',
-                    isSelected: currentRoute == 'profile',
+                    isSelected: widget.currentRoute == 'profile',
                     onTap: () {
                       Navigator.pop(context);
-                      if (currentRoute != 'profile') {
+                      if (widget.currentRoute != 'profile') {
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(builder: (_) => ProfileScreen()),
@@ -186,10 +213,10 @@ class CustomDrawer extends StatelessWidget {
                   DrawerMenuItem(
                     icon: Icons.account_balance_wallet_outlined,
                     title: 'Deposit',
-                    isSelected: currentRoute == 'deposit',
+                    isSelected: widget.currentRoute == 'deposit',
                     onTap: () {
                       Navigator.pop(context);
-                      if (currentRoute != 'deposit') {
+                      if (widget.currentRoute != 'deposit') {
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (_) => DepositScreen()),
@@ -200,10 +227,10 @@ class CustomDrawer extends StatelessWidget {
                   DrawerMenuItem(
                     icon: Icons.currency_bitcoin,
                     title: 'Crypto Plans',
-                    isSelected: currentRoute == 'crypto',
+                    isSelected: widget.currentRoute == 'crypto',
                     onTap: () {
                       Navigator.pop(context);
-                      if (currentRoute != 'crypto') {
+                      if (widget.currentRoute != 'crypto') {
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(builder: (_) => CryptoPlanHistoryScreen()),
@@ -214,10 +241,10 @@ class CustomDrawer extends StatelessWidget {
                   DrawerMenuItem(
                     icon: Icons.account_balance_wallet,
                     title: 'USDT Plans',
-                    isSelected: currentRoute == 'usdt',
+                    isSelected: widget.currentRoute == 'usdt',
                     onTap: () {
                       Navigator.pop(context);
-                      if (currentRoute != 'usdt') {
+                      if (widget.currentRoute != 'usdt') {
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(builder: (_) => UsdtPlanHistoryScreen()),

@@ -2,7 +2,7 @@ class LoginResponseModel {
   int? status;
   String? message;
   String? token;
-  LoginResponseModelData? data;
+  UserData? data;
 
   LoginResponseModel({this.status, this.message, this.token, this.data});
 
@@ -10,7 +10,7 @@ class LoginResponseModel {
     status = json['status'];
     message = json['message'];
     token = json['token'];
-    data = json['data'] != null ? new LoginResponseModelData.fromJson(json['data']) : null;
+    data = json['data'] != null ? new UserData.fromJson(json['data']) : null;
   }
 
   Map<String, dynamic> toJson() {
@@ -25,21 +25,21 @@ class LoginResponseModel {
   }
 }
 
-class Data {
+class UserData {
   int? userId;
   LoginResponseModelData? user;
   int? activePlans;
   int? totalTransactions;
   int? totalWithdrawals;
 
-  Data(
+  UserData(
       {this.userId,
         this.user,
         this.activePlans,
         this.totalTransactions,
         this.totalWithdrawals});
 
-  Data.fromJson(Map<String, dynamic> json) {
+  UserData.fromJson(Map<String, dynamic> json) {
     userId = json['user_id'];
     user = json['user'] != null ? new LoginResponseModelData.fromJson(json['user']) : null;
     activePlans = json['active_plans'];

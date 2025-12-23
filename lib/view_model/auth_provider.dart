@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import '../api_services/api_exception.dart';
+import '../model/auth_model/login_response_model.dart';
 import '../model/auth_model/user_register_model.dart';
 import '../repo/auth_repo.dart';
 import '../res/database/local_data_key.dart';
@@ -9,9 +10,9 @@ class AuthController extends ChangeNotifier {
   final AuthRepository authRepository;
   AuthController({required this.authRepository});
 
-  // Auth state
+  // Auth state - Now stores the model object
   bool _isLoggedIn = false;
-  Map<String, dynamic>? _user;
+  UserData? _user; // Changed to store model directly
   bool _isLoading = false;
   bool _isInitialized = false;
   String? _errorMessage;
@@ -28,7 +29,7 @@ class AuthController extends ChangeNotifier {
 
   // Getters
   bool get isLoggedIn => _isLoggedIn;
-  Map<String, dynamic>? get user => _user;
+  UserData? get user => _user;
   bool get isLoading => _isLoading;
   bool get isInitialized => _isInitialized;
   String? get errorMessage => _errorMessage;
@@ -74,24 +75,24 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Check if user is logged in
+      // FIXED: Remove .key - pass enum directly
       final isLoggedIn = AppLocalData.getBool(LocalDataKey.isLoggedIn) ?? false;
 
       if (isLoggedIn) {
-        // Load user data and token from local storage
+        // FIXED: Remove .key - pass enum directly
         final userData = AppLocalData.getMap(LocalDataKey.userData);
         final token = AppLocalData.getString(LocalDataKey.accessToken);
 
         if (userData != null && token != null) {
-          _user = userData;
+          _user = UserData.fromJson(userData);
           _isLoggedIn = true;
+          print('✅ User loaded from storage: ${_user?.user?.name} (${_user?.user?.email})');
         } else {
-          // Clear invalid data
           await logout();
         }
       }
     } catch (e) {
-      print('Error initializing auth: $e');
+      print('❌ Error initializing auth: $e');
     }
 
     _isLoading = false;
@@ -104,7 +105,6 @@ class AuthController extends ChangeNotifier {
     clearLoginErrors();
     bool isValid = true;
 
-    // Validate email
     if (email.isEmpty) {
       _emailError = 'Email is required';
       isValid = false;
@@ -113,7 +113,6 @@ class AuthController extends ChangeNotifier {
       isValid = false;
     }
 
-    // Validate password
     if (password.isEmpty) {
       _passwordError = 'Password is required';
       isValid = false;
@@ -130,7 +129,6 @@ class AuthController extends ChangeNotifier {
   }
 
   Future<bool> login(String email, String password) async {
-    // Validate inputs first
     if (!_validateLogin(email, password)) {
       return false;
     }
@@ -140,38 +138,31 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Call the login API
       final response = await authRepository.loginUser(
         email: email,
         password: password,
       );
 
-      // ADD THESE DEBUG PRINTS
+      // DEBUG PRINTS
       print('📊 Raw Response Status: ${response.status}');
-      print('📊 Status Type: ${response.status.runtimeType}');
-      print('📊 Status == 200: ${response.status == 200}');
-      print('📊 Status == 1: ${response.status == 1}');
       print('📊 Token: ${response.token}');
-      print('📊 Data: ${response.data}');
       print('📊 Message: ${response.message}');
+      print('📊 User Data: ${response.data?.toJson()}');
 
-      // Check if response and status are valid
       if (response.status == 0) {
         print('✅ Status check passed');
 
-        // Check if token exists
         if (response.token?.isEmpty ?? true) {
-          print('🔴 Token is empty');
+          print('❌ Token is empty');
           _errorMessage = 'Authentication token not received';
           _isLoading = false;
           notifyListeners();
           return false;
         }
-        print('✅ Token exists: ${response.token}');
+        print('✅ Token exists');
 
-        // Check if user data exists
         if (response.data == null) {
-          print('🔴 User data is null');
+          print('❌ User data is null');
           _errorMessage = response.message ?? 'User data not received';
           _isLoading = false;
           notifyListeners();
@@ -179,49 +170,32 @@ class AuthController extends ChangeNotifier {
         }
         print('✅ User data exists');
 
-        // Save token to local storage
+        // Store the model directly
+        _user = response.data;
+
+        // FIXED: Remove .key - pass enum directly
         await AppLocalData.setString(LocalDataKey.accessToken, response.token!);
-        print('✅ Token saved to local storage');
+        print('✅ Token saved');
 
-        // Prepare user data from LoginResponseModelData
-        _user = {
-          'id': response.data?.id,
-          'email': response.data?.email,
-          'name': response.data?.name,
-          'firstName': response.data?.firstName,
-          'lastName': response.data?.lastName,
-          'phone': response.data?.phone,
-          'role': response.data?.role,
-          'country': response.data?.country,
-          'address': response.data?.address,
-          'walletBalance': response.data?.walletBalance,
-          'investmentAmount': response.data?.investmentAmount,
-          'referralCode': response.data?.referralCode,
-          'referredBy': response.data?.referredBy,
-          'isVerified': response.data?.isVerified,
-          'emailVerifiedAt': response.data?.emailVerifiedAt,
-          'idProof': response.data?.idProof,
-          'lastLogin': response.data?.lastLogin,
-          'createdAt': response.data?.createdAt,
-          'updatedAt': response.data?.updatedAt,
-          'profileImage': null,
-        };
-
-        // Save to local storage
+        // FIXED: Remove .key - pass enum directly
         await AppLocalData.setBool(LocalDataKey.isLoggedIn, true);
-        await AppLocalData.setMap(LocalDataKey.userData, _user ?? {});
-        print('✅ User data saved to local storage');
+        print('✅ Login status saved');
+
+        // FIXED: Remove .key - pass enum directly
+        await AppLocalData.setMap(LocalDataKey.userData, response.data?.toJson() ?? {});
+      //  print('✅ User data saved: ${_user?.name} (${_user?.email})');
+
+        // Verify saved data
+        final savedUserData = AppLocalData.getMap(LocalDataKey.userData);
+        print('🔍 Verified saved user data: $savedUserData');
 
         _isLoggedIn = true;
         _isLoading = false;
-        print('✅ Login successful, isLoggedIn: $_isLoggedIn');
         notifyListeners();
         return true;
 
-      }
-      else {
-        print('🔴 Status check failed');
-        // Handle error response
+      } else {
+        print('❌ Status check failed: ${response.status}');
         _errorMessage = response.message ?? 'Login failed. Please check your credentials.';
         _isLoading = false;
         notifyListeners();
@@ -229,13 +203,14 @@ class AuthController extends ChangeNotifier {
       }
 
     } on ApiException catch (e) {
-      print('🔴 ApiException: ${e.message}');
+      print('❌ ApiException: ${e.message}');
       _errorMessage = e.message;
       _isLoading = false;
       notifyListeners();
       return false;
     } catch (e) {
-      print('🔴 Exception: $e');
+      print('❌ Exception: $e');
+      print('❌ Stack trace: ${StackTrace.current}');
       _errorMessage = 'An unexpected error occurred. Please try again.';
       _isLoading = false;
       notifyListeners();
@@ -248,19 +223,16 @@ class AuthController extends ChangeNotifier {
     clearRegisterErrors();
     bool isValid = true;
 
-    // Validate first name
     if (firstName.isEmpty) {
       _firstNameError = 'First name is required';
       isValid = false;
     }
 
-    // Validate last name
     if (lastName.isEmpty) {
       _lastNameError = 'Last name is required';
       isValid = false;
     }
 
-    // Validate email
     if (email.isEmpty) {
       _emailError = 'Email is required';
       isValid = false;
@@ -269,7 +241,6 @@ class AuthController extends ChangeNotifier {
       isValid = false;
     }
 
-    // Validate password
     if (password.isEmpty) {
       _passwordError = 'Password is required';
       isValid = false;
@@ -278,7 +249,6 @@ class AuthController extends ChangeNotifier {
       isValid = false;
     }
 
-    // Validate confirm password
     if (confirmPassword != password) {
       _confirmPasswordError = 'Passwords do not match';
       isValid = false;
@@ -292,7 +262,6 @@ class AuthController extends ChangeNotifier {
   }
 
   Future<bool> register(String firstName, String lastName, String email, String password, String confirmPassword, String? referralCode) async {
-    // Validate inputs first
     if (!_validateRegister(firstName, lastName, email, password, confirmPassword)) {
       return false;
     }
@@ -302,7 +271,6 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Create user register model
       final userRegisterModel = UserRegisterModel(
         firstName: firstName,
         lastName: lastName,
@@ -311,39 +279,30 @@ class AuthController extends ChangeNotifier {
         referralCode: referralCode,
       );
 
-      // Call the registration API
       final response = await authRepository.singUpUser(
         userRegisterModel: userRegisterModel,
       );
 
-      // ADD DEBUG PRINTS
-      print('📊 Registration Response Status: ${response.status}');
-      print('📊 Registration Response Message: ${response.message}');
-      print('📊 User ID: ${response.data?.userId}');
-      print('📊 Referral Code: ${response.data?.referralCode}');
-      print('📊 Referred By: ${response.data?.referredBy}');
+      print('📊 Registration Status: ${response.status}');
+      print('📊 Registration Message: ${response.message}');
 
-      // Check if registration was successful
-      // Assuming status 1 or 200 means success (adjust based on your API)
       if (response.status == 0) {
         if (response.data?.userId != null) {
-          print('✅ Registration successful, user ID: ${response.data?.userId}');
-
-          // Switch to login screen after successful registration
+          print('✅ Registration successful');
           _showLoginScreen = true;
-          _errorMessage = null; // Clear error since registration succeeded
+          _errorMessage = null;
           _isLoading = false;
           notifyListeners();
           return true;
         } else {
-          print('🔴 Registration response missing user data');
+          print('❌ Registration response missing user data');
           _errorMessage = response.message ?? 'Registration failed. Please try again.';
           _isLoading = false;
           notifyListeners();
           return false;
         }
       } else {
-        print('🔴 Registration failed with status: ${response.status}');
+        print('❌ Registration failed: ${response.status}');
         _errorMessage = response.message ?? 'Registration failed. Please try again.';
         _isLoading = false;
         notifyListeners();
@@ -351,14 +310,14 @@ class AuthController extends ChangeNotifier {
       }
 
     } on ApiException catch (e) {
-      print('🔴 ApiException during registration: ${e.message}');
+      print('❌ ApiException: ${e.message}');
       _errorMessage = e.message;
       _isLoading = false;
       notifyListeners();
       return false;
     } catch (e) {
-      print('🔴 Exception during registration: $e');
-      _errorMessage = 'An unexpected error occurred during registration. Please try again.';
+      print('❌ Exception: $e');
+      _errorMessage = 'An unexpected error occurred. Please try again.';
       _isLoading = false;
       notifyListeners();
       return false;
@@ -367,7 +326,7 @@ class AuthController extends ChangeNotifier {
 
   Future<void> logout() async {
     try {
-      // Clear local storage
+      // FIXED: Remove .key - pass enum directly
       await AppLocalData.remove(LocalDataKey.isLoggedIn);
       await AppLocalData.remove(LocalDataKey.userData);
       await AppLocalData.remove(LocalDataKey.accessToken);
@@ -379,12 +338,39 @@ class AuthController extends ChangeNotifier {
       clearLoginErrors();
       clearRegisterErrors();
       notifyListeners();
+      print('✅ Logout successful');
     } catch (e) {
-      print('Logout error: $e');
+      print('❌ Logout error: $e');
     }
   }
 
-  // Clear error message
+  Future<void> loadUserFromStorage() async {
+    try {
+      print('🔍 Loading user data from storage...');
+
+      // FIXED: Remove .key - pass enum directly
+      final isLoggedIn = AppLocalData.getBool(LocalDataKey.isLoggedIn);
+      final userData = AppLocalData.getMap(LocalDataKey.userData);
+      final token = AppLocalData.getString(LocalDataKey.accessToken);
+
+      print('🔍 isLoggedIn: $isLoggedIn');
+      print('🔍 userData: $userData');
+      print('🔍 token: $token');
+
+      if (isLoggedIn == true && userData != null) {
+        _user = UserData.fromJson(userData);
+        _isLoggedIn = true;
+       // print('✅ User loaded: ${_user?.name} (${_user?.email})');
+        notifyListeners();
+      } else {
+        print('⚠️ No user data found in storage');
+      }
+    } catch (e) {
+      print('❌ Error loading user from storage: $e');
+      print('❌ Stack trace: ${StackTrace.current}');
+    }
+  }
+
   void clearError() {
     _errorMessage = null;
     notifyListeners();

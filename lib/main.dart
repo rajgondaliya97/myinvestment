@@ -15,7 +15,6 @@ void main() async {
 
   // Initialize SharedPreferences
   await AppLocalData.init();
-
   // Initialize Dependencies (API services, repositories, etc.)
   await DependencyLocator().init();
 
