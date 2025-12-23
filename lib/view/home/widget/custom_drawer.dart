@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
-
 import '../../../res/app_widget/custom_app_button.dart';
 import '../../../res/app_widget/custom_app_text.dart';
 import '../../../view_model/auth_provider.dart';
 import '../../auth/screen/auth_wrapper.dart';
 import '../../crypto/screen/crypto_plan_history_screen.dart';
+import '../../deposit/screen/deposit_screen.dart';
 import '../../profile/screen/profile_screen.dart';
 import '../../usdt/screen/usdt_plan_history_screen.dart';
 import '../screen/home_screen.dart';
@@ -179,6 +179,20 @@ class CustomDrawer extends StatelessWidget {
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(builder: (_) => ProfileScreen()),
+                        );
+                      }
+                    },
+                  ),
+                  DrawerMenuItem(
+                    icon: Icons.account_balance_wallet_outlined,
+                    title: 'Deposit',
+                    isSelected: currentRoute == 'deposit',
+                    onTap: () {
+                      Navigator.pop(context);
+                      if (currentRoute != 'deposit') {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => DepositScreen()),
                         );
                       }
                     },
