@@ -1,5 +1,7 @@
 import '../api_services/api_service.dart';
 import '../model/auth_model/login_response_model.dart';
+import '../model/auth_model/sing_up_response_model.dart';
+import '../model/auth_model/user_register_model.dart';
 import '../utils/app_urls.dart';
 
 class AuthRepository {
@@ -9,14 +11,27 @@ class AuthRepository {
   Future<LoginResponseModel> loginUser({
     required String email,
     required String password,
-  }) async
-  {
+  }) async {
     try {
       final response = await apiService.post(
         AppUrl.loginUrl,
         body: {'email': email, 'password': password},
       );
       return LoginResponseModel.fromJson(response);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<SingUpResponseModel> singUpUser({
+    required UserRegisterModel userRegisterModel,
+  }) async {
+    try {
+      final response = await apiService.post(
+        AppUrl.registerUrl,
+        body: userRegisterModel.toJson(),
+      );
+      return SingUpResponseModel.fromJson(response);
     } catch (e) {
       rethrow;
     }

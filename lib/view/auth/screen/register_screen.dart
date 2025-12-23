@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
 import '../../../res/app_widget/custom_app_button.dart';
+import '../../../res/app_widget/custom_app_flush_bar.dart';
 import '../../../res/app_widget/custom_app_text.dart';
 import '../../../res/app_widget/custom_text_field.dart';
 import '../../../view_model/auth_provider.dart';
@@ -31,17 +32,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
   }
 
-  void _handleRegister() {
+  void _handleRegister() async {
     final authController = Provider.of<AuthController>(context, listen: false);
 
-    authController.register(
-      _firstNameController.text,
-      _lastNameController.text,
-      _emailController.text,
+    final success = await authController.register(
+      _firstNameController.text.trim(),
+      _lastNameController.text.trim(),
+      _emailController.text.trim(),
       _passwordController.text,
       _confirmPasswordController.text,
-      _referralCodeController.text.isNotEmpty ? _referralCodeController.text : null,
+      _referralCodeController.text.isNotEmpty ? _referralCodeController.text.trim() : null,
     );
+
+    // Show appropriate flushbar
+    if (mounted) {
+      if (success) {
+        FlushbarHelper.showSuccess(
+          context: context,
+          message: 'Account created successfully! Please log in to continue.',
+          title: 'Registration Successful',
+        );
+        // The controller has already switched to login screen
+      } else {
+        FlushbarHelper.showError(
+          context: context,
+          message: authController.errorMessage ?? 'Registration failed',
+          title: 'Registration Failed',
+        );
+      }
+    }
   }
 
   @override

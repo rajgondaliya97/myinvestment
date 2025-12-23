@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import '../api_services/api_exception.dart';
+import '../model/auth_model/user_register_model.dart';
 import '../repo/auth_repo.dart';
 import '../res/database/local_data_key.dart';
 import '../res/database/local_database.dart';
@@ -290,10 +291,10 @@ class AuthController extends ChangeNotifier {
     return isValid;
   }
 
-  Future<void> register(String firstName, String lastName, String email, String password, String confirmPassword, String? referralCode) async {
+  Future<bool> register(String firstName, String lastName, String email, String password, String confirmPassword, String? referralCode) async {
     // Validate inputs first
     if (!_validateRegister(firstName, lastName, email, password, confirmPassword)) {
-      return;
+      return false;
     }
 
     _isLoading = true;
@@ -301,32 +302,67 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // TODO: Implement register API call when available
-      // For now, using simulation
-      await Future.delayed(Duration(seconds: 2));
+      // Create user register model
+      final userRegisterModel = UserRegisterModel(
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        password: password,
+        referralCode: referralCode,
+      );
 
-      // Create user data
-      _user = {
-        'email': email,
-        'firstName': firstName,
-        'lastName': lastName,
-        'name': '$firstName $lastName',
-        'referredBy': referralCode,
-        'profileImage': null,
-      };
+      // Call the registration API
+      final response = await authRepository.singUpUser(
+        userRegisterModel: userRegisterModel,
+      );
 
-      // Save to local storage
-      await AppLocalData.setBool(LocalDataKey.isLoggedIn, true);
-      await AppLocalData.setMap(LocalDataKey.userData, _user!);
+      // ADD DEBUG PRINTS
+      print('📊 Registration Response Status: ${response.status}');
+      print('📊 Registration Response Message: ${response.message}');
+      print('📊 User ID: ${response.data?.userId}');
+      print('📊 Referral Code: ${response.data?.referralCode}');
+      print('📊 Referred By: ${response.data?.referredBy}');
 
-      _isLoggedIn = true;
+      // Check if registration was successful
+      // Assuming status 1 or 200 means success (adjust based on your API)
+      if (response.status == 0) {
+        if (response.data?.userId != null) {
+          print('✅ Registration successful, user ID: ${response.data?.userId}');
+
+          // Switch to login screen after successful registration
+          _showLoginScreen = true;
+          _errorMessage = null; // Clear error since registration succeeded
+          _isLoading = false;
+          notifyListeners();
+          return true;
+        } else {
+          print('🔴 Registration response missing user data');
+          _errorMessage = response.message ?? 'Registration failed. Please try again.';
+          _isLoading = false;
+          notifyListeners();
+          return false;
+        }
+      } else {
+        print('🔴 Registration failed with status: ${response.status}');
+        _errorMessage = response.message ?? 'Registration failed. Please try again.';
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+
+    } on ApiException catch (e) {
+      print('🔴 ApiException during registration: ${e.message}');
+      _errorMessage = e.message;
+      _isLoading = false;
+      notifyListeners();
+      return false;
     } catch (e) {
-      print('Registration error: $e');
-      _errorMessage = 'Registration failed. Please try again.';
+      print('🔴 Exception during registration: $e');
+      _errorMessage = 'An unexpected error occurred during registration. Please try again.';
+      _isLoading = false;
+      notifyListeners();
+      return false;
     }
-
-    _isLoading = false;
-    notifyListeners();
   }
 
   Future<void> logout() async {
@@ -345,19 +381,6 @@ class AuthController extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       print('Logout error: $e');
-    }
-  }
-
-  // Update user profile
-  Future<void> updateUserProfile(Map<String, dynamic> updatedData) async {
-    try {
-      if (_user != null) {
-        _user = {..._user!, ...updatedData};
-        await AppLocalData.setMap(LocalDataKey.userData, _user!);
-        notifyListeners();
-      }
-    } catch (e) {
-      print('Update profile error: $e');
     }
   }
 
