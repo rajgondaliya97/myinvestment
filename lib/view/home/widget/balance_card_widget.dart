@@ -195,12 +195,6 @@ class _BalanceCardState extends State<BalanceCard> with SingleTickerProviderStat
                     Icons.diamond,
                     Color(0xFF627EEA),
                   ),
-                  SizedBox(height: 12.h),
-
-                  _buildPointsItem(
-                    'POINTS',
-                    widget.pointsBalance,
-                  ),
                   SizedBox(height: 16.h),
 
                   // Action Buttons
