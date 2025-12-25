@@ -1,4 +1,5 @@
 import '../api_services/api_service.dart';
+import '../model/plan_model/get_plan_by_id_model.dart';
 import '../model/plan_model/get_plan_model.dart';
 import '../utils/app_urls.dart';
 
@@ -17,10 +18,10 @@ class PlanRepository {
   }
 
   /// Fetch a single plan by ID
-  Future<GetPlanModel> getPlanById({required int planId}) async {
+  Future<GetPlanByIdModel> getPlanById({required int planId}) async {
     try {
       final response = await apiService.get("${AppUrl.getPlansByIdUrl}$planId");
-      return GetPlanModel.fromJson(response);
+      return GetPlanByIdModel.fromJson(response);
     } catch (e) {
       rethrow;
     }

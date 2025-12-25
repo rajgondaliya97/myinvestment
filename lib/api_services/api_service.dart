@@ -1,9 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-
 import '../res/database/local_data_key.dart';
+import '../res/database/local_database.dart';
 import 'api_enes.dart';
 import 'api_exception.dart';
 
@@ -14,112 +13,90 @@ class ApiService {
 
   final String baseUrl = ApiEnv.baseUrl;
   String? _bearerToken;
+  bool _tokenLoaded = false;
 
   // Initialize and load token from storage
   Future<void> init() async {
     await _loadToken();
   }
 
-  // Load token from SharedPreferences
+  /// Load token from AppLocalData (your local storage)
   Future<void> _loadToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    final tokenKey = LocalDataKey.accessToken.name;
-    _bearerToken = prefs.getString(tokenKey);
+    if (_tokenLoaded) return; // Prevent multiple loads
 
-    debugPrint('🔑 Token Key: $tokenKey');
-    debugPrint('🔑 _bearerToken: ${_bearerToken != null ? "✅ Token exists (${_bearerToken!.substring(0, 20)}...)" : "❌ No token found"}');
+    try {
+      // Get token from your local storage using AppLocalData
+      final token = await AppLocalData.getString(LocalDataKey.accessToken);
 
-    if (_bearerToken != null) {
-      debugPrint('✅ Token loaded from storage');
-    } else {
-      debugPrint('⚠️ No token found in storage');
+      if (token != null && token.isNotEmpty) {
+        _bearerToken = token;
+        debugPrint('✅ Token loaded from local storage: ${token.substring(0, 20)}...');
+      } else {
+        _bearerToken = null;
+        debugPrint('⚠️ No token found in local storage');
+      }
+
+      _tokenLoaded = true;
+    } catch (e) {
+      debugPrint('❌ Error loading token: $e');
+      _bearerToken = null;
+      _tokenLoaded = true;
     }
   }
 
-  // Save token to SharedPreferences - Made public for manual token saving
+  /// Save token to local storage (when user logs in)
   Future<void> saveToken(String token) async {
-    _bearerToken = token;
-    final prefs = await SharedPreferences.getInstance();
-    final tokenKey = LocalDataKey.accessToken.name;
-    await prefs.setString(tokenKey, token);
-    debugPrint('✅ Token saved to storage: ${token.substring(0, 20)}...');
+    try {
+      _bearerToken = token;
+      await AppLocalData.setString(LocalDataKey.accessToken, token);
+      debugPrint('✅ Token saved to local storage: ${token.substring(0, 20)}...');
+    } catch (e) {
+      debugPrint('❌ Error saving token: $e');
+    }
   }
 
-  // Clear token (for logout)
+  /// Clear token (for logout)
   Future<void> clearToken() async {
-    _bearerToken = null;
-    final prefs = await SharedPreferences.getInstance();
-    final tokenKey = LocalDataKey.accessToken.name;
-    await prefs.remove(tokenKey);
-    debugPrint('🗑️ Token cleared');
+    try {
+      _bearerToken = null;
+      await AppLocalData.remove(LocalDataKey.accessToken);
+      _tokenLoaded = false;
+      debugPrint('🗑️ Token cleared');
+    } catch (e) {
+      debugPrint('❌ Error clearing token: $e');
+    }
   }
 
-  bool get isAuthenticated => _bearerToken != null;
+  /// Check if user is authenticated
+  bool get isAuthenticated => _bearerToken != null && _bearerToken!.isNotEmpty;
 
-  // Get current token (for debugging)
+  /// Get current token (for debugging)
   String? get currentToken => _bearerToken;
 
-  Future<Map<String, String>> _getHeadersAsync(Map<String, String>? customHeaders) async {
-    Map<String, String> headers = {
-      'Content-Type': 'application/json',
-    };
-
-    // If token is not in memory, try to load from SharedPreferences
-    if (_bearerToken == null) {
-      await _loadToken();
-    }
-
-    // Add Authorization first if token exists
-    if (_bearerToken != null && _bearerToken!.isNotEmpty) {
-      headers['Authorization'] = 'Bearer $_bearerToken';
-    } else {
-      debugPrint('⚠️ WARNING: No bearer token available for request');
-    }
-
-    // Then add custom headers (they can override if needed)
-    if (customHeaders != null) {
-      headers.addAll(customHeaders);
-    }
-
-    return headers;
-  }
-
-  // Synchronous version for backward compatibility
+  /// Get headers with authorization token
   Map<String, String> _getHeaders(Map<String, String>? customHeaders) {
     Map<String, String> headers = {
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
     };
 
-    // Add Authorization first if token exists
+    // Add Authorization header if token exists
     if (_bearerToken != null && _bearerToken!.isNotEmpty) {
       headers['Authorization'] = 'Bearer $_bearerToken';
+      debugPrint('🔐 Authorization header added');
     } else {
       debugPrint('⚠️ WARNING: No bearer token available for request');
     }
 
-    // Then add custom headers (they can override if needed)
-    if (customHeaders != null) {
+    // Add custom headers (they can override defaults if needed)
+    if (customHeaders != null && customHeaders.isNotEmpty) {
       headers.addAll(customHeaders);
     }
 
     return headers;
   }
 
-  // Add method to manually set token
-  void setToken(String token) {
-    _bearerToken = token;
-    debugPrint('✅ Token manually set: ${token.substring(0, 20)}...');
-  }
-
-  // Add method to get token from storage synchronously
-  Future<String?> getStoredToken() async {
-    if (_bearerToken == null) {
-      await _loadToken();
-    }
-    return _bearerToken;
-  }
-
-  // 🟩 Helper to print nice bordered API logs
+  /// Pretty print API logs with borders
   void _printApiLog({
     required String method,
     required String url,
@@ -128,71 +105,86 @@ class ApiService {
     http.Response? response,
   }) {
     const borderTop =
-        '╔═══════════════════════════════════════════════════════════════╗';
+        '┌──────────────────────────────────────────────────────────────────────┐';
     const borderMid =
-        '╠───────────────────────────────────────────────────────────────╣';
+        '├──────────────────────────────────────────────────────────────────────┤';
     const borderBottom =
-        '╚═══════════════════════════════════════════════════════════════╝';
+        '└──────────────────────────────────────────────────────────────────────┘';
 
     debugPrint('\n$borderTop');
-    debugPrint('║ 🔹 API REQUEST');
+    debugPrint('│ 🔹 API REQUEST');
     debugPrint(borderMid);
-    debugPrint('║ METHOD : $method');
-    debugPrint('║ URL    : $url');
+    debugPrint('│ METHOD : $method');
+    debugPrint('│ URL    : $url');
+
     if (headers != null && headers.isNotEmpty) {
-      // Mask the Authorization token for security
       final maskedHeaders = Map<String, String>.from(headers);
+      // Mask the Authorization token for security
       if (maskedHeaders.containsKey('Authorization')) {
         final token = maskedHeaders['Authorization']!;
         maskedHeaders['Authorization'] = token.length > 20
             ? '${token.substring(0, 20)}...[MASKED]'
             : '[MASKED]';
       }
-      debugPrint('║ HEADERS: ${jsonEncode(maskedHeaders)}');
+      debugPrint('│ HEADERS: ${jsonEncode(maskedHeaders)}');
     }
+
     if (requestBody != null) {
       final bodyStr = jsonEncode(requestBody);
       if (bodyStr.length > 500) {
-        debugPrint('║ BODY   : ${bodyStr.substring(0, 500)}...[TRUNCATED]');
+        debugPrint('│ BODY   : ${bodyStr.substring(0, 500)}...[TRUNCATED]');
       } else {
-        debugPrint('║ BODY   : $bodyStr');
+        debugPrint('│ BODY   : $bodyStr');
       }
     }
 
     if (response != null) {
       debugPrint(borderMid);
-      debugPrint('║ 🔸 API RESPONSE');
+      debugPrint('│ 🔸 API RESPONSE');
       debugPrint(borderMid);
-      debugPrint('║ STATUS : ${response.statusCode}');
+      debugPrint('│ STATUS : ${response.statusCode}');
       try {
-        final formatted = const JsonEncoder.withIndent(
-          '  ',
-        ).convert(json.decode(response.body));
+        final formatted = const JsonEncoder.withIndent('  ').convert(
+          json.decode(response.body),
+        );
         for (var line in formatted.split('\n')) {
-          debugPrint('║ $line');
+          debugPrint('│ $line');
         }
       } catch (_) {
-        debugPrint('║ ${response.body}');
+        final body = response.body;
+        if (body.length > 500) {
+          debugPrint('│ ${body.substring(0, 500)}...[TRUNCATED]');
+        } else {
+          debugPrint('│ $body');
+        }
       }
     }
 
     debugPrint(borderBottom);
   }
 
-  Future<dynamic> get(String endpoint, {Map<String, String>? headers}) async {
+  /// GET request
+  Future<dynamic> get(
+      String endpoint, {
+        Map<String, String>? headers,
+      }) async {
     await _loadToken();
     final url = '$baseUrl$endpoint';
+    final requestHeaders = _getHeaders(headers);
+
     try {
       final response = await http.get(
         Uri.parse(url),
-        headers: _getHeaders(headers),
+        headers: requestHeaders,
       );
+
       _printApiLog(
         method: 'GET',
         url: url,
-        headers: _getHeaders(headers),
+        headers: requestHeaders,
         response: response,
       );
+
       return _handleResponse(response);
     } catch (e) {
       if (e is ApiException) {
@@ -202,6 +194,7 @@ class ApiService {
     }
   }
 
+  /// POST request
   Future<dynamic> post(
       String endpoint, {
         Map<String, dynamic>? body,
@@ -209,12 +202,11 @@ class ApiService {
       }) async {
     await _loadToken();
     final url = '$baseUrl$endpoint';
-
-    // Use _getHeaders to ensure Authorization token is included
     final requestHeaders = _getHeaders(headers);
 
     try {
-      debugPrint("📤 POST Body: ${json.encode(body)}");
+      debugPrint('📤 POST Body: ${json.encode(body)}');
+
       final response = await http.post(
         Uri.parse(url),
         headers: requestHeaders,
@@ -238,25 +230,31 @@ class ApiService {
     }
   }
 
+  /// PUT request
   Future<dynamic> put(
       String endpoint, {
         dynamic body,
         Map<String, String>? headers,
       }) async {
+    await _loadToken();
     final url = '$baseUrl$endpoint';
+    final requestHeaders = _getHeaders(headers);
+
     try {
       final response = await http.put(
         Uri.parse(url),
-        headers: _getHeaders(headers),
+        headers: requestHeaders,
         body: json.encode(body),
       );
+
       _printApiLog(
         method: 'PUT',
         url: url,
-        headers: _getHeaders(headers),
+        headers: requestHeaders,
         requestBody: body,
         response: response,
       );
+
       return _handleResponse(response);
     } catch (e) {
       if (e is ApiException) {
@@ -266,22 +264,28 @@ class ApiService {
     }
   }
 
+  /// DELETE request
   Future<dynamic> delete(
       String endpoint, {
         Map<String, String>? headers,
       }) async {
+    await _loadToken();
     final url = '$baseUrl$endpoint';
+    final requestHeaders = _getHeaders(headers);
+
     try {
       final response = await http.delete(
         Uri.parse(url),
-        headers: _getHeaders(headers),
+        headers: requestHeaders,
       );
+
       _printApiLog(
         method: 'DELETE',
         url: url,
-        headers: _getHeaders(headers),
+        headers: requestHeaders,
         response: response,
       );
+
       return _handleResponse(response);
     } catch (e) {
       if (e is ApiException) {
@@ -291,6 +295,7 @@ class ApiService {
     }
   }
 
+  /// Handle API response
   dynamic _handleResponse(http.Response response) {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       try {
@@ -298,6 +303,13 @@ class ApiService {
       } catch (e) {
         throw ApiException('Invalid JSON response');
       }
+    } else if (response.statusCode == 401) {
+      // Unauthorized - token expired or invalid
+      clearToken();
+      throw ApiException(
+        'Unauthorized - Please login again',
+        statusCode: response.statusCode,
+      );
     } else {
       // Extract error message from response body if available
       String errorMessage = 'Error ${response.statusCode}';

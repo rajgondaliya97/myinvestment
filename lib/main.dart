@@ -4,6 +4,7 @@ import 'package:myinvestment/res/database/local_database.dart';
 import 'package:myinvestment/res/dependency_locator.dart';
 import 'package:myinvestment/view_model/deposit_provider.dart';
 import 'package:myinvestment/view_model/investment_controller.dart';
+import 'package:myinvestment/view_model/pan_provider.dart';
 import 'package:provider/provider.dart';
 import 'view/auth/screen/auth_wrapper.dart';
 import 'view_model/auth_provider.dart';
@@ -30,6 +31,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => HomeProvider()),
         ChangeNotifierProvider(create: (_) => InvestmentProvider()),
         ChangeNotifierProvider(create: (_) => DepositProvider()),
+        ChangeNotifierProvider(create: (_) => PlanProvider(planRepository: DependencyLocator().planRepository)),
       ],
       child: ScreenUtilInit(
         designSize: Size(375, 812),

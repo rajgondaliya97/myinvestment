@@ -174,7 +174,7 @@ class AuthController extends ChangeNotifier {
         _user = response.data;
 
         // FIXED: Remove .key - pass enum directly
-        await AppLocalData.setString(LocalDataKey.accessToken, response.token!);
+        await AppLocalData.setString(LocalDataKey.accessToken, response.token.toString());
         print('✅ Token saved');
 
         // FIXED: Remove .key - pass enum directly
