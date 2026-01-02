@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:myinvestment/res/database/local_database.dart';
 import 'package:myinvestment/res/dependency_locator.dart';
+import 'package:myinvestment/utils/app_color.dart';
 import 'package:myinvestment/view_model/deposit_provider.dart';
 import 'package:myinvestment/view_model/investment_controller.dart';
 import 'package:myinvestment/view_model/pan_provider.dart';
@@ -28,9 +29,9 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthController(authRepository: DependencyLocator().authRepository)),
-        ChangeNotifierProvider(create: (_) => HomeProvider()),
+        ChangeNotifierProvider(create: (_) => HomeProvider(homeRepository: DependencyLocator().homeRepository)),
         ChangeNotifierProvider(create: (_) => InvestmentProvider()),
-        ChangeNotifierProvider(create: (_) => DepositProvider()),
+        ChangeNotifierProvider(create: (_) => DepositProvider(planRepository: DependencyLocator().planRepository)),
         ChangeNotifierProvider(create: (_) => PlanProvider(planRepository: DependencyLocator().planRepository)),
       ],
       child: ScreenUtilInit(
@@ -42,7 +43,7 @@ class MyApp extends StatelessWidget {
             title: 'Investment App',
             debugShowCheckedModeBanner: false,
             theme: ThemeData(
-              primaryColor: Color(0xFF00FF00),
+              primaryColor: AppColor.primaryColor,
               scaffoldBackgroundColor: Colors.black,
               brightness: Brightness.dark,
               fontFamily: 'Inter',

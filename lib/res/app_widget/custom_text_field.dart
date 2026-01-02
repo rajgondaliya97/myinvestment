@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../utils/app_color.dart';
 import 'custom_app_text.dart';
+
 class CustomTextField extends StatefulWidget {
   final String hint;
   final IconData icon;
@@ -33,10 +35,19 @@ class _CustomTextFieldState extends State<CustomTextField> {
       children: [
         Container(
           decoration: BoxDecoration(
-            color: Color(0xFF1A1A1A),
+            gradient: LinearGradient(
+              colors: [
+                AppColor.secondaryPrimaryColor.withOpacity(0.8),
+                AppColor.lighterBlue.withOpacity(0.5),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
             borderRadius: BorderRadius.circular(16.r),
             border: Border.all(
-              color: widget.errorText != null ? Colors.red : Color(0xFF2A2A2A),
+              color: widget.errorText != null
+                  ? Colors.red
+                  : AppColor.primaryColor.withOpacity(0.3),
               width: 2.w,
             ),
           ),
@@ -47,20 +58,26 @@ class _CustomTextFieldState extends State<CustomTextField> {
             style: TextStyle(color: Colors.white, fontSize: 16.sp),
             decoration: InputDecoration(
               hintText: widget.hint,
-              hintStyle: TextStyle(color: Colors.grey[600], fontSize: 16.sp),
-              prefixIcon: Icon(widget.icon, color: Colors.grey[600], size: 20.sp),
+              hintStyle:
+              TextStyle(color: Colors.grey[500], fontSize: 16.sp),
+              prefixIcon: Icon(widget.icon,
+                  color: AppColor.primaryColor.withOpacity(0.7), size: 20.sp),
               suffixIcon: widget.isPassword
                   ? IconButton(
                 icon: Icon(
-                  _obscureText ? Icons.visibility_off : Icons.visibility,
-                  color: Colors.grey[600],
+                  _obscureText
+                      ? Icons.visibility_off
+                      : Icons.visibility,
+                  color: AppColor.primaryColor.withOpacity(0.7),
                   size: 20.sp,
                 ),
-                onPressed: () => setState(() => _obscureText = !_obscureText),
+                onPressed: () =>
+                    setState(() => _obscureText = !_obscureText),
               )
                   : null,
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 18.h),
+              contentPadding:
+              EdgeInsets.symmetric(horizontal: 20.w, vertical: 18.h),
             ),
           ),
         ),

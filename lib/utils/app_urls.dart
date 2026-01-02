@@ -7,5 +7,6 @@ class AppUrl
   static const String getPlansUrl = "api/get_plans";
   static const String getPlansByIdUrl = "api/plans/";
   static const String planSubscribeUrl = "api/plan_subscribe";
+  static const String dashBordUrl = "api/user_dashboard";
 
 }

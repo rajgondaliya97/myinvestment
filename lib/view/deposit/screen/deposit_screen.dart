@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import '../../../res/app_widget/custom_app_bar.dart';
 import '../../../res/app_widget/custom_app_button.dart';
+import '../../../res/app_widget/custom_app_flush_bar.dart';
 import '../../../view_model/deposit_provider.dart';
 import '../../../view_model/home_provider.dart';
 import '../../../view_model/pan_provider.dart';
@@ -31,260 +32,236 @@ class _DepositScreenState extends State<DepositScreen> {
   GetPlanModelData? _selectedPlanData;
 
   @override
+  void initState() {
+    super.initState();
+    _setupSubscriptionListener();
+  }
+
+  @override
   void dispose() {
     _amountController.dispose();
     super.dispose();
   }
 
-  /// Calculate profit values based on ROI
-  Map<String, double> _calculateProfitValues(
-      double amount,
-      String? roiString,
-      int durationDays,
-      ) {
-    if (roiString == null || roiString.isEmpty) {
-      return {
-        'minProfit': 0.0,
-        'maxProfit': 0.0,
-        'avgProfit': 0.0,
-      };
-    }
+  /// Setup listener for subscription state changes
+  void _setupSubscriptionListener() {
+    Future.delayed(Duration.zero, () {
+      final depositProvider =
+      Provider.of<DepositProvider>(context, listen: false);
 
-    try {
-      // Parse ROI range (e.g., "1-1.5" to min=1, max=1.5)
-      final roiParts = roiString.split('-');
-      final minRoi = double.tryParse(roiParts[0]) ?? 0.0;
-      final maxRoi = double.tryParse(roiParts.last) ?? 0.0;
-      final avgRoi = (minRoi + maxRoi) / 2;
+      if (depositProvider.hasSubscriptionSuccess) {
+        // Show success flushbar
+        FlushbarHelper.showSuccess(
+          context: context,
+          title: 'Subscription Successful! 🎉',
+          message: depositProvider.subscriptionSuccess ?? 'Plan subscribed',
+          duration: Duration(seconds: 4),
+        );
 
-      // Calculate daily profit
-      final minDailyProfit = (amount * minRoi) / 100;
-      final maxDailyProfit = (amount * maxRoi) / 100;
-      final avgDailyProfit = (amount * avgRoi) / 100;
+        // Show success dialog after flushbar
+        Future.delayed(Duration(seconds: 1), () {
+          if (mounted) {
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (dialogContext) => SuccessDialog(
+                onDone: () {
+                  // ✅ Close dialog using dialogContext
+                  Navigator.of(dialogContext).pop();
 
-      print('💰 Profit Calculation:');
-      print('   Amount: $amount');
-      print('   ROI Range: $minRoi% - $maxRoi%');
-      print('   Min Daily: $minDailyProfit');
-      print('   Max Daily: $maxDailyProfit');
-      print('   Avg Daily: $avgDailyProfit');
+                  // ✅ Pop screen using original context after a brief delay
+                  Future.delayed(Duration(milliseconds: 300), () {
+                    if (mounted) {
+                      Navigator.of(context).pop();
+                      depositProvider.clearSubscriptionMessages();
+                    }
+                  });
+                },
+              ),
+            );
+          }
+        });
+      } else if (depositProvider.hasSubscriptionError) {
+        // Show error flushbar
+        FlushbarHelper.showError(
+          context: context,
+          title: 'Subscription Failed',
+          message: depositProvider.subscriptionError ?? 'Something went wrong',
+          duration: Duration(seconds: 4),
+        );
 
-      return {
-        'minProfit': minDailyProfit,
-        'maxProfit': maxDailyProfit,
-        'avgProfit': avgDailyProfit,
-      };
-    } catch (e) {
-      print('❌ Error calculating profit: $e');
-      return {
-        'minProfit': 0.0,
-        'maxProfit': 0.0,
-        'avgProfit': 0.0,
-      };
-    }
-  }
-
-  void _handleCreateDeposit() {
-    final depositProvider = Provider.of<DepositProvider>(context, listen: false);
-    final planProvider = Provider.of<PlanProvider>(context, listen: false);
-
-    // Validate plan is selected
-    if (_selectedPlanData == null || planProvider.selectedPlanDetails == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a plan'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    final amount = double.tryParse(_amountController.text);
-    final minAmount =
-        double.tryParse(planProvider.selectedPlanDetails?.minAmount ?? '0') ??
-            0;
-    final maxAmount =
-        double.tryParse(planProvider.selectedPlanDetails?.maxAmount ?? '0') ??
-            0;
-
-    // Validate amount
-    if (amount == null || amount < minAmount || amount > maxAmount) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Amount must be between $minAmount and $maxAmount'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    // Calculate profit values
-    final profitValues = _calculateProfitValues(
-      amount,
-      planProvider.selectedPlanDetails?.dailyRoi,
-      planProvider.selectedPlanDetails?.durationDays ?? 0,
-    );
-
-    // Convert API plan data to tariff data format
-    final tariffData = {
-      'name': planProvider.selectedPlanDetails?.name,
-      'days': planProvider.selectedPlanDetails?.durationDays ?? 0,
-      'minAmount': minAmount,
-      'maxAmount': maxAmount,
-      'dailyRoi': planProvider.selectedPlanDetails?.dailyRoi,
-      'description': planProvider.selectedPlanDetails?.description,
-      'minProfit': profitValues['minProfit'],
-      'maxProfit': profitValues['maxProfit'],
-      'avgProfit': profitValues['avgProfit'],
-    };
-
-    // Create deposit using DepositProvider
-    depositProvider.createDeposit(
-      currency: _selectedCurrency,
-      amount: amount,
-      tariff: _selectedTariff,
-      tariffData: tariffData,
-    );
-
-    print('✅ Deposit Created:');
-    print('   Currency: $_selectedCurrency');
-    print('   Amount: $amount');
-    print('   Plan: ${planProvider.selectedPlanDetails?.name}');
-    print('   Duration: ${planProvider.selectedPlanDetails?.durationDays} days');
-    print('   ROI: ${planProvider.selectedPlanDetails?.dailyRoi}%');
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => SuccessDialog(
-        onDone: () {
-          Navigator.pop(context);
-          Navigator.pop(context);
-        },
-      ),
-    );
+        // Clear error after showing
+        Future.delayed(Duration(seconds: 4), () {
+          if (mounted) {
+            depositProvider.clearSubscriptionMessages();
+          }
+        });
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final depositProvider = Provider.of<DepositProvider>(context);
-    final homeProvider = Provider.of<HomeProvider>(context);
-    final planProvider = Provider.of<PlanProvider>(context);
+    return Consumer3<DepositProvider, HomeProvider, PlanProvider>(
+      builder: (context, depositProvider, homeProvider, planProvider, child) {
+        // Get profit values from deposit provider
+        final amount = double.tryParse(_amountController.text) ?? 0;
+        final profitValues =
+        depositProvider.calculateProfitDetails(amount: amount);
 
-    // Get profit values from selected plan
-    final profitValues = _selectedPlanData != null
-        ? _calculateProfitValues(
-      double.tryParse(_amountController.text) ?? 0,
-      planProvider.selectedPlanDetails?.dailyRoi,
-      planProvider.selectedPlanDetails?.durationDays ?? 0,
-    )
-        : {'minProfit': 0.0, 'maxProfit': 0.0, 'avgProfit': 0.0};
+        return Scaffold(
+          backgroundColor: const Color(0xFF0A0A0A),
+          appBar: CustomAppBar(title: 'Create Deposit'),
+          drawer: const CustomDrawer(currentRoute: 'home'),
+          body: SingleChildScrollView(
+            padding: EdgeInsets.all(20.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ============ BALANCE CARD ============
+                BalanceCard(
+                  balance: homeProvider.balance,
+                  profitPercentage: homeProvider.profitPercentage,
+                ),
+                SizedBox(height: 20.h),
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0A),
-      appBar: CustomAppBar(title: 'Create Deposit'),
-      drawer: const CustomDrawer(currentRoute: 'home'),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(20.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Balance Card
-            BalanceCard(
-              balance: homeProvider.balance,
-              profitPercentage: homeProvider.profitPercentage,
+                // ============ CHOOSE BALANCE ============
+                ChooseBalanceCard(
+                  selectedCurrency: _selectedCurrency,
+                  onCurrencyChanged: (currency) {
+                    setState(() => _selectedCurrency = currency);
+                  },
+                  usdBalance: depositProvider.usdBalance,
+                  btcBalance: depositProvider.btcBalance,
+                  ethBalance: depositProvider.ethBalance,
+                ),
+                SizedBox(height: 20.h),
+
+                // ============ TARIFF CARD (Auto-selects first plan) ============
+                TariffCardWithAPI(
+                  selectedTariff: _selectedTariff,
+                  onTariffChanged: (tariffId, planData) {
+                    setState(() {
+                      _selectedTariff = tariffId;
+                      _selectedPlanData = planData;
+                      _amountController.clear();
+                      depositProvider.clearSubscriptionMessages();
+                    });
+                  },
+                ),
+                SizedBox(height: 20.h),
+
+                // ============ AMOUNT CARD (Shown if plan selected) ============
+                if (_selectedPlanData != null &&
+                    planProvider.selectedPlanDetails != null)
+                  DepositAmountCard(
+                    controller: _amountController,
+                    tariffData: {
+                      'minAmount':
+                      planProvider.selectedPlanDetails?.minAmount ?? '0',
+                      'maxAmount':
+                      planProvider.selectedPlanDetails?.maxAmount ?? '0',
+                    },
+                  ),
+                if (_selectedPlanData != null &&
+                    planProvider.selectedPlanDetails != null)
+                  SizedBox(height: 20.h),
+
+                // ============ PROFIT PER DAY CARD ============
+                if (_selectedPlanData != null &&
+                    planProvider.selectedPlanDetails != null &&
+                    _amountController.text.isNotEmpty)
+                  ProfitPerDayCard(tariffData: {
+                    'minProfit':
+                    profitValues['minDailyProfit']?.toStringAsFixed(2) ??
+                        '0',
+                    'maxProfit':
+                    profitValues['maxDailyProfit']?.toStringAsFixed(2) ??
+                        '0',
+                    'avgProfit':
+                    profitValues['avgDailyProfit']?.toStringAsFixed(2) ??
+                        '0',
+                  }),
+                if (_selectedPlanData != null &&
+                    planProvider.selectedPlanDetails != null &&
+                    _amountController.text.isNotEmpty)
+                  SizedBox(height: 20.h),
+
+                // ============ PROFIT BY PERIOD CARD ============
+                if (_selectedPlanData != null &&
+                    planProvider.selectedPlanDetails != null &&
+                    _amountController.text.isNotEmpty)
+                  ProfitByPeriodCard(
+                    amountController: _amountController,
+                    tariffData: {
+                      'avgProfit': double.tryParse(
+                          profitValues['avgDailyProfit'].toString()) ??
+                          0.0,
+                      'days':
+                      planProvider.selectedPlanDetails?.durationDays ?? 0,
+                      'avgTotalProfit': profitValues['avgTotalProfit'] ?? 0.0,
+                    },
+                  ),
+                if (_selectedPlanData != null &&
+                    planProvider.selectedPlanDetails != null &&
+                    _amountController.text.isNotEmpty)
+                  SizedBox(height: 20.h),
+
+                // ============ PLAN DETAILS CARD ============
+                if (_selectedPlanData != null &&
+                    planProvider.selectedPlanDetails != null)
+                  PlanDetailsCard(tariffData: {
+                    'days':
+                    planProvider.selectedPlanDetails?.durationDays ?? 0,
+                  }),
+                SizedBox(height: 30.h),
+
+                // ============ SUBSCRIBE BUTTON ============
+                AppButton.primary(
+                  onPressed: depositProvider.isSubscribing
+                      ? null
+                      : () => _handleSubscribeClick(depositProvider, planProvider),
+                  text: depositProvider.isSubscribing
+                      ? 'Subscribing...'
+                      : 'Subscribe Plan',
+                  width: double.infinity,
+                  height: 55,
+                ),
+                SizedBox(height: 20.h),
+              ],
             ),
-            SizedBox(height: 20.h),
-
-            // Choose Balance
-            ChooseBalanceCard(
-              selectedCurrency: _selectedCurrency,
-              onCurrencyChanged: (currency) {
-                setState(() => _selectedCurrency = currency);
-              },
-              usdBalance: depositProvider.usdBalance,
-              btcBalance: depositProvider.btcBalance,
-              ethBalance: depositProvider.ethBalance,
-            ),
-            SizedBox(height: 20.h),
-
-            // Tariff Card with API (auto-selects first plan)
-            TariffCardWithAPI(
-              selectedTariff: _selectedTariff,
-              onTariffChanged: (tariffId, planData) {
-                setState(() {
-                  _selectedTariff = tariffId;
-                  _selectedPlanData = planData;
-                });
-              },
-            ),
-            SizedBox(height: 20.h),
-
-            // Show amount card only if plan is selected
-            if (_selectedPlanData != null &&
-                planProvider.selectedPlanDetails != null)
-              DepositAmountCard(
-                controller: _amountController,
-                tariffData: {
-                  'minAmount':
-                  planProvider.selectedPlanDetails?.minAmount ?? '0',
-                  'maxAmount':
-                  planProvider.selectedPlanDetails?.maxAmount ?? '0',
-                },
-              ),
-            if (_selectedPlanData != null &&
-                planProvider.selectedPlanDetails != null)
-              SizedBox(height: 20.h),
-
-            // Show profit per day card
-            if (_selectedPlanData != null &&
-                planProvider.selectedPlanDetails != null &&
-                _amountController.text.isNotEmpty)
-              ProfitPerDayCard(tariffData: {
-                'minProfit': profitValues['minProfit'],
-                'maxProfit': profitValues['maxProfit'],
-                'avgProfit': profitValues['avgProfit'],
-              }),
-            if (_selectedPlanData != null &&
-                planProvider.selectedPlanDetails != null &&
-                _amountController.text.isNotEmpty)
-              SizedBox(height: 20.h),
-
-            // Show profit by period card
-            if (_selectedPlanData != null &&
-                planProvider.selectedPlanDetails != null &&
-                _amountController.text.isNotEmpty)
-              ProfitByPeriodCard(
-                amountController: _amountController,
-                tariffData: {
-                  'avgProfit': profitValues['avgProfit'],
-                  'days': planProvider.selectedPlanDetails?.durationDays ?? 0,
-                },
-              ),
-            if (_selectedPlanData != null &&
-                planProvider.selectedPlanDetails != null &&
-                _amountController.text.isNotEmpty)
-              SizedBox(height: 20.h),
-
-            // Show plan details card
-            if (_selectedPlanData != null &&
-                planProvider.selectedPlanDetails != null)
-              PlanDetailsCard(tariffData: {
-                'days': planProvider.selectedPlanDetails?.durationDays ?? 0,
-              }),
-            SizedBox(height: 30.h),
-
-            // Create Deposit Button
-            AppButton.primary(
-              onPressed: _handleCreateDeposit,
-              text: 'Create Deposit',
-              width: double.infinity,
-              height: 55,
-            ),
-            SizedBox(height: 20.h),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
+  }
+
+  /// ============ SIMPLE CLICK HANDLER ============
+  /// Only calls provider method - NO LOGIC HERE
+  void _handleSubscribeClick(
+      DepositProvider depositProvider,
+      PlanProvider planProvider,
+      ) {
+    // Show loading flushbar
+    final loadingFlushbar = FlushbarHelper.showLoading(
+      context: context,
+      message:
+      'Subscribing to ${_selectedPlanData?.name ?? "plan"}...',
+      title: 'Processing',
+    );
+
+    // Call provider method with all data
+    depositProvider.subscribePlan(
+      selectedPlanData: _selectedPlanData!,
+      amount: double.tryParse(_amountController.text) ?? 0,
+      dailyRoi: planProvider.selectedPlanDetails?.dailyRoi,
+      durationDays: planProvider.selectedPlanDetails?.durationDays,
+      minAmount: planProvider.selectedPlanDetails?.minAmount,
+      maxAmount: planProvider.selectedPlanDetails?.maxAmount,
+      description: planProvider.selectedPlanDetails?.description,
+    ).then((_) {
+      // Dismiss loading flushbar
+      loadingFlushbar.dismiss();
+    });
   }
 }

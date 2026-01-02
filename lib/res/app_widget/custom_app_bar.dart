@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:myinvestment/res/app_widget/custom_app_text.dart';
@@ -24,80 +23,49 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppBar(
-      backgroundColor: Colors.black,
-      elevation: 0,
-      leading: Builder(
-        builder: (context) => IconButton(
-          icon: Icon(Icons.menu, color: Color(0xFF00FF00), size: 28.sp),
-          onPressed: () => Scaffold.of(context).openDrawer(),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+          colors: [
+            Color(0xFF116713),
+            Color(0xFF031c40),
+          ],
         ),
       ),
-      toolbarHeight: 70.h,
-      title: Row(
-        children: [
-        /*  if (showLogo)
-            Container(
-              padding: EdgeInsets.all(8.w),
-              decoration: BoxDecoration(
-                color: Color(0xFF00FF00).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-              child: Icon(
-                Icons.trending_up,
-                color: Color(0xFF00FF00),
-                size: 28.sp,
-              ),
-            ),*/
-          if (showLogo && title != null) SizedBox(width: 12.w),
-          if (title != null)
-            Expanded(
-              child: Text(
-                title!,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20.sp,
-                  fontWeight: FontWeight.w700,
+      child: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: Icon(Icons.menu, color: Colors.white, size: 28.sp),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+        toolbarHeight: 70.h,
+        title: Row(
+          children: [
+            if (title != null)
+              Expanded(
+                child: Text(
+                  title ?? '',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20.sp,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
-            ),
+          ],
+        ),
+        actions: [
+          if (actions != null)
+            ...actions!
+          else
+            AppText.small('')
         ],
       ),
-      actions: [
-        if (actions != null)
-          ...actions!
-        else
-       /*   GestureDetector(
-            onTap: onProfileTap,
-            child: Container(
-              margin: EdgeInsets.only(right: 16.w),
-              width: 45.w,
-              height: 45.w,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Color(0xFF00FF00),
-                  width: 2.w,
-                ),
-                image: profileImageUrl != null
-                    ? DecorationImage(
-                  image: NetworkImage(profileImageUrl!),
-                  fit: BoxFit.cover,
-                )
-                    : null,
-                color: Color(0xFF1A1A1A),
-              ),
-              child: profileImageUrl == null
-                  ? Icon(
-                Icons.person,
-                color: Color(0xFF00FF00),
-                size: 24.sp,
-              )
-                  : null,
-            ),
-          ),*/
-      AppText.small('')
-      ],
     );
   }
 }
