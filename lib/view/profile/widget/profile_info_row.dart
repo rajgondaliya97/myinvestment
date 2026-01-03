@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../res/app_widget/custom_app_text.dart';
+import '../../../utils/app_color.dart';
 
 class ProfileInfoRow extends StatelessWidget {
   final String label;
@@ -25,14 +26,17 @@ class ProfileInfoRow extends StatelessWidget {
       SnackBar(
         content: Row(
           children: [
-            Icon(Icons.check_circle, color: Colors.white, size: 20.sp),
+            Icon(Icons.check_circle, color: AppColor.white, size: 20.sp),
             SizedBox(width: 8.w),
             Text('Copied to clipboard!'),
           ],
         ),
-        backgroundColor: Color(0xFF00FF00).withOpacity(0.8),
+        backgroundColor: AppColor.primaryColor,
         duration: Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.r),
+        ),
       ),
     );
   }
@@ -44,10 +48,26 @@ class ProfileInfoRow extends StatelessWidget {
       children: [
         // Icon (if provided)
         if (icon != null) ...[
-          Icon(
-            icon,
-            color: Color(0xFF00FF00).withOpacity(0.6),
-            size: 20.sp,
+          Container(
+            padding: EdgeInsets.all(8.w),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppColor.primaryColor.withOpacity(0.2),
+                  AppColor.lighterGreen.withOpacity(0.1),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(8.r),
+              border: Border.all(
+                color: AppColor.primaryColor.withOpacity(0.3),
+                width: 1.w,
+              ),
+            ),
+            child: Icon(
+              icon,
+              color: AppColor.lighterGreen,
+              size: 18.sp,
+            ),
           ),
           SizedBox(width: 12.w),
         ],
@@ -59,18 +79,34 @@ class ProfileInfoRow extends StatelessWidget {
             children: [
               AppText.small(
                 label,
-                color: Colors.grey[500],
+                color: AppColor.grey500,
                 fontSize: 12,
+                fontWeight: FontWeight.w500,
               ),
-              SizedBox(height: 4.h),
+              SizedBox(height: 6.h),
               Row(
                 children: [
                   Expanded(
-                    child: AppText.medium(
+                    child: valueColor != null
+                        ? ShaderMask(
+                      shaderCallback: (bounds) => LinearGradient(
+                        colors: [
+                          valueColor!,
+                          valueColor!.withOpacity(0.8),
+                        ],
+                      ).createShader(bounds),
+                      child: AppText.medium(
+                        value,
+                        color: AppColor.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    )
+                        : AppText.medium(
                       value,
-                      color: valueColor ?? Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                      color: AppColor.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   // Copy button (if copyable)
@@ -79,15 +115,31 @@ class ProfileInfoRow extends StatelessWidget {
                     GestureDetector(
                       onTap: () => _copyToClipboard(context, value),
                       child: Container(
-                        padding: EdgeInsets.all(6.w),
+                        padding: EdgeInsets.all(8.w),
                         decoration: BoxDecoration(
-                          color: Color(0xFF2A2A2A),
-                          borderRadius: BorderRadius.circular(6.r),
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColor.primaryColor.withOpacity(0.3),
+                              AppColor.lighterGreen.withOpacity(0.2),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(8.r),
+                          border: Border.all(
+                            color: AppColor.primaryColor.withOpacity(0.4),
+                            width: 1.w,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColor.primaryColor.withOpacity(0.2),
+                              blurRadius: 6,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
                         ),
                         child: Icon(
                           Icons.copy,
                           size: 16.sp,
-                          color: Color(0xFF00FF00),
+                          color: AppColor.lighterGreen,
                         ),
                       ),
                     ),

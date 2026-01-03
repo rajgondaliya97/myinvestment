@@ -155,6 +155,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   text: 'Login',
                   isLoading: authController.isLoading,
                   icon: Icons.login,
+                  height: 50.h,
+                  fontSize: 15,
                 ),
                 SizedBox(height: 24.h),
 

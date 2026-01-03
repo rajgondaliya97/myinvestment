@@ -35,18 +35,11 @@ class _CustomTextFieldState extends State<CustomTextField> {
       children: [
         Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppColor.secondaryPrimaryColor.withOpacity(0.8),
-                AppColor.lighterBlue.withOpacity(0.5),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            gradient: AppColor.glassGradient,
             borderRadius: BorderRadius.circular(16.r),
             border: Border.all(
               color: widget.errorText != null
-                  ? Colors.red
+                  ? AppColor.error
                   : AppColor.primaryColor.withOpacity(0.3),
               width: 2.w,
             ),
@@ -55,20 +48,20 @@ class _CustomTextFieldState extends State<CustomTextField> {
             controller: widget.controller,
             obscureText: widget.isPassword && _obscureText,
             keyboardType: widget.keyboardType,
-            style: TextStyle(color: Colors.white, fontSize: 16.sp),
+            style: TextStyle(color: AppColor.white, fontSize: 16.sp),
             decoration: InputDecoration(
               hintText: widget.hint,
               hintStyle:
-              TextStyle(color: Colors.grey[500], fontSize: 16.sp),
+              TextStyle(color: AppColor.grey500, fontSize: 16.sp),
               prefixIcon: Icon(widget.icon,
-                  color: AppColor.primaryColor.withOpacity(0.7), size: 20.sp),
+                  color: AppColor.white.withOpacity(0.7), size: 20.sp),
               suffixIcon: widget.isPassword
                   ? IconButton(
                 icon: Icon(
                   _obscureText
                       ? Icons.visibility_off
                       : Icons.visibility,
-                  color: AppColor.primaryColor.withOpacity(0.7),
+                  color: AppColor.white.withOpacity(0.7),
                   size: 20.sp,
                 ),
                 onPressed: () =>
@@ -84,7 +77,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
         if (widget.errorText != null)
           Padding(
             padding: EdgeInsets.only(left: 8.w, top: 8.h),
-            child: AppText.small(widget.errorText!, color: Colors.red),
+            child: AppText.small(widget.errorText!, color: AppColor.error),
           ),
       ],
     );

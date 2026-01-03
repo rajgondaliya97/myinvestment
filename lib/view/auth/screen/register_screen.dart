@@ -182,6 +182,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   text: 'Create Account',
                   isLoading: authController.isLoading,
                   icon: Icons.person_add,
+                  height: 50.h,
+                  fontSize: 15,
                 ),
                 SizedBox(height: 24.h),
 

@@ -28,11 +28,27 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthController(authRepository: DependencyLocator().authRepository)),
-        ChangeNotifierProvider(create: (_) => HomeProvider(homeRepository: DependencyLocator().homeRepository)),
+        ChangeNotifierProvider(
+          create: (_) => AuthController(
+            authRepository: DependencyLocator().authRepository,
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => HomeProvider(
+            homeRepository: DependencyLocator().homeRepository,
+           // planRepository: DependencyLocator().planRepository,
+          ),
+        ),
         ChangeNotifierProvider(create: (_) => InvestmentProvider()),
-        ChangeNotifierProvider(create: (_) => DepositProvider(planRepository: DependencyLocator().planRepository)),
-        ChangeNotifierProvider(create: (_) => PlanProvider(planRepository: DependencyLocator().planRepository)),
+        ChangeNotifierProvider(
+          create: (_) => DepositProvider(
+            planRepository: DependencyLocator().planRepository,
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (_) =>
+              PlanProvider(planRepository: DependencyLocator().planRepository),
+        ),
       ],
       child: ScreenUtilInit(
         designSize: Size(375, 812),

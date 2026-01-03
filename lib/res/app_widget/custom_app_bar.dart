@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:myinvestment/res/app_widget/custom_app_text.dart';
 
+import '../../utils/app_color.dart';
+
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? title;
   final String? profileImageUrl;
@@ -25,14 +27,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-          colors: [
-            Color(0xFF116713),
-            Color(0xFF031c40),
-          ],
-        ),
+        gradient: AppColor.primaryGradient,
       ),
       child: AppBar(
         backgroundColor: Colors.transparent,
@@ -51,7 +46,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 child: Text(
                   title ?? '',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: AppColor.white,
                     fontSize: 20.sp,
                     fontWeight: FontWeight.w700,
                   ),

@@ -46,10 +46,10 @@ class FlushbarHelper {
       icon: Icon(
         Icons.error_outline,
         size: 28.sp,
-        color: Colors.red,
+        color: AppColor.error,
       ),
       duration: duration ?? Duration(seconds: 3),
-      leftBarIndicatorColor: Colors.red,
+      leftBarIndicatorColor: AppColor.error,
       backgroundColor: AppColor.secondaryPrimaryColor,
       borderRadius: BorderRadius.circular(12.r),
       margin: EdgeInsets.all(16.w),
@@ -98,10 +98,10 @@ class FlushbarHelper {
       icon: Icon(
         Icons.warning_amber_outlined,
         size: 28.sp,
-        color: Colors.orange,
+        color: AppColor.orange,
       ),
       duration: duration ?? Duration(seconds: 3),
-      leftBarIndicatorColor: Colors.orange,
+      leftBarIndicatorColor: AppColor.orange,
       backgroundColor: AppColor.secondaryPrimaryColor,
       borderRadius: BorderRadius.circular(12.r),
       margin: EdgeInsets.all(16.w),
@@ -130,7 +130,7 @@ class FlushbarHelper {
           ? Icon(
         icon,
         size: 28.sp,
-        color: iconColor ?? Colors.white,
+        color: iconColor ?? AppColor.white,
       )
           : null,
       duration: duration ?? Duration(seconds: 3),

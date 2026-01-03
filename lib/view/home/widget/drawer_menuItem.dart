@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
 import '../../../res/app_widget/custom_app_text.dart';
+import '../../../utils/app_color.dart';
 
 class DrawerMenuItem extends StatelessWidget {
   final IconData icon;
@@ -22,27 +22,67 @@ class DrawerMenuItem extends StatelessWidget {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: isSelected
-            ? Color(0xFF00FF00).withOpacity(0.1)
-            : Colors.transparent,
+        gradient: isSelected
+            ? LinearGradient(
+          colors: [
+            AppColor.primaryColor.withOpacity(0.5),
+            AppColor.secondaryPrimaryColor.withOpacity(0.9),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        )
+            : null,
+        color: isSelected ? null : AppColor.transparent,
         borderRadius: BorderRadius.circular(12.r),
         border: isSelected
             ? Border.all(
-          color: Color(0xFF00FF00).withOpacity(0.3),
+          color: AppColor.primaryColor.withOpacity(0.4),
           width: 1.w,
         )
             : null,
+        boxShadow: isSelected
+            ? [
+          BoxShadow(
+            color: AppColor.primaryColor.withOpacity(0.2),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ]
+            : null,
       ),
       child: ListTile(
-        leading: Icon(
-          icon,
-          color: isSelected ? Color(0xFF00FF00) : Colors.grey[400],
-          size: 24.sp,
+        leading: Container(
+          padding: EdgeInsets.all(8.w),
+          decoration: isSelected
+              ? BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppColor.primaryColor,
+                AppColor.secondaryPrimaryColor,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(8.r),
+          )
+              : null,
+          child: Icon(
+            icon,
+            color: isSelected ? AppColor.lighterGreen : AppColor.grey500,
+            size: 24.sp,
+          ),
         ),
-        title: AppText.medium(
-          title,
-          color: isSelected ? Color(0xFF00FF00) : Colors.white,
-          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+        title: ShaderMask(
+          shaderCallback: isSelected
+              ? (bounds) => LinearGradient(
+            colors: [AppColor.lighterGreen, AppColor.primaryColor],
+          ).createShader(bounds)
+              : (bounds) => LinearGradient(
+            colors: [AppColor.white, AppColor.white],
+          ).createShader(bounds),
+          child: AppText.medium(
+            title,
+            color: AppColor.white,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+          ),
         ),
         onTap: onTap,
         shape: RoundedRectangleBorder(
