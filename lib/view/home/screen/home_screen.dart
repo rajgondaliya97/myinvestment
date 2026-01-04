@@ -6,8 +6,10 @@ import 'package:provider/provider.dart';
 import '../../../res/app_widget/custom_app_bar.dart';
 import '../../../res/app_widget/custom_app_button.dart';
 import '../../../res/app_widget/custom_app_text.dart';
+import '../../../utils/app_constent.dart';
 import '../../../view_model/auth_provider.dart';
 import '../../../view_model/home_provider.dart';
+import '../../wallte/screen/add_waller_screen.dart';
 import '../widget/balance_card_widget.dart';
 import '../widget/calculator_card.dart';
 import '../widget/profit_chart_card.dart';
@@ -58,11 +60,8 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: AppColor.secondaryPrimaryColor,
       appBar: CustomAppBar(
-        title: 'Investment App',
+        title: AppConst.appName,
         profileImageUrl: profileImage,
-        onProfileTap: () {
-          // Navigate to profile screen
-        },
       ),
       drawer: CustomDrawer(currentRoute: 'home'),
       body: Container(
@@ -232,7 +231,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           Expanded(
                             child: AppButton.primary(
-                              onPressed: () {},
+                              onPressed: () {
+                                Navigator.push(context, MaterialPageRoute(builder: (context) => AddWalletScreen(),));
+                              },
                               text: 'Deposit',
                               icon: Icons.add,
                             ),

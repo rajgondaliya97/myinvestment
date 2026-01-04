@@ -7,6 +7,7 @@ import '../../../res/app_widget/custom_app_bar.dart';
 import '../../../res/app_widget/custom_app_text.dart';
 import '../../../utils/app_color.dart';
 import '../../../model/user_plan/user_plan_model.dart';
+import '../../home/widget/custom_drawer.dart';
 
 class UserActivePlansScreen extends StatefulWidget {
   const UserActivePlansScreen({Key? key}) : super(key: key);
@@ -88,6 +89,7 @@ class _UserActivePlansScreenState extends State<UserActivePlansScreen>
     return Scaffold(
       backgroundColor: AppColor.secondaryPrimaryColor,
       appBar: CustomAppBar(title: 'My Investment Plans'),
+      drawer: CustomDrawer(currentRoute: 'active_plans'),
       body: Container(
         height: double.infinity,
         decoration: BoxDecoration(

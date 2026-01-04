@@ -125,7 +125,7 @@ class _BalanceCardState extends State<BalanceCard> with SingleTickerProviderStat
                   '\$${widget.balance.toStringAsFixed(2)}',
                   fontWeight: FontWeight.w700,
                   color: Colors.white,
-                  fontSize: 32,
+                  fontSize: 25,
                 ),
                 SizedBox(height: 8.h),
                 AppText.small(
