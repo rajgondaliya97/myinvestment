@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
 import '../../../res/app_widget/custom_app_text.dart';
+import '../../../utils/app_color.dart';
 
 class ProfitByPeriodCard extends StatelessWidget {
   final TextEditingController amountController;
@@ -22,9 +22,12 @@ class ProfitByPeriodCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        gradient: AppColor.cardGradientBgColor,
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: const Color(0xFF2A2A2A), width: 1.5),
+        border: Border.all(
+          color: AppColor.lighterGreen.withOpacity(0.3),
+          width: 1.5,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -32,7 +35,7 @@ class ProfitByPeriodCard extends StatelessWidget {
           AppText.medium(
             'PROFIT BY PERIOD',
             fontSize: 12,
-            color: Colors.grey[500],
+            color: Colors.grey[400],
             fontWeight: FontWeight.w600,
           ),
           SizedBox(height: 16.h),
@@ -60,14 +63,18 @@ class ProfitByPeriodCard extends StatelessWidget {
         gradient: isHighlight
             ? LinearGradient(
           colors: [
-            const Color(0xFF00FF00),
-            const Color(0xFF00CC00),
+            AppColor.primaryColor,
+            AppColor.lighterGreen,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         )
-            : null,
-        color: isHighlight ? null : const Color(0xFF2A2A2A),
+            : LinearGradient(
+          colors: [
+            AppColor.secondaryPrimaryColor.withOpacity(0.8),
+            AppColor.primaryColor.withOpacity(0.2),
+          ],
+        ),
         borderRadius: BorderRadius.circular(16.r),
       ),
       child: Column(
@@ -76,19 +83,19 @@ class ProfitByPeriodCard extends StatelessWidget {
             value,
             fontSize: isHighlight ? 28 : 24,
             fontWeight: FontWeight.w700,
-            color: isHighlight ? Colors.black : const Color(0xFF00FF00),
+            color: isHighlight ? Colors.white : AppColor.lighterGreen,
           ),
           SizedBox(height: 4.h),
           AppText.medium(
             'USD',
             fontSize: 12,
-            color: isHighlight ? Colors.black87 : Colors.grey[500],
+            color: isHighlight ? Colors.white.withOpacity(0.85) : Colors.grey[400],
           ),
           SizedBox(height: 8.h),
           AppText.medium(
             label,
             fontSize: 13,
-            color: isHighlight ? Colors.black87 : Colors.grey[500],
+            color: isHighlight ? Colors.white.withOpacity(0.85) : Colors.grey[400],
             fontWeight: FontWeight.w600,
           ),
         ],

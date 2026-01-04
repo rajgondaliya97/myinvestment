@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
 import '../../../res/app_widget/custom_app_text.dart';
+import '../../../utils/app_color.dart';
 
 class DepositAmountCard extends StatelessWidget {
   final TextEditingController controller;
@@ -18,9 +18,12 @@ class DepositAmountCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        gradient: AppColor.cardGradientBgColor,
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: const Color(0xFF2A2A2A), width: 1.5),
+        border: Border.all(
+          color: AppColor.lighterGreen.withOpacity(0.3),
+          width: 1.5,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -28,17 +31,22 @@ class DepositAmountCard extends StatelessWidget {
           AppText.medium(
             'DEPOSIT AMOUNT',
             fontSize: 12,
-            color: Colors.grey[500],
+            color: Colors.grey[400],
             fontWeight: FontWeight.w600,
           ),
           SizedBox(height: 16.h),
           Container(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
             decoration: BoxDecoration(
-              color: const Color(0xFF2A2A2A),
+              gradient: LinearGradient(
+                colors: [
+                  AppColor.secondaryPrimaryColor.withOpacity(0.8),
+                  AppColor.primaryColor.withOpacity(0.2),
+                ],
+              ),
               borderRadius: BorderRadius.circular(12.r),
               border: Border.all(
-                color: const Color(0xFF00FF00).withOpacity(0.3),
+                color: AppColor.lighterGreen.withOpacity(0.3),
                 width: 1.5,
               ),
             ),
@@ -66,7 +74,7 @@ class DepositAmountCard extends StatelessWidget {
                 AppText.medium(
                   'USD',
                   fontSize: 16,
-                  color: Colors.grey[500],
+                  color: Colors.grey[400],
                   fontWeight: FontWeight.w600,
                 ),
               ],
@@ -88,12 +96,12 @@ class DepositAmountCard extends StatelessWidget {
         AppText.medium(
           label,
           fontSize: 13,
-          color: Colors.grey[600],
+          color: Colors.grey[500],
         ),
         AppText.medium(
           '$value',
           fontSize: 13,
-          color: const Color(0xFF00FF00),
+          color: AppColor.lighterGreen,
           fontWeight: FontWeight.w700,
         ),
       ],

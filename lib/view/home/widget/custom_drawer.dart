@@ -238,10 +238,15 @@ class _CustomDrawerState extends State<CustomDrawer> {
                       title: 'Profile',
                       isSelected: widget.currentRoute == 'profile',
                       onTap: () {
-                        Navigator.pop(context);
+                        // 1. Capture the navigator before popping
+                        final navigator = Navigator.of(context);
+
+                        // 2. Close the drawer
+                        navigator.pop();
+
+                        // 3. Navigate only if we aren't already there
                         if (widget.currentRoute != 'profile') {
-                          Navigator.pushReplacement(
-                            context,
+                          navigator.pushReplacement(
                             MaterialPageRoute(builder: (_) => ProfileScreen()),
                           );
                         }
@@ -254,7 +259,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                       onTap: () {
                         Navigator.pop(context);
                         if (widget.currentRoute != 'deposit') {
-                          Navigator.push(
+                          Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(builder: (_) => DepositScreen()),
                           );

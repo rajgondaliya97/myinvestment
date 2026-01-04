@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
 import '../../../res/app_widget/custom_app_text.dart';
+import '../../../utils/app_color.dart';
 
 class ProfitPerDayCard extends StatelessWidget {
   final Map<String, dynamic> tariffData;
@@ -18,15 +18,15 @@ class ProfitPerDayCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFF00FF00).withOpacity(0.2),
-            const Color(0xFF00CC00).withOpacity(0.1),
+            AppColor.lighterGreen.withOpacity(0.3),
+            AppColor.primaryColor.withOpacity(0.2),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20.r),
         border: Border.all(
-          color: const Color(0xFF00FF00).withOpacity(0.5),
+          color: AppColor.lighterGreen.withOpacity(0.5),
           width: 1.5,
         ),
       ),
@@ -36,7 +36,7 @@ class ProfitPerDayCard extends StatelessWidget {
           AppText.medium(
             'PROFIT PER DAY',
             fontSize: 12,
-            color: Colors.grey[400],
+            color: Colors.grey[300],
             fontWeight: FontWeight.w600,
           ),
           SizedBox(height: 20.h),
@@ -63,7 +63,12 @@ class ProfitPerDayCard extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
-              color: const Color(0xFF2A2A2A),
+              gradient: LinearGradient(
+                colors: [
+                  AppColor.secondaryPrimaryColor.withOpacity(0.8),
+                  AppColor.primaryColor.withOpacity(0.2),
+                ],
+              ),
               borderRadius: BorderRadius.circular(12.r),
             ),
             child: Row(
@@ -71,7 +76,7 @@ class ProfitPerDayCard extends StatelessWidget {
               children: [
                 Icon(
                   Icons.analytics_outlined,
-                  color: const Color(0xFF00FF00),
+                  color: AppColor.lighterGreen,
                   size: 24.sp,
                 ),
                 SizedBox(width: 12.w),
@@ -81,14 +86,14 @@ class ProfitPerDayCard extends StatelessWidget {
                     AppText.medium(
                       'AVERAGE PROFIT',
                       fontSize: 11,
-                      color: Colors.grey[500],
+                      color: Colors.grey[400],
                     ),
                     SizedBox(height: 4.h),
                     AppText.large(
                       '${tariffData['avgProfit']} USD',
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF00FF00),
+                      color: AppColor.lighterGreen,
                     ),
                   ],
                 ),
@@ -104,15 +109,20 @@ class ProfitPerDayCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF2A2A2A),
+        gradient: LinearGradient(
+          colors: [
+            AppColor.secondaryPrimaryColor.withOpacity(0.8),
+            AppColor.primaryColor.withOpacity(0.2),
+          ],
+        ),
         borderRadius: BorderRadius.circular(12.r),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: const Color(0xFF00FF00), size: 20.sp),
+          Icon(icon, color: AppColor.lighterGreen, size: 20.sp),
           SizedBox(height: 8.h),
-          AppText.medium(label, fontSize: 10, color: Colors.grey[500]),
+          AppText.medium(label, fontSize: 10, color: Colors.grey[400]),
           SizedBox(height: 4.h),
           AppText.medium(
             value,

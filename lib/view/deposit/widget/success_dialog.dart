@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../res/app_widget/custom_app_button.dart';
 import '../../../res/app_widget/custom_app_text.dart';
+import '../../../utils/app_color.dart';
 
 class SuccessDialog extends StatelessWidget {
   final VoidCallback onDone;
@@ -14,10 +15,10 @@ class SuccessDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: const Color(0xFF1A1A1A),
+      backgroundColor: AppColor.secondaryPrimaryColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20.r),
-        side: const BorderSide(color: Color(0xFF00FF00), width: 2),
+        side: BorderSide(color: AppColor.lighterGreen, width: 2),
       ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -28,7 +29,7 @@ class SuccessDialog extends StatelessWidget {
             'Success!',
             fontSize: 24,
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF00FF00),
+            color: AppColor.lighterGreen,
           ),
           SizedBox(height: 12.h),
           AppText.medium(
@@ -57,12 +58,17 @@ class SuccessDialog extends StatelessWidget {
       width: 80.w,
       height: 80.w,
       decoration: BoxDecoration(
-        color: const Color(0xFF00FF00).withOpacity(0.2),
+        gradient: LinearGradient(
+          colors: [
+            AppColor.lighterGreen.withOpacity(0.3),
+            AppColor.primaryColor.withOpacity(0.2),
+          ],
+        ),
         shape: BoxShape.circle,
       ),
       child: Icon(
         Icons.check_circle,
-        color: const Color(0xFF00FF00),
+        color: AppColor.lighterGreen,
         size: 50.sp,
       ),
     );

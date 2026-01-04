@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import '../../../res/app_widget/custom_app_text.dart';
+import '../../../utils/app_color.dart';
 import '../../../view_model/pan_provider.dart';
 import '../../../model/plan_model/get_plan_model.dart';
 
@@ -65,9 +66,12 @@ class _TariffCardWithAPIState extends State<TariffCardWithAPI> {
     return Container(
       padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        gradient: AppColor.cardGradientBgColor,
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: const Color(0xFF2A2A2A), width: 1.5),
+        border: Border.all(
+          color: AppColor.lighterGreen.withOpacity(0.3),
+          width: 1.5,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,7 +79,7 @@ class _TariffCardWithAPIState extends State<TariffCardWithAPI> {
           AppText.medium(
             'TARIFF',
             fontSize: 12,
-            color: Colors.grey[500],
+            color: Colors.grey[400],
             fontWeight: FontWeight.w600,
           ),
           SizedBox(height: 16.h),
@@ -118,10 +122,10 @@ class _TariffCardWithAPIState extends State<TariffCardWithAPI> {
                   SizedBox(
                     width: 16.w,
                     height: 16.w,
-                    child: const CircularProgressIndicator(
+                    child: CircularProgressIndicator(
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        Color(0xFF00FF00),
+                        AppColor.lighterGreen,
                       ),
                     ),
                   ),
@@ -151,19 +155,29 @@ class _TariffCardWithAPIState extends State<TariffCardWithAPI> {
     return GestureDetector(
       onTap: () {
         // Fetch detailed plan data when user selects a plan
-        print('🔤 Plan Tapped: ID=$key, Name=${plan.name}');
+        print('📤 Plan Tapped: ID=$key, Name=${plan.name}');
         planProvider.fetchPlanDetailsById(plan.id ?? 0);
         widget.onTariffChanged(key, plan);
       },
       child: Container(
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
-          color: isSelected
-              ? const Color(0xFF00FF00).withOpacity(0.15)
-              : const Color(0xFF2A2A2A),
+          gradient: isSelected
+              ? LinearGradient(
+            colors: [
+              AppColor.lighterGreen.withOpacity(0.3),
+              AppColor.primaryColor.withOpacity(0.2),
+            ],
+          )
+              : LinearGradient(
+            colors: [
+              AppColor.secondaryPrimaryColor.withOpacity(0.8),
+              AppColor.primaryColor.withOpacity(0.2),
+            ],
+          ),
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(
-            color: isSelected ? const Color(0xFF00FF00) : Colors.transparent,
+            color: isSelected ? AppColor.lighterGreen : Colors.transparent,
             width: 2,
           ),
         ),
@@ -177,7 +191,7 @@ class _TariffCardWithAPIState extends State<TariffCardWithAPI> {
                   title,
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: isSelected ? const Color(0xFF00FF00) : Colors.white,
+                  color: isSelected ? AppColor.lighterGreen : Colors.white,
                 ),
                 SizedBox(height: 4.h),
                 AppText.medium(
@@ -191,7 +205,7 @@ class _TariffCardWithAPIState extends State<TariffCardWithAPI> {
               isSelected
                   ? Icons.radio_button_checked
                   : Icons.radio_button_unchecked,
-              color: isSelected ? const Color(0xFF00FF00) : Colors.grey[600],
+              color: isSelected ? AppColor.lighterGreen : Colors.grey[600],
               size: 24.sp,
             ),
           ],
@@ -205,9 +219,12 @@ class _TariffCardWithAPIState extends State<TariffCardWithAPI> {
     return Container(
       padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        gradient: AppColor.cardGradientBgColor,
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: const Color(0xFF2A2A2A), width: 1.5),
+        border: Border.all(
+          color: AppColor.lighterGreen.withOpacity(0.3),
+          width: 1.5,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -215,7 +232,7 @@ class _TariffCardWithAPIState extends State<TariffCardWithAPI> {
           AppText.medium(
             'TARIFF',
             fontSize: 12,
-            color: Colors.grey[500],
+            color: Colors.grey[400],
             fontWeight: FontWeight.w600,
           ),
           SizedBox(height: 16.h),
@@ -232,7 +249,12 @@ class _TariffCardWithAPIState extends State<TariffCardWithAPI> {
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: const Color(0xFF2A2A2A),
+            gradient: LinearGradient(
+              colors: [
+                AppColor.secondaryPrimaryColor.withOpacity(0.8),
+                AppColor.primaryColor.withOpacity(0.2),
+              ],
+            ),
             borderRadius: BorderRadius.circular(12.r),
           ),
           child: Row(
@@ -263,7 +285,7 @@ class _TariffCardWithAPIState extends State<TariffCardWithAPI> {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: const Color(0xFF3A3A3A),
+        color: AppColor.primaryColor.withOpacity(0.3),
         borderRadius: BorderRadius.circular(6.r),
       ),
       child: _buildShimmerAnimation(),
@@ -278,9 +300,9 @@ class _TariffCardWithAPIState extends State<TariffCardWithAPI> {
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
           colors: [
-            Colors.grey[800]!,
-            Colors.grey[700]!,
-            Colors.grey[800]!,
+            AppColor.primaryColor.withOpacity(0.3),
+            AppColor.lighterGreen.withOpacity(0.2),
+            AppColor.primaryColor.withOpacity(0.3),
           ],
           stops: const [0.1, 0.3, 0.4],
         ).createShader(bounds);
@@ -296,10 +318,10 @@ class _TariffCardWithAPIState extends State<TariffCardWithAPI> {
     return Container(
       padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        gradient: AppColor.cardGradientBgColor,
         borderRadius: BorderRadius.circular(20.r),
         border: Border.all(
-          color: const Color(0xFFFF4444).withOpacity(0.5),
+          color: Colors.red.withOpacity(0.5),
           width: 1.5,
         ),
       ),
@@ -350,9 +372,12 @@ class _TariffCardWithAPIState extends State<TariffCardWithAPI> {
     return Container(
       padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        gradient: AppColor.cardGradientBgColor,
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: const Color(0xFF2A2A2A), width: 1.5),
+        border: Border.all(
+          color: AppColor.lighterGreen.withOpacity(0.3),
+          width: 1.5,
+        ),
       ),
       child: Center(
         child: AppText.medium(

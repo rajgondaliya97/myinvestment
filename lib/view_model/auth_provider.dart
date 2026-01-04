@@ -126,17 +126,9 @@ class AuthController extends ChangeNotifier {
       final isLoggedIn = AppLocalData.getBool(LocalDataKey.isLoggedIn) ?? false;
 
       if (isLoggedIn) {
-        final userData = AppLocalData.getMap(LocalDataKey.userData);
         final token = AppLocalData.getString(LocalDataKey.accessToken);
 
-        if (userData != null && token != null) {
-          _user = UserData.fromJson(userData);
-
-          // Load profile data if available
-          if (userData['user'] != null) {
-            _profileData = UserProfileModelData.fromJson(userData['user']);
-          }
-
+        if (token != null) {
           _isLoggedIn = true;
           print('✅ User loaded from storage: ${_profileData?.email}');
         } else {

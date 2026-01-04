@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
 import '../../../res/app_widget/custom_app_text.dart';
+import '../../../utils/app_color.dart';
 
 class PlanDetailsCard extends StatelessWidget {
   final Map<String, dynamic> tariffData;
@@ -19,9 +19,12 @@ class PlanDetailsCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        gradient: AppColor.cardGradientBgColor,
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: const Color(0xFF2A2A2A), width: 1.5),
+        border: Border.all(
+          color: AppColor.lighterGreen.withOpacity(0.3),
+          width: 1.5,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -29,7 +32,7 @@ class PlanDetailsCard extends StatelessWidget {
           AppText.medium(
             'PLAN DETAILS',
             fontSize: 12,
-            color: Colors.grey[500],
+            color: Colors.grey[400],
             fontWeight: FontWeight.w600,
           ),
           SizedBox(height: 16.h),
@@ -51,7 +54,7 @@ class PlanDetailsCard extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        AppText.medium(fontSize: 13, label, color: Colors.grey[500]),
+        AppText.medium(fontSize: 13, label, color: Colors.grey[400]),
         AppText.medium(
           value,
           fontSize: 13,

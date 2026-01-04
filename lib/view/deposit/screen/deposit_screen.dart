@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../res/app_widget/custom_app_bar.dart';
 import '../../../res/app_widget/custom_app_button.dart';
 import '../../../res/app_widget/custom_app_flush_bar.dart';
+import '../../../utils/app_color.dart';
 import '../../../view_model/deposit_provider.dart';
 import '../../../view_model/home_provider.dart';
 import '../../../view_model/pan_provider.dart';
@@ -110,125 +111,130 @@ class _DepositScreenState extends State<DepositScreen> {
         depositProvider.calculateProfitDetails(amount: amount);
 
         return Scaffold(
-          backgroundColor: const Color(0xFF0A0A0A),
+          backgroundColor: AppColor.secondaryPrimaryColor,
           appBar: CustomAppBar(title: 'Create Deposit'),
           drawer: const CustomDrawer(currentRoute: 'home'),
-          body: SingleChildScrollView(
-            padding: EdgeInsets.all(20.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ============ BALANCE CARD ============
-                BalanceCard(
-                  balance: homeProvider.balance,
-                  profitPercentage: homeProvider.profitPercentage,
-                ),
-                SizedBox(height: 20.h),
+          body: Container(
+            decoration: BoxDecoration(
+              gradient: AppColor.screenGradientBgColor,
+            ),
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(20.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ============ BALANCE CARD ============
+                  BalanceCard(
+                    balance: homeProvider.balance,
+                    profitPercentage: homeProvider.profitPercentage,
+                  ),
+                  SizedBox(height: 20.h),
 
-                // ============ CHOOSE BALANCE ============
-                ChooseBalanceCard(
-                  selectedCurrency: _selectedCurrency,
-                  onCurrencyChanged: (currency) {
-                    setState(() => _selectedCurrency = currency);
-                  },
-                  usdBalance: depositProvider.usdBalance,
-                  btcBalance: depositProvider.btcBalance,
-                  ethBalance: depositProvider.ethBalance,
-                ),
-                SizedBox(height: 20.h),
+                  // ============ CHOOSE BALANCE ============
+                  ChooseBalanceCard(
+                    selectedCurrency: _selectedCurrency,
+                    onCurrencyChanged: (currency) {
+                      setState(() => _selectedCurrency = currency);
+                    },
+                    usdBalance: depositProvider.usdBalance,
+                    btcBalance: depositProvider.btcBalance,
+                    ethBalance: depositProvider.ethBalance,
+                  ),
+                  SizedBox(height: 20.h),
 
-                // ============ TARIFF CARD (Auto-selects first plan) ============
-                TariffCardWithAPI(
-                  selectedTariff: _selectedTariff,
-                  onTariffChanged: (tariffId, planData) {
-                    setState(() {
-                      _selectedTariff = tariffId;
-                      _selectedPlanData = planData;
-                      _amountController.clear();
-                      depositProvider.clearSubscriptionMessages();
-                    });
-                  },
-                ),
-                SizedBox(height: 20.h),
-
-                // ============ AMOUNT CARD (Shown if plan selected) ============
-                if (_selectedPlanData != null &&
-                    planProvider.selectedPlanDetails != null)
-                  DepositAmountCard(
-                    controller: _amountController,
-                    tariffData: {
-                      'minAmount':
-                      planProvider.selectedPlanDetails?.minAmount ?? '0',
-                      'maxAmount':
-                      planProvider.selectedPlanDetails?.maxAmount ?? '0',
+                  // ============ TARIFF CARD (Auto-selects first plan) ============
+                  TariffCardWithAPI(
+                    selectedTariff: _selectedTariff,
+                    onTariffChanged: (tariffId, planData) {
+                      setState(() {
+                        _selectedTariff = tariffId;
+                        _selectedPlanData = planData;
+                        _amountController.clear();
+                        depositProvider.clearSubscriptionMessages();
+                      });
                     },
                   ),
-                if (_selectedPlanData != null &&
-                    planProvider.selectedPlanDetails != null)
                   SizedBox(height: 20.h),
 
-                // ============ PROFIT PER DAY CARD ============
-                if (_selectedPlanData != null &&
-                    planProvider.selectedPlanDetails != null &&
-                    _amountController.text.isNotEmpty)
-                  ProfitPerDayCard(tariffData: {
-                    'minProfit':
-                    profitValues['minDailyProfit']?.toStringAsFixed(2) ??
-                        '0',
-                    'maxProfit':
-                    profitValues['maxDailyProfit']?.toStringAsFixed(2) ??
-                        '0',
-                    'avgProfit':
-                    profitValues['avgDailyProfit']?.toStringAsFixed(2) ??
-                        '0',
-                  }),
-                if (_selectedPlanData != null &&
-                    planProvider.selectedPlanDetails != null &&
-                    _amountController.text.isNotEmpty)
-                  SizedBox(height: 20.h),
+                  // ============ AMOUNT CARD (Shown if plan selected) ============
+                  if (_selectedPlanData != null &&
+                      planProvider.selectedPlanDetails != null)
+                    DepositAmountCard(
+                      controller: _amountController,
+                      tariffData: {
+                        'minAmount':
+                        planProvider.selectedPlanDetails?.minAmount ?? '0',
+                        'maxAmount':
+                        planProvider.selectedPlanDetails?.maxAmount ?? '0',
+                      },
+                    ),
+                  if (_selectedPlanData != null &&
+                      planProvider.selectedPlanDetails != null)
+                    SizedBox(height: 20.h),
 
-                // ============ PROFIT BY PERIOD CARD ============
-                if (_selectedPlanData != null &&
-                    planProvider.selectedPlanDetails != null &&
-                    _amountController.text.isNotEmpty)
-                  ProfitByPeriodCard(
-                    amountController: _amountController,
-                    tariffData: {
-                      'avgProfit': double.tryParse(
-                          profitValues['avgDailyProfit'].toString()) ??
-                          0.0,
+                  // ============ PROFIT PER DAY CARD ============
+                  if (_selectedPlanData != null &&
+                      planProvider.selectedPlanDetails != null &&
+                      _amountController.text.isNotEmpty)
+                    ProfitPerDayCard(tariffData: {
+                      'minProfit':
+                      profitValues['minDailyProfit']?.toStringAsFixed(2) ??
+                          '0',
+                      'maxProfit':
+                      profitValues['maxDailyProfit']?.toStringAsFixed(2) ??
+                          '0',
+                      'avgProfit':
+                      profitValues['avgDailyProfit']?.toStringAsFixed(2) ??
+                          '0',
+                    }),
+                  if (_selectedPlanData != null &&
+                      planProvider.selectedPlanDetails != null &&
+                      _amountController.text.isNotEmpty)
+                    SizedBox(height: 20.h),
+
+                  // ============ PROFIT BY PERIOD CARD ============
+                  if (_selectedPlanData != null &&
+                      planProvider.selectedPlanDetails != null &&
+                      _amountController.text.isNotEmpty)
+                    ProfitByPeriodCard(
+                      amountController: _amountController,
+                      tariffData: {
+                        'avgProfit': double.tryParse(
+                            profitValues['avgDailyProfit'].toString()) ??
+                            0.0,
+                        'days':
+                        planProvider.selectedPlanDetails?.durationDays ?? 0,
+                        'avgTotalProfit': profitValues['avgTotalProfit'] ?? 0.0,
+                      },
+                    ),
+                  if (_selectedPlanData != null &&
+                      planProvider.selectedPlanDetails != null &&
+                      _amountController.text.isNotEmpty)
+                    SizedBox(height: 20.h),
+
+                  // ============ PLAN DETAILS CARD ============
+                  if (_selectedPlanData != null &&
+                      planProvider.selectedPlanDetails != null)
+                    PlanDetailsCard(tariffData: {
                       'days':
                       planProvider.selectedPlanDetails?.durationDays ?? 0,
-                      'avgTotalProfit': profitValues['avgTotalProfit'] ?? 0.0,
-                    },
+                    }),
+                  SizedBox(height: 30.h),
+
+                  // ============ SUBSCRIBE BUTTON ============
+                  AppButton.primary(
+                    onPressed: depositProvider.isSubscribing
+                        ? null
+                        : () => _handleSubscribeClick(depositProvider, planProvider),
+                    text: depositProvider.isSubscribing
+                        ? 'Subscribing...'
+                        : 'Subscribe Plan',
+                    width: double.infinity,
+                    height: 55,
                   ),
-                if (_selectedPlanData != null &&
-                    planProvider.selectedPlanDetails != null &&
-                    _amountController.text.isNotEmpty)
                   SizedBox(height: 20.h),
-
-                // ============ PLAN DETAILS CARD ============
-                if (_selectedPlanData != null &&
-                    planProvider.selectedPlanDetails != null)
-                  PlanDetailsCard(tariffData: {
-                    'days':
-                    planProvider.selectedPlanDetails?.durationDays ?? 0,
-                  }),
-                SizedBox(height: 30.h),
-
-                // ============ SUBSCRIBE BUTTON ============
-                AppButton.primary(
-                  onPressed: depositProvider.isSubscribing
-                      ? null
-                      : () => _handleSubscribeClick(depositProvider, planProvider),
-                  text: depositProvider.isSubscribing
-                      ? 'Subscribing...'
-                      : 'Subscribe Plan',
-                  width: double.infinity,
-                  height: 55,
-                ),
-                SizedBox(height: 20.h),
-              ],
+                ],
+              ),
             ),
           ),
         );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../res/app_widget/custom_app_text.dart';
+import '../../../utils/app_color.dart';
 
 class TariffCard extends StatelessWidget {
   final String selectedTariff;
@@ -18,9 +19,12 @@ class TariffCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        gradient: AppColor.cardGradientBgColor,
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: const Color(0xFF2A2A2A), width: 1.5),
+        border: Border.all(
+          color: AppColor.lighterGreen.withOpacity(0.3),
+          width: 1.5,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -28,7 +32,7 @@ class TariffCard extends StatelessWidget {
           AppText.medium(
             'TARIFF',
             fontSize: 12,
-            color: Colors.grey[500],
+            color: Colors.grey[400],
             fontWeight: FontWeight.w600,
           ),
           SizedBox(height: 16.h),
@@ -49,12 +53,22 @@ class TariffCard extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
-          color: isSelected
-              ? const Color(0xFF00FF00).withOpacity(0.15)
-              : const Color(0xFF2A2A2A),
+          gradient: isSelected
+              ? LinearGradient(
+            colors: [
+              AppColor.lighterGreen.withOpacity(0.3),
+              AppColor.primaryColor.withOpacity(0.2),
+            ],
+          )
+              : LinearGradient(
+            colors: [
+              AppColor.secondaryPrimaryColor.withOpacity(0.8),
+              AppColor.primaryColor.withOpacity(0.2),
+            ],
+          ),
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(
-            color: isSelected ? const Color(0xFF00FF00) : Colors.transparent,
+            color: isSelected ? AppColor.lighterGreen : Colors.transparent,
             width: 2,
           ),
         ),
@@ -68,7 +82,7 @@ class TariffCard extends StatelessWidget {
                   title,
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: isSelected ? const Color(0xFF00FF00) : Colors.white,
+                  color: isSelected ? AppColor.lighterGreen : Colors.white,
                 ),
                 SizedBox(height: 4.h),
                 AppText.medium(
@@ -82,7 +96,7 @@ class TariffCard extends StatelessWidget {
               isSelected
                   ? Icons.radio_button_checked
                   : Icons.radio_button_unchecked,
-              color: isSelected ? const Color(0xFF00FF00) : Colors.grey[600],
+              color: isSelected ? AppColor.lighterGreen : Colors.grey[600],
               size: 24.sp,
             ),
           ],
