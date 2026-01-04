@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
+import 'package:myinvestment/view/profile/screen/profile_edit_screen.dart';
 import 'package:provider/provider.dart';
 
 import '../../../res/app_widget/custom_app_bar.dart';
@@ -355,12 +356,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 // Action Buttons
                 AppButton.primary(
                   onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Edit profile coming soon!'),
-                        backgroundColor: AppColor.primaryColor,
-                      ),
-                    );
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileEditScreen(),));
                   },
                   text: 'Edit Profile',
                   icon: Icons.edit,

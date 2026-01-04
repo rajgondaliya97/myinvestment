@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import '../api_services/api_exception.dart';
 import '../model/auth_model/login_response_model.dart';
+import '../model/auth_model/update_user_profile_model.dart';
 import '../model/auth_model/user_profile_model.dart';
 import '../model/auth_model/user_register_model.dart';
 import '../repo/auth_repo.dart';
@@ -375,16 +376,10 @@ class AuthController extends ChangeNotifier {
       print('🔍 Loading user data from storage...');
 
       final isLoggedIn = AppLocalData.getBool(LocalDataKey.isLoggedIn);
-      final userData = AppLocalData.getMap(LocalDataKey.userData);
+      //final userData = AppLocalData.getMap(LocalDataKey.userData);
       final token = AppLocalData.getString(LocalDataKey.accessToken);
 
-      if (isLoggedIn == true && userData != null) {
-        _user = UserData.fromJson(userData);
-
-        // Load profile data if available
-        if (userData['user'] != null) {
-          _profileData = UserProfileModelData.fromJson(userData['user']);
-        }
+      if (isLoggedIn == true) {
 
         _isLoggedIn = true;
         notifyListeners();
@@ -393,6 +388,64 @@ class AuthController extends ChangeNotifier {
       }
     } catch (e) {
       print('❌ Error loading user from storage: $e');
+    }
+  }
+// Add this method to your AuthController class
+
+// Update user profile - does not store data locally
+  Future<bool> updateUserProfile({
+    required String firstName,
+    required String lastName,
+    required String email,
+    String? profileImage,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      print('📡 Updating user profile...');
+
+      final response = await authRepository.updateUserProfile(
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        profileImage: profileImage,
+      );
+
+      print('📊 Update Response Status: ${response.status}');
+      print('📊 Update Message: ${response.message}');
+      print('📊 Update Data: ${response.data?.toJson()}');
+
+      if (response.status == 0 && response.data != null) {
+        print('✅ Profile updated successfully');
+
+        // Fetch updated profile data from API after successful update
+        await fetchUserProfile();
+
+        _errorMessage = null;
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      } else {
+        _errorMessage = response.message ?? 'Failed to update profile';
+        print('❌ Profile update failed: $_errorMessage');
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+    } on ApiException catch (e) {
+      print('❌ ApiException: ${e.message}');
+      _errorMessage = e.message;
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      print('❌ Exception: $e');
+      _errorMessage = 'Failed to update profile';
+      _isLoading = false;
+      notifyListeners();
+      return false;
     }
   }
 

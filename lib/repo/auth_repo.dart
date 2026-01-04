@@ -3,6 +3,7 @@ import '../model/auth_model/login_response_model.dart';
 import '../model/auth_model/sing_up_response_model.dart';
 import '../model/auth_model/user_profile_model.dart';
 import '../model/auth_model/user_register_model.dart';
+import '../model/auth_model/update_user_profile_model.dart';
 import '../utils/app_urls.dart';
 
 class AuthRepository {
@@ -43,6 +44,35 @@ class AuthRepository {
       final response = await apiService.get(AppUrl.userProfileUrl);
 
       return UserProfileModel.fromJson(response);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<UpdateUserProfileModel> updateUserProfile({
+    required String firstName,
+    required String lastName,
+    required String email,
+    String? profileImage, // base64 encoded image or file path
+  }) async {
+    try {
+      final body = {
+        'first_name': firstName,
+        'last_name': lastName,
+        'email': email,
+      };
+
+      // Add profile image if provided
+      if (profileImage != null && profileImage.isNotEmpty) {
+        body['profile'] = profileImage;
+      }
+
+      final response = await apiService.post(
+        AppUrl.updateUserProfileUrl, // Make sure this URL is defined in AppUrl
+        body: body,
+      );
+
+      return UpdateUserProfileModel.fromJson(response);
     } catch (e) {
       rethrow;
     }
