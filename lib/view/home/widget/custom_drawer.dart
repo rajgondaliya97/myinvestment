@@ -10,6 +10,7 @@ import '../../crypto/screen/crypto_plan_history_screen.dart';
 import '../../deposit/screen/deposit_screen.dart';
 import '../../profile/screen/profile_screen.dart';
 import '../../usdt/screen/usdt_plan_history_screen.dart';
+import '../../user_plan/screen/user_active_plan_screen.dart';
 import '../screen/home_screen.dart';
 import 'drawer_menuItem.dart';
 
@@ -248,6 +249,20 @@ class _CustomDrawerState extends State<CustomDrawer> {
                         if (widget.currentRoute != 'profile') {
                           navigator.pushReplacement(
                             MaterialPageRoute(builder: (_) => ProfileScreen()),
+                          );
+                        }
+                      },
+                    ),
+                    DrawerMenuItem(
+                      icon: Icons.trending_up,
+                      title: 'My Active Plans',
+                      isSelected: widget.currentRoute == 'active_plans',
+                      onTap: () {
+                        final navigator = Navigator.of(context);
+                        navigator.pop();
+                        if (widget.currentRoute != 'active_plans') {
+                          navigator.pushReplacement(
+                            MaterialPageRoute(builder: (_) => UserActivePlansScreen()),
                           );
                         }
                       },

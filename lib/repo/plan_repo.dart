@@ -1,3 +1,5 @@
+import 'package:myinvestment/model/user_plan/user_plan_model.dart';
+
 import '../api_services/api_service.dart';
 import '../model/plan_model/get_plan_by_id_model.dart';
 import '../model/plan_model/get_plan_model.dart';
@@ -40,6 +42,18 @@ class PlanRepository {
         body: {"plan_id": plan_id, "amount": amount},
       );
       return PlanSubscribeModel.fromJson(response);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<UserPlanModel> getUserPlan(int limit, int page) async {
+    try {
+      final response = await apiService.post(
+        AppUrl.userPlansUrl,
+        body: {"limit": limit, "page": page, 'search': '', 'sort': 'desc'},
+      );
+      return UserPlanModel.fromJson(response);
     } catch (e) {
       rethrow;
     }
