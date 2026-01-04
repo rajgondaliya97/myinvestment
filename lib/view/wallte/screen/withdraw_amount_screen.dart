@@ -186,7 +186,7 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColor.secondaryPrimaryColor,
-      appBar: CustomAppBar(title: 'Withdraw Amount'),
+      appBar: CustomAppBar(title: 'Withdraw Amount',showDrawer: false),
       body: Container(
         height: double.infinity,
         decoration: BoxDecoration(

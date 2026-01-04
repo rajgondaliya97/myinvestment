@@ -216,7 +216,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           );
                         },
                       ),
-                      SizedBox(height: 20.h),
+                     /* SizedBox(height: 20.h),
                       // Profit Chart Card
                       ProfitChartCard(
                         chartData: homeProvider.currentChartData,
@@ -224,7 +224,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         onPeriodSelected: (period) =>
                             homeProvider.selectPeriod(period),
                         isLoading: homeProvider.isLoading,
-                      ),
+                      ),*/
                       SizedBox(height: 20.h),
 
                       // Quick Actions

@@ -34,29 +34,9 @@ class CalculatorCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-           /* // Icon container with glassmorphism effect
-            Container(
-              padding: EdgeInsets.all(12.w),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.2),
-                  width: 1.5.w,
-                ),
-              ),
-              child: Icon(
-                Icons.calculate_rounded,
-                color: AppColor.white,
-                size: 28.sp,
-              ),
-            ),
-
-            SizedBox(height: 20.h),*/
-
             // Title
             AppText.medium(
-              'Loan Calculator',
+              'Investment Calculator',
               fontWeight: FontWeight.w700,
               color: AppColor.white,
               fontSize: 20,
@@ -66,10 +46,9 @@ class CalculatorCard extends StatelessWidget {
 
             // Description
             AppText.medium(
-              'Calculate your loan amount and get instant results tailored to your needs.',
+              'Calculate your investment returns and plan your financial future with instant results.',
               color: Colors.white.withOpacity(0.85),
               fontSize: 14,
-              //height: 1.5,
             ),
 
             SizedBox(height: 24.h),

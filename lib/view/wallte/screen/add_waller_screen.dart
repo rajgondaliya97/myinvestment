@@ -134,7 +134,7 @@ class _AddWalletScreenState extends State<AddWalletScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColor.secondaryPrimaryColor,
-      appBar: CustomAppBar(title: 'Add Wallet Balance'),
+      appBar: CustomAppBar(title: 'Add Wallet Balance',showDrawer: false),
       body: Container(
         height: double.infinity,
         decoration: BoxDecoration(
