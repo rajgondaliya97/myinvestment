@@ -10,16 +10,16 @@ import '../../../res/app_widget/custom_text_field.dart';
 import '../../../utils/app_color.dart';
 import '../../../view_model/wallet_controller.dart';
 
-class AddWalletScreen extends StatefulWidget {
-  const AddWalletScreen({Key? key}) : super(key: key);
+class WithdrawAmountScreen extends StatefulWidget {
+  const WithdrawAmountScreen({Key? key}) : super(key: key);
 
   @override
-  State<AddWalletScreen> createState() => _AddWalletScreenState();
+  State<WithdrawAmountScreen> createState() => _WithdrawAmountScreenState();
 }
 
-class _AddWalletScreenState extends State<AddWalletScreen> {
+class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
   final TextEditingController _amountController = TextEditingController();
-  final List<int> _quickAmounts = [100, 500, 1000, 5000, 10000];
+  final List<int> _quickAmounts = [100, 500, 1000, 5000];
   int? _selectedAmount;
   String? _amountError;
 
@@ -46,8 +46,21 @@ class _AddWalletScreenState extends State<AddWalletScreen> {
     });
   }
 
+  void _selectMaxAmount() {
+    final walletController = context.read<WalletController>();
+    final maxAmount = walletController.availableBalance;
+
+    setState(() {
+      _selectedAmount = null;
+      _amountController.text = maxAmount.toString();
+      _amountError = null;
+    });
+  }
+
   bool _validateAmount() {
     final amount = _amountController.text.trim();
+    final walletController = context.read<WalletController>();
+    final availableBalance = walletController.availableBalance;
 
     if (amount.isEmpty) {
       setState(() {
@@ -73,14 +86,14 @@ class _AddWalletScreenState extends State<AddWalletScreen> {
 
     if (numAmount < 10) {
       setState(() {
-        _amountError = 'Minimum amount is \$10';
+        _amountError = 'Minimum withdrawal amount is \$10';
       });
       return false;
     }
 
-    if (numAmount > 1000000) {
+    if (numAmount > availableBalance) {
       setState(() {
-        _amountError = 'Maximum amount is \$1,000,000';
+        _amountError = 'Insufficient balance. Available: \$${availableBalance}';
       });
       return false;
     }
@@ -91,20 +104,59 @@ class _AddWalletScreenState extends State<AddWalletScreen> {
     return true;
   }
 
-  void _addBalance() async {
+  void _withdrawBalance() async {
     if (!_validateAmount()) {
       return;
     }
 
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColor.secondaryPrimaryColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+          side: BorderSide(color: AppColor.primaryColor.withOpacity(0.3)),
+        ),
+        title: AppText.large(
+          'Confirm Withdrawal',
+          fontWeight: FontWeight.w700,
+        ),
+        content: AppText.medium(
+          'Are you sure you want to withdraw \$${_amountController.text}?',
+          color: AppColor.grey500,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: AppText.medium(
+              'Cancel',
+              color: AppColor.grey500,
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: AppText.medium(
+              'Withdraw',
+              color: AppColor.primaryColor,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
     final amount = int.parse(_amountController.text.trim());
     final walletController = context.read<WalletController>();
 
-    final success = await walletController.addWalletBalance(balance: amount);
+    final success = await walletController.withdrawBalance(amount: amount);
 
     if (success && mounted) {
       FlushbarHelper.showSuccess(
         context: context,
-        message: 'Balance added successfully! New balance: \$${walletController.currentBalance}',
+        message: 'Withdrawal successful! Remaining balance: \$${walletController.availableBalance}',
       );
 
       // Clear the input
@@ -118,7 +170,7 @@ class _AddWalletScreenState extends State<AddWalletScreen> {
         Navigator.pop(context, true);
       }
     } else if (mounted) {
-      final errorMessage = walletController.errorMessage ?? 'Failed to add balance';
+      final errorMessage = walletController.errorMessage ?? 'Failed to withdraw balance';
       FlushbarHelper.showError(
         context: context,
         message: errorMessage,
@@ -134,7 +186,7 @@ class _AddWalletScreenState extends State<AddWalletScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColor.secondaryPrimaryColor,
-      appBar: CustomAppBar(title: 'Add Wallet Balance'),
+      appBar: CustomAppBar(title: 'Withdraw Amount'),
       body: Container(
         height: double.infinity,
         decoration: BoxDecoration(
@@ -160,23 +212,53 @@ class _AddWalletScreenState extends State<AddWalletScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Current Balance Card
-                    _buildCurrentBalanceCard(walletController),
+                    // Available Balance Card
+                    _buildAvailableBalanceCard(walletController),
                     SizedBox(height: 30.h),
 
                     // Amount Input Section
-                    AppText.medium(
-                      'Enter Amount',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        AppText.medium(
+                          'Withdrawal Amount',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                        GestureDetector(
+                          onTap: _selectMaxAmount,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  AppColor.lighterGreen.withOpacity(0.3),
+                                  AppColor.primaryColor.withOpacity(0.2),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(20.r),
+                              border: Border.all(
+                                color: AppColor.lighterGreen.withOpacity(0.5),
+                                width: 1,
+                              ),
+                            ),
+                            child: AppText.medium(
+                              'Withdraw Max',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColor.lighterGreen,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     SizedBox(height: 12.h),
 
                     // Amount Text Field
                     CustomTextField(
-                      hint: 'Enter amount',
-                      icon: Icons.attach_money,
+                      hint: 'Enter withdrawal amount',
+                      icon: Icons.money_off,
                       controller: _amountController,
                       errorText: _amountError,
                       keyboardType: TextInputType.number,
@@ -201,17 +283,17 @@ class _AddWalletScreenState extends State<AddWalletScreen> {
                     ),
                     SizedBox(height: 12.h),
 
-                    _buildQuickAmountGrid(),
+                    _buildQuickAmountGrid(walletController.availableBalance),
                     SizedBox(height: 30.h),
 
-                    // Information Card
-                    _buildInfoCard(),
+                    // Warning Card
+                    _buildWarningCard(),
                     SizedBox(height: 30.h),
 
-                    // Add Balance Button
+                    // Withdraw Button
                     AppButton.primary(
-                      onPressed: walletController.isLoading ? null : _addBalance,
-                      text: walletController.isLoading ? 'Processing...' : 'Add Balance',
+                      onPressed: walletController.isLoading ? null : _withdrawBalance,
+                      text: walletController.isLoading ? 'Processing...' : 'Withdraw Amount',
                       width: double.infinity,
                       height: 55,
                     ),
@@ -225,10 +307,9 @@ class _AddWalletScreenState extends State<AddWalletScreen> {
     );
   }
 
-  Widget _buildCurrentBalanceCard(WalletController walletController) {
-    final currentBalance = walletController.currentBalance;
-    final lockedBalance = walletController.lockedBalance;
+  Widget _buildAvailableBalanceCard(WalletController walletController) {
     final availableBalance = walletController.availableBalance;
+    final lockedBalance = walletController.lockedBalance;
 
     return Container(
       width: double.infinity,
@@ -242,7 +323,7 @@ class _AddWalletScreenState extends State<AddWalletScreen> {
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColor.primaryColor.withOpacity(0.3),
+            color: Colors.orange.withOpacity(0.3),
             blurRadius: 12,
             offset: Offset(0, 4),
           ),
@@ -263,14 +344,14 @@ class _AddWalletScreenState extends State<AddWalletScreen> {
                       borderRadius: BorderRadius.circular(12.r),
                     ),
                     child: Icon(
-                      Icons.account_balance_wallet,
+                      Icons.account_balance_wallet_outlined,
                       color: Colors.white,
                       size: 24.sp,
                     ),
                   ),
                   SizedBox(width: 12.w),
                   AppText.medium(
-                    'Wallet Balance',
+                    'Available to Withdraw',
                     fontSize: 14,
                     color: Colors.white70,
                   ),
@@ -289,57 +370,85 @@ class _AddWalletScreenState extends State<AddWalletScreen> {
           ),
           SizedBox(height: 16.h),
           AppText.large(
-            '\$$currentBalance',
-            fontSize: 26,
+            '\$$availableBalance',
+            fontSize: 25,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
-          SizedBox(height: 16.h),
-          // Balance Details
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildBalanceDetail('Available', availableBalance),
-              Container(
-                width: 1,
-                height: 30.h,
-                color: Colors.white.withOpacity(0.3),
+          if (lockedBalance > 0) ...[
+            SizedBox(height: 12.h),
+            Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(10.r),
               ),
-              _buildBalanceDetail('Locked', lockedBalance),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.lock_outline,
+                    color: Colors.white70,
+                    size: 16.sp,
+                  ),
+                  SizedBox(width: 8.w),
+                  AppText.medium(
+                    'Locked in investments: \$$lockedBalance',
+                    fontSize: 12,
+                    color: Colors.white70,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickAmountGrid(int availableBalance) {
+    // Filter quick amounts to only show amounts less than or equal to available balance
+    final validAmounts = _quickAmounts.where((amount) => amount <= availableBalance).toList();
+
+    if (validAmounts.isEmpty) {
+      return Container(
+        padding: EdgeInsets.all(16.w),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppColor.secondaryPrimaryColor.withOpacity(0.8),
+              AppColor.primaryColor.withOpacity(0.2),
             ],
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBalanceDetail(String label, int amount) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          AppText.medium(
-            label,
-            fontSize: 12,
-            color: Colors.white60,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(
+            color: Colors.orange.withOpacity(0.3),
+            width: 1,
           ),
-          SizedBox(height: 4.h),
-          AppText.medium(
-            '\$$amount',
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ],
-      ),
-    );
-  }
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.info_outline,
+              color: Colors.orange[300],
+              size: 20.sp,
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: AppText.medium(
+                'Insufficient balance for quick withdrawals',
+                fontSize: 13,
+                color: Colors.grey[400],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
-  Widget _buildQuickAmountGrid() {
     return Wrap(
       spacing: 12.w,
       runSpacing: 12.h,
-      children: _quickAmounts.map((amount) {
+      children: validAmounts.map((amount) {
         final isSelected = _selectedAmount == amount;
         return GestureDetector(
           onTap: () => _selectQuickAmount(amount),
@@ -349,8 +458,8 @@ class _AddWalletScreenState extends State<AddWalletScreen> {
               gradient: isSelected
                   ? LinearGradient(
                 colors: [
-                  AppColor.lighterGreen,
-                  AppColor.primaryColor,
+                  Colors.orange,
+                  Colors.deepOrange,
                 ],
               )
                   : LinearGradient(
@@ -362,8 +471,8 @@ class _AddWalletScreenState extends State<AddWalletScreen> {
               borderRadius: BorderRadius.circular(12.r),
               border: Border.all(
                 color: isSelected
-                    ? AppColor.lighterGreen
-                    : AppColor.lighterGreen.withOpacity(0.3),
+                    ? Colors.orange
+                    : Colors.orange.withOpacity(0.3),
                 width: isSelected ? 2 : 1,
               ),
             ),
@@ -379,19 +488,19 @@ class _AddWalletScreenState extends State<AddWalletScreen> {
     );
   }
 
-  Widget _buildInfoCard() {
+  Widget _buildWarningCard() {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColor.primaryColor.withOpacity(0.2),
+            Colors.red.withOpacity(0.15),
             AppColor.secondaryPrimaryColor.withOpacity(0.3),
           ],
         ),
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(
-          color: Colors.blue.withOpacity(0.3),
+          color: Colors.red.withOpacity(0.3),
           width: 1,
         ),
       ),
@@ -399,8 +508,8 @@ class _AddWalletScreenState extends State<AddWalletScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
-            Icons.info_outline,
-            color: Colors.blue[300],
+            Icons.warning_amber_rounded,
+            color: Colors.red[300],
             size: 20.sp,
           ),
           SizedBox(width: 12.w),
@@ -409,17 +518,18 @@ class _AddWalletScreenState extends State<AddWalletScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 AppText.medium(
-                  'Important Information',
+                  'Important Notice',
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Colors.blue[300],
+                  color: Colors.red[300],
                 ),
                 SizedBox(height: 8.h),
                 AppText.medium(
-                  '• Minimum deposit: \$10\n'
-                      '• Maximum deposit: \$1,000,000\n'
-                      '• Balance will be added instantly\n'
-                      '• You can use available balance for investments',
+                  '• Minimum withdrawal: \$10\n'
+                      '• You can only withdraw available balance\n'
+                      '• Locked balance cannot be withdrawn\n'
+                      '• Processing time: Instant\n'
+                      '• Transaction cannot be reversed',
                   fontSize: 12,
                   color: Colors.grey[400],
                 ),
@@ -437,7 +547,7 @@ class _AddWalletScreenState extends State<AddWalletScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           CircularProgressIndicator(
-            color: AppColor.lighterGreen,
+            color: Colors.orange,
             strokeWidth: 3,
           ),
           SizedBox(height: 16.h),
@@ -482,7 +592,7 @@ class _AddWalletScreenState extends State<AddWalletScreen> {
           ElevatedButton(
             onPressed: _refreshBalance,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColor.lighterGreen,
+              backgroundColor: Colors.orange,
               padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 12.h),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12.r),

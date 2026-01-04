@@ -10,6 +10,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onProfileTap;
   final bool showLogo;
   final List<Widget>? actions;
+  final bool showDrawer; // NEW: Control drawer visibility
+  final bool showBackButton; // NEW: Show back button instead of drawer
 
   const CustomAppBar({
     Key? key,
@@ -18,6 +20,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.onProfileTap,
     this.showLogo = true,
     this.actions,
+    this.showDrawer = true, // DEFAULT: Show drawer
+    this.showBackButton = false, // DEFAULT: Don't show back button
   }) : super(key: key);
 
   @override
@@ -32,12 +36,20 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       child: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: Builder(
+        leading: showDrawer
+            ? Builder(
           builder: (context) => IconButton(
             icon: Icon(Icons.menu, color: Colors.white, size: 28.sp),
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
-        ),
+        )
+            : showBackButton
+            ? IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white, size: 24.sp),
+          onPressed: () => Navigator.pop(context),
+        )
+            : null,
+        automaticallyImplyLeading: showBackButton, // Show back button when needed
         toolbarHeight: 70.h,
         title: Row(
           children: [
@@ -55,10 +67,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           ],
         ),
         actions: [
-          if (actions != null)
-            ...actions!
-          else
-            AppText.small('')
+          if (actions != null) ...actions! else AppText.small('')
         ],
       ),
     );

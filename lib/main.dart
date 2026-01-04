@@ -6,6 +6,7 @@ import 'package:myinvestment/utils/app_color.dart';
 import 'package:myinvestment/view_model/deposit_provider.dart';
 import 'package:myinvestment/view_model/investment_controller.dart';
 import 'package:myinvestment/view_model/pan_provider.dart';
+import 'package:myinvestment/view_model/transaction_controller.dart';
 import 'package:myinvestment/view_model/user_plan_provoder.dart';
 import 'package:myinvestment/view_model/wallet_controller.dart';
 import 'package:provider/provider.dart';
@@ -60,6 +61,12 @@ class MyApp extends StatelessWidget {
             walletRepository: DependencyLocator().walletRepository,
           ),
         ),
+        ChangeNotifierProvider(
+          create: (_) => TransactionController(
+            transactionRepository: DependencyLocator().transactionRepository,
+          ),
+        ),
+
       ],
       child: ScreenUtilInit(
         designSize: Size(375, 812),

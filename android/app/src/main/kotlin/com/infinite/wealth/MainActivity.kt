@@ -1,4 +1,4 @@
-package com.example.myinvestment
+package com.infinite.wealth
 
 import io.flutter.embedding.android.FlutterActivity
 

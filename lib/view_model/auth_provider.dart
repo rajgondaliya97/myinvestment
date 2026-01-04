@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import '../api_services/api_exception.dart';
+import '../api_services/api_service.dart'; // 🔥 ADD THIS IMPORT
 import '../model/auth_model/login_response_model.dart';
 import '../model/auth_model/update_user_profile_model.dart';
 import '../model/auth_model/user_profile_model.dart';
@@ -130,8 +131,14 @@ class AuthController extends ChangeNotifier {
         final token = AppLocalData.getString(LocalDataKey.accessToken);
 
         if (token != null) {
+          // 🔥 SET TOKEN IN API SERVICE
+          ApiService().setToken(token);
+
           _isLoggedIn = true;
-          print('✅ User loaded from storage: ${_profileData?.email}');
+          print('✅ User loaded from storage');
+
+          // Fetch profile after loading token
+          await fetchUserProfile();
         } else {
           await logout();
         }
@@ -216,6 +223,9 @@ class AuthController extends ChangeNotifier {
         await AppLocalData.setString(LocalDataKey.accessToken, response.token.toString());
         await AppLocalData.setBool(LocalDataKey.isLoggedIn, true);
         await AppLocalData.setMap(LocalDataKey.userData, response.data?.toJson() ?? {});
+
+        // 🔥 SET TOKEN IN API SERVICE
+        ApiService().setToken(response.token.toString());
 
         _isLoggedIn = true;
         _isLoading = false;
@@ -357,6 +367,9 @@ class AuthController extends ChangeNotifier {
       await AppLocalData.remove(LocalDataKey.userData);
       await AppLocalData.remove(LocalDataKey.accessToken);
 
+      // 🔥 CLEAR TOKEN FROM API SERVICE
+      ApiService().clearToken();
+
       _user = null;
       _profileData = null;
       _isLoggedIn = false;
@@ -376,10 +389,11 @@ class AuthController extends ChangeNotifier {
       print('🔍 Loading user data from storage...');
 
       final isLoggedIn = AppLocalData.getBool(LocalDataKey.isLoggedIn);
-      //final userData = AppLocalData.getMap(LocalDataKey.userData);
       final token = AppLocalData.getString(LocalDataKey.accessToken);
 
-      if (isLoggedIn == true) {
+      if (isLoggedIn == true && token != null) {
+        // 🔥 SET TOKEN IN API SERVICE
+        ApiService().setToken(token);
 
         _isLoggedIn = true;
         notifyListeners();
@@ -390,9 +404,8 @@ class AuthController extends ChangeNotifier {
       print('❌ Error loading user from storage: $e');
     }
   }
-// Add this method to your AuthController class
 
-// Update user profile - does not store data locally
+  // Update user profile - does not store data locally
   Future<bool> updateUserProfile({
     required String firstName,
     required String lastName,

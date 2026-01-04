@@ -10,6 +10,7 @@ import '../../../utils/app_constent.dart';
 import '../../../view_model/auth_provider.dart';
 import '../../../view_model/home_provider.dart';
 import '../../wallte/screen/add_waller_screen.dart';
+import '../../wallte/screen/withdraw_amount_screen.dart';
 import '../widget/balance_card_widget.dart';
 import '../widget/calculator_card.dart';
 import '../widget/profit_chart_card.dart';
@@ -241,7 +242,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           SizedBox(width: 12.w),
                           Expanded(
                             child: AppButton.primary(
-                              onPressed: () {},
+                              onPressed: () {
+                                Navigator.push(context, MaterialPageRoute(builder: (context) => WithdrawAmountScreen(),));
+                              },
                               text: 'Withdraw',
                               icon: Icons.remove,
                             ),
