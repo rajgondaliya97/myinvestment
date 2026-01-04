@@ -172,7 +172,7 @@ class _DepositScreenState extends State<DepositScreen> {
                       planProvider.selectedPlanDetails != null)
                     SizedBox(height: 20.h),
 
-                  // ============ PROFIT PER DAY CARD ============
+                  /*// ============ PROFIT PER DAY CARD ============
                   if (_selectedPlanData != null &&
                       planProvider.selectedPlanDetails != null &&
                       _amountController.text.isNotEmpty)
@@ -207,6 +207,7 @@ class _DepositScreenState extends State<DepositScreen> {
                         'avgTotalProfit': profitValues['avgTotalProfit'] ?? 0.0,
                       },
                     ),
+  */
                   if (_selectedPlanData != null &&
                       planProvider.selectedPlanDetails != null &&
                       _amountController.text.isNotEmpty)
@@ -267,7 +268,7 @@ class _DepositScreenState extends State<DepositScreen> {
       description: planProvider.selectedPlanDetails?.description,
     ).then((_) {
       // Dismiss loading flushbar
-      loadingFlushbar.dismiss();
+      //loadingFlushbar.dismiss();
     });
   }
 }

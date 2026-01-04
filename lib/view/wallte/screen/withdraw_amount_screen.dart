@@ -455,7 +455,7 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
           child: Container(
             padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 14.h),
             decoration: BoxDecoration(
-              gradient: isSelected
+              gradient: /*isSelected
                   ? LinearGradient(
                 colors: [
                   Colors.orange,
@@ -467,12 +467,22 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
                   AppColor.secondaryPrimaryColor.withOpacity(0.8),
                   AppColor.primaryColor.withOpacity(0.2),
                 ],
+              )*/isSelected
+                  ? LinearGradient(
+                colors: [
+                  AppColor.lighterGreen,
+                  AppColor.primaryColor,
+                ],
+              )
+                  : LinearGradient(
+                colors: [
+                  AppColor.secondaryPrimaryColor.withOpacity(0.8),
+                  AppColor.primaryColor.withOpacity(0.2),
+                ],
               ),
               borderRadius: BorderRadius.circular(12.r),
               border: Border.all(
-                color: isSelected
-                    ? Colors.orange
-                    : Colors.orange.withOpacity(0.3),
+                color: AppColor.lighterGreen.withOpacity(0.3),
                 width: isSelected ? 2 : 1,
               ),
             ),

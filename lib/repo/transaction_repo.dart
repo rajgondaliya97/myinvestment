@@ -1,3 +1,5 @@
+import 'package:myinvestment/utils/app_urls.dart';
+
 import '../api_services/api_service.dart';
 import '../model/transaction_model/transaction_history_model.dart';
 
@@ -16,7 +18,7 @@ class TransactionRepository {
 
     // Your API call here
     final response = await apiService.post(
-      'transaction-history',
+      AppUrl.getTransactionsUrl,
       body: {
       'limit': limit,
       'page': page,

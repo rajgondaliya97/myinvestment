@@ -7,6 +7,7 @@ import '../../../res/app_widget/custom_app_bar.dart';
 import '../../../res/app_widget/custom_app_text.dart';
 import '../../../utils/app_color.dart';
 import '../../../view_model/transaction_controller.dart';
+import '../../home/widget/custom_drawer.dart';
 
 class TransactionHistoryScreen extends StatefulWidget {
   const TransactionHistoryScreen({super.key});
@@ -214,6 +215,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen>
           ),
         ],
       ),
+      drawer: CustomDrawer(currentRoute: 'transactions'),
       body: Container(
         height: double.infinity,
         decoration: BoxDecoration(
