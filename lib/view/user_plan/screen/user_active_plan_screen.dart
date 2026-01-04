@@ -231,8 +231,10 @@ class _UserActivePlansScreenState extends State<UserActivePlansScreen>
               AppColor.primaryColor,
             ],
           ),
-          borderRadius: BorderRadius.circular(12.r),
+          borderRadius: BorderRadius.circular(10.r),
         ),
+        indicatorSize: TabBarIndicatorSize.tab,
+        dividerColor: Colors.transparent,
         labelColor: Colors.white,
         unselectedLabelColor: Colors.grey[400],
         labelStyle: TextStyle(
@@ -243,6 +245,8 @@ class _UserActivePlansScreenState extends State<UserActivePlansScreen>
           fontSize: 14.sp,
           fontWeight: FontWeight.w500,
         ),
+        padding: EdgeInsets.all(4.w),
+        labelPadding: EdgeInsets.zero,
         tabs: [
           Tab(text: 'Active'),
           Tab(text: 'Completed'),
