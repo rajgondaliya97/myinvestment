@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import '../api_services/api_exception.dart';
 import '../model/auth_model/login_response_model.dart';
+import '../model/auth_model/user_profile_model.dart';
 import '../model/auth_model/user_register_model.dart';
 import '../repo/auth_repo.dart';
 import '../res/database/local_data_key.dart';
@@ -10,9 +11,10 @@ class AuthController extends ChangeNotifier {
   final AuthRepository authRepository;
   AuthController({required this.authRepository});
 
-  // Auth state - Now stores the model object
+  // Auth state
   bool _isLoggedIn = false;
-  UserData? _user; // Changed to store model directly
+  UserData? _user;
+  UserProfileModelData? _profileData; // NEW: Profile data from API
   bool _isLoading = false;
   bool _isInitialized = false;
   String? _errorMessage;
@@ -30,6 +32,7 @@ class AuthController extends ChangeNotifier {
   // Getters
   bool get isLoggedIn => _isLoggedIn;
   UserData? get user => _user;
+  UserProfileModelData? get profileData => _profileData; // NEW: Profile data getter
   bool get isLoading => _isLoading;
   bool get isInitialized => _isInitialized;
   String? get errorMessage => _errorMessage;
@@ -69,24 +72,73 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
   }
 
+  // NEW: Fetch user profile from API
+  Future<void> fetchUserProfile() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      print('📡 Fetching user profile from API...');
+
+      final response = await authRepository.getUserProfile();
+
+      print('📊 Profile Response Status: ${response.status}');
+      print('📊 Profile Message: ${response.message}');
+      print('📊 Profile Data: ${response.data?.toJson()}');
+
+      if (response.status == 0 && response.data != null) {
+        _profileData = response.data;
+
+        // Update user data in storage with profile data
+        final userData = _user?.toJson() ?? {};
+        userData['user'] = response.data?.toJson();
+
+        await AppLocalData.setMap(LocalDataKey.userData, userData);
+
+        print('✅ Profile data fetched and saved');
+        print('✅ Name: ${_profileData?.firstName} ${_profileData?.lastName}');
+        print('✅ Email: ${_profileData?.email}');
+        print('✅ Wallet Balance: ${_profileData?.walletBalance}');
+
+        _errorMessage = null;
+      } else {
+        _errorMessage = response.message ?? 'Failed to fetch profile';
+        print('❌ Profile fetch failed: $_errorMessage');
+      }
+    } on ApiException catch (e) {
+      print('❌ ApiException: ${e.message}');
+      _errorMessage = e.message;
+    } catch (e) {
+      print('❌ Exception: $e');
+      _errorMessage = 'Failed to fetch profile data';
+    }
+
+    _isLoading = false;
+    notifyListeners();
+  }
+
   // Initialize auth state from local storage
   Future<void> initializeAuth() async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      // FIXED: Remove .key - pass enum directly
       final isLoggedIn = AppLocalData.getBool(LocalDataKey.isLoggedIn) ?? false;
 
       if (isLoggedIn) {
-        // FIXED: Remove .key - pass enum directly
         final userData = AppLocalData.getMap(LocalDataKey.userData);
         final token = AppLocalData.getString(LocalDataKey.accessToken);
 
         if (userData != null && token != null) {
           _user = UserData.fromJson(userData);
+
+          // Load profile data if available
+          if (userData['user'] != null) {
+            _profileData = UserProfileModelData.fromJson(userData['user']);
+          }
+
           _isLoggedIn = true;
-          print('✅ User loaded from storage: ${_user?.user?.name} (${_user?.user?.email})');
+          print('✅ User loaded from storage: ${_profileData?.email}');
         } else {
           await logout();
         }
@@ -143,11 +195,9 @@ class AuthController extends ChangeNotifier {
         password: password,
       );
 
-      // DEBUG PRINTS
       print('📊 Raw Response Status: ${response.status}');
       print('📊 Token: ${response.token}');
       print('📊 Message: ${response.message}');
-      print('📊 User Data: ${response.data?.toJson()}');
 
       if (response.status == 0) {
         print('✅ Status check passed');
@@ -159,7 +209,6 @@ class AuthController extends ChangeNotifier {
           notifyListeners();
           return false;
         }
-        print('✅ Token exists');
 
         if (response.data == null) {
           print('❌ User data is null');
@@ -168,30 +217,20 @@ class AuthController extends ChangeNotifier {
           notifyListeners();
           return false;
         }
-        print('✅ User data exists');
 
-        // Store the model directly
         _user = response.data;
 
-        // FIXED: Remove .key - pass enum directly
         await AppLocalData.setString(LocalDataKey.accessToken, response.token.toString());
-        print('✅ Token saved');
-
-        // FIXED: Remove .key - pass enum directly
         await AppLocalData.setBool(LocalDataKey.isLoggedIn, true);
-        print('✅ Login status saved');
-
-        // FIXED: Remove .key - pass enum directly
         await AppLocalData.setMap(LocalDataKey.userData, response.data?.toJson() ?? {});
-      //  print('✅ User data saved: ${_user?.name} (${_user?.email})');
-
-        // Verify saved data
-        final savedUserData = AppLocalData.getMap(LocalDataKey.userData);
-        print('🔍 Verified saved user data: $savedUserData');
 
         _isLoggedIn = true;
         _isLoading = false;
         notifyListeners();
+
+        // Fetch profile after successful login
+        await fetchUserProfile();
+
         return true;
 
       } else {
@@ -210,7 +249,6 @@ class AuthController extends ChangeNotifier {
       return false;
     } catch (e) {
       print('❌ Exception: $e');
-      print('❌ Stack trace: ${StackTrace.current}');
       _errorMessage = 'An unexpected error occurred. Please try again.';
       _isLoading = false;
       notifyListeners();
@@ -295,14 +333,12 @@ class AuthController extends ChangeNotifier {
           notifyListeners();
           return true;
         } else {
-          print('❌ Registration response missing user data');
           _errorMessage = response.message ?? 'Registration failed. Please try again.';
           _isLoading = false;
           notifyListeners();
           return false;
         }
       } else {
-        print('❌ Registration failed: ${response.status}');
         _errorMessage = response.message ?? 'Registration failed. Please try again.';
         _isLoading = false;
         notifyListeners();
@@ -310,13 +346,11 @@ class AuthController extends ChangeNotifier {
       }
 
     } on ApiException catch (e) {
-      print('❌ ApiException: ${e.message}');
       _errorMessage = e.message;
       _isLoading = false;
       notifyListeners();
       return false;
     } catch (e) {
-      print('❌ Exception: $e');
       _errorMessage = 'An unexpected error occurred. Please try again.';
       _isLoading = false;
       notifyListeners();
@@ -326,12 +360,12 @@ class AuthController extends ChangeNotifier {
 
   Future<void> logout() async {
     try {
-      // FIXED: Remove .key - pass enum directly
       await AppLocalData.remove(LocalDataKey.isLoggedIn);
       await AppLocalData.remove(LocalDataKey.userData);
       await AppLocalData.remove(LocalDataKey.accessToken);
 
       _user = null;
+      _profileData = null;
       _isLoggedIn = false;
       _errorMessage = null;
       _showLoginScreen = true;
@@ -348,26 +382,25 @@ class AuthController extends ChangeNotifier {
     try {
       print('🔍 Loading user data from storage...');
 
-      // FIXED: Remove .key - pass enum directly
       final isLoggedIn = AppLocalData.getBool(LocalDataKey.isLoggedIn);
       final userData = AppLocalData.getMap(LocalDataKey.userData);
       final token = AppLocalData.getString(LocalDataKey.accessToken);
 
-      print('🔍 isLoggedIn: $isLoggedIn');
-      print('🔍 userData: $userData');
-      print('🔍 token: $token');
-
       if (isLoggedIn == true && userData != null) {
         _user = UserData.fromJson(userData);
+
+        // Load profile data if available
+        if (userData['user'] != null) {
+          _profileData = UserProfileModelData.fromJson(userData['user']);
+        }
+
         _isLoggedIn = true;
-       // print('✅ User loaded: ${_user?.name} (${_user?.email})');
         notifyListeners();
       } else {
         print('⚠️ No user data found in storage');
       }
     } catch (e) {
       print('❌ Error loading user from storage: $e');
-      print('❌ Stack trace: ${StackTrace.current}');
     }
   }
 

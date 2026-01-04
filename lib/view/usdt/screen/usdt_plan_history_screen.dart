@@ -50,15 +50,7 @@ class _UsdtPlanHistoryScreenState extends State<UsdtPlanHistoryScreen> {
       drawer: CustomDrawer(currentRoute: 'usdt'),
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              AppColor.secondaryPrimaryColor,
-              Color(0xFF021530),
-              AppColor.primaryColor.withOpacity(0.3),
-            ],
-          ),
+          gradient: AppColor.screenGradientBgColor,
         ),
         child: Consumer<InvestmentProvider>(
           builder: (context, provider, child) {
@@ -196,15 +188,7 @@ class _UsdtPlanHistoryScreenState extends State<UsdtPlanHistoryScreen> {
                   return Container(
                     margin: EdgeInsets.only(bottom: 16.h),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          AppColor.lighterBlue.withOpacity(0.8),
-                          AppColor.secondaryPrimaryColor.withOpacity(0.9),
-                          AppColor.primaryColor.withOpacity(0.1),
-                        ],
-                      ),
+                      gradient: AppColor.cardGradientBgColor,
                       borderRadius: BorderRadius.circular(20.r),
                       border: Border.all(
                         color: AppColor.lighterGreen.withOpacity(0.3),

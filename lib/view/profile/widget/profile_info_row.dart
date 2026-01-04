@@ -119,8 +119,8 @@ class ProfileInfoRow extends StatelessWidget {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              AppColor.primaryColor.withOpacity(0.3),
-                              AppColor.lighterGreen.withOpacity(0.2),
+                              AppColor.secondaryPrimaryColor.withOpacity(0.3),
+                              AppColor.lighterBlue.withOpacity(0.2),
                             ],
                           ),
                           borderRadius: BorderRadius.circular(8.r),
