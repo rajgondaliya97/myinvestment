@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:myinvestment/utils/app_color.dart';
 
 import '../../../res/app_widget/custom_app_text.dart';
 
@@ -67,11 +68,9 @@ class _BalanceCardState extends State<BalanceCard> with SingleTickerProviderStat
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Color(0xFF00FF00).withOpacity(0.2),
-            Color(0xFF00CC00).withOpacity(0.1),
+            AppColor.secondaryPrimaryColor.withOpacity(0.8),
+            AppColor.primaryColor.withOpacity(0.2),
           ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20.r),
         border: Border.all(

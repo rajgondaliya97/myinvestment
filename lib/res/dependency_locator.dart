@@ -1,42 +1,33 @@
 
 
+import '../api_services/api_service.dart';
+import '../repo/auth_repo.dart';
+import '../repo/home_repo.dart';
+import '../repo/plan_repo.dart';
+import '../repo/profile_repo.dart';
+import '../repo/wallet_repo.dart';
+
 class DependencyLocator {
   static final DependencyLocator _instance = DependencyLocator._internal();
   factory DependencyLocator() => _instance;
   DependencyLocator._internal();
-/*
 
-  // Repositories
-  late HomePageRepo homePageRepo;
-  late TicketBookingRepository ticketBookingRepository;
-  late AuthRepository authRepository;
-  late UserRepository userRepository;
-  late AutoSyncDataServiceRepo autoSyncRepo;
-  late QrScanRepository qrScanRepository;
-  late SplashRepository splashRepository;
-
-  // Services
   late ApiService apiService;
-  late AutoSyncService autoSyncService;
-*/
+  late AuthRepository authRepository;
+  late PlanRepository planRepository;
+  late ProfileRepository profileRepository;
+  late WalletRepository walletRepository;
+  late HomeRepository homeRepository;
+
 
   Future<void> init() async {
-   /* // Initialize API Service
+    // Initialize API Service
     apiService = ApiService();
-
-    // Initialize Repositories
-    homePageRepo = HomePageRepo(apiService: apiService);
-    ticketBookingRepository = TicketBookingRepository(apiService: apiService);
     authRepository = AuthRepository(apiService: apiService);
-    userRepository = UserRepository(apiService: apiService);
-    autoSyncRepo = AutoSyncDataServiceRepo(apiService: apiService);
-    qrScanRepository = QrScanRepository(apiService: apiService);
-    splashRepository = SplashRepository(apiService: apiService);
+    planRepository = PlanRepository(apiService: apiService);
+    walletRepository = WalletRepository(apiService: apiService);
+    homeRepository = HomeRepository(apiService: apiService);
 
-    // Initialize Auto Sync Service
-    autoSyncService = AutoSyncService();
-    autoSyncService.initialize();
-*/
     print('✅ All dependencies initialized');
   }
 }

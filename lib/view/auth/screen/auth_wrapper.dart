@@ -12,23 +12,21 @@ class AuthWrapper extends StatefulWidget {
 }
 
 class _AuthWrapperState extends State<AuthWrapper> {
-  bool showLogin = true;
-
   @override
   void initState() {
     super.initState();
     // Initialize auth state when app starts
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<AuthProvider>(context, listen: false).initializeAuth();
+      Provider.of<AuthController>(context, listen: false).initializeAuth();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
+    final authController = Provider.of<AuthController>(context);
 
     // Show loading screen while checking auth state
-    if (!authProvider.isInitialized) {
+    if (!authController.isInitialized) {
       return Scaffold(
         backgroundColor: Colors.black,
         body: Center(
@@ -58,13 +56,13 @@ class _AuthWrapperState extends State<AuthWrapper> {
     }
 
     // Show home screen if logged in
-    if (authProvider.isLoggedIn) {
+    if (authController.isLoggedIn) {
       return HomeScreen();
     }
 
-    // Show login or register screen
-    return showLogin
-        ? LoginScreen(onSwitchToRegister: () => setState(() => showLogin = false))
-        : RegisterScreen(onSwitchToLogin: () => setState(() => showLogin = true));
+    // Show login or register screen based on controller state
+    return authController.showLoginScreen
+        ? LoginScreen()
+        : RegisterScreen();
   }
 }

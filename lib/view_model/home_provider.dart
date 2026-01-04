@@ -1,47 +1,95 @@
 import 'package:flutter/material.dart';
+import '../model/home_model/dashbord_model.dart';
+import '../repo/home_repo.dart';
 
 class HomeProvider extends ChangeNotifier {
-  double _balance = 125450.75;
-  double _profitPercentage = 24.5;
-  String _selectedPeriod = '1D';
+  final HomeRepository homeRepository;
+
+  HomeProvider({required this.homeRepository});
+
+  // Dashboard data
+  DashboardDataModel? _dashboardData;
   bool _isLoading = false;
+  String? _errorMessage;
 
-  // Chart data for different periods
-  Map<String, List<double>> _chartData = {
-    '1D': [100, 120, 115, 140, 135, 150, 145, 160, 155, 170],
-    '1W': [1000, 1100, 1050, 1200, 1150, 1300, 1250],
-    '1M': [5000, 5500, 5300, 6000, 5800, 6500, 6300, 7000],
-    '1Y': [50000, 60000, 55000, 70000, 65000, 80000, 75000, 90000, 85000, 100000, 95000, 110000],
-  };
-
-  double get balance => _balance;
-  double get profitPercentage => _profitPercentage;
-  String get selectedPeriod => _selectedPeriod;
+  // Getters
+  DashboardDataModel? get dashboardData => _dashboardData;
   bool get isLoading => _isLoading;
-  List<double> get currentChartData => _chartData[_selectedPeriod] ?? [];
+  String? get errorMessage => _errorMessage;
 
-  void selectPeriod(String period) {
-    _selectedPeriod = period;
-    _isLoading = true;
-    notifyListeners();
+  // Get balance from dashboard data
+  double get balance => (_dashboardData?.balance ?? 0).toDouble();
+  int get activePlans => _dashboardData?.activePlans ?? 0;
+  int get totalWithdrawalsApprove => _dashboardData?.totalWithdrawalsApprove ?? 0;
+  int get totalWithdrawals => _dashboardData?.totalWithdrawals ?? 0;
 
-    // Simulate API call
-    Future.delayed(Duration(milliseconds: 500), () {
-      _isLoading = false;
-      notifyListeners();
-    });
+  // Chart data (keep existing implementation)
+  String _selectedPeriod = '1M';
+  String get selectedPeriod => _selectedPeriod;
+
+  List<double> get currentChartData {
+    // Return your existing chart data based on selected period
+    return _getChartDataForPeriod(_selectedPeriod);
   }
 
-  void refreshData() async {
+  double get profitPercentage {
+    // Calculate profit percentage based on your logic
+    return 12.5; // Example value
+  }
+
+  // Fetch dashboard data from API
+  Future<void> fetchDashboardData() async {
     _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
 
-    // Simulate API call
-    await Future.delayed(Duration(seconds: 2));
+    try {
+      _dashboardData = await homeRepository.getDashBord();
+      _isLoading = false;
+      _errorMessage = null;
+      notifyListeners();
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
 
-    _balance += 100; // Demo: add some profit
-    _profitPercentage = ((_balance / 100000) - 1) * 100;
-    _isLoading = false;
+  // Select period for chart
+  void selectPeriod(String period) {
+    _selectedPeriod = period;
     notifyListeners();
+  }
+
+  // Initialize with user data (optional - for backward compatibility)
+  void initializeWithUserData({
+    double? walletBalance,
+    double? investmentAmount,
+  }) {
+    // You can use this if needed for initial display before API loads
+    notifyListeners();
+  }
+
+  // Helper method to get chart data
+  List<double> _getChartDataForPeriod(String period) {
+    // Your existing chart data logic - returning just the profit values
+    switch (period) {
+      case '1W':
+        return [120, 150, 170, 140, 200, 180, 190];
+      case '1M':
+        return [800, 1200, 1500, 1800];
+      case '3M':
+        return [5000, 6500, 7200];
+      case '1Y':
+        return [5000, 5500, 6000, 6200, 7000, 7500, 8000, 8200, 8500, 9000, 9500, 10000];
+      default:
+        return [800, 1200, 1500, 1800];
+    }
+  }
+
+  // Refresh all data
+  Future<void> refreshData() async {
+    await fetchDashboardData();
   }
 }
