@@ -9,6 +9,7 @@ import '../../auth/screen/auth_wrapper.dart';
 import '../../crypto/screen/crypto_plan_history_screen.dart';
 import '../../deposit/screen/deposit_screen.dart';
 import '../../profile/screen/profile_screen.dart';
+import '../../transaction_history/screen/transaction_history_screen.dart';
 import '../../usdt/screen/usdt_plan_history_screen.dart';
 import '../../user_plan/screen/user_active_plan_screen.dart';
 import '../screen/home_screen.dart';
@@ -30,14 +31,12 @@ class _CustomDrawerState extends State<CustomDrawer> {
   @override
   void initState() {
     super.initState();
-    // Load user data from local storage when drawer opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<AuthController>(context, listen: false).loadUserFromStorage();
     });
   }
 
   void _handleLogout(BuildContext context) async {
-    // Show confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -75,17 +74,12 @@ class _CustomDrawerState extends State<CustomDrawer> {
     );
 
     if (confirmed == true) {
-      // Close drawer first
       Navigator.pop(context);
-
-      // Perform logout
       await Provider.of<AuthController>(context, listen: false).logout();
-
-      // Navigate to auth wrapper (which will show login screen)
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (_) => AuthWrapper()),
-            (route) => false, // Remove all previous routes
+        MaterialPageRoute(builder: (context) => AuthWrapper()),
+            (route) => false,
       );
     }
   }
@@ -95,7 +89,6 @@ class _CustomDrawerState extends State<CustomDrawer> {
     final authController = Provider.of<AuthController>(context);
     final user = authController.user;
 
-    // Get user name and email from model
     final userName = user?.user?.name ??
         '${user?.user?.firstName ?? ''} ${user?.user?.lastName ?? ''}'.trim();
     final userEmail = user?.user?.email ?? 'user@example.com';
@@ -142,7 +135,6 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Profile Image
                     Container(
                       width: 70.w,
                       height: 70.w,
@@ -192,7 +184,6 @@ class _CustomDrawerState extends State<CustomDrawer> {
                       ),
                     ),
                     SizedBox(height: 16.h),
-                    // User Name
                     ShaderMask(
                       shaderCallback: (bounds) => LinearGradient(
                         colors: [AppColor.lighterGreen, AppColor.primaryColor],
@@ -205,7 +196,6 @@ class _CustomDrawerState extends State<CustomDrawer> {
                       ),
                     ),
                     SizedBox(height: 4.h),
-                    // User Email
                     AppText.medium(
                       fontSize: 12,
                       userEmail,
@@ -229,7 +219,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                         if (widget.currentRoute != 'home') {
                           Navigator.pushReplacement(
                             context,
-                            MaterialPageRoute(builder: (_) => HomeScreen()),
+                            MaterialPageRoute(builder: (context) => HomeScreen()), // FIXED
                           );
                         }
                       },
@@ -239,16 +229,11 @@ class _CustomDrawerState extends State<CustomDrawer> {
                       title: 'Profile',
                       isSelected: widget.currentRoute == 'profile',
                       onTap: () {
-                        // 1. Capture the navigator before popping
                         final navigator = Navigator.of(context);
-
-                        // 2. Close the drawer
                         navigator.pop();
-
-                        // 3. Navigate only if we aren't already there
                         if (widget.currentRoute != 'profile') {
                           navigator.pushReplacement(
-                            MaterialPageRoute(builder: (_) => ProfileScreen()),
+                            MaterialPageRoute(builder: (context) => ProfileScreen()), // FIXED
                           );
                         }
                       },
@@ -262,7 +247,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                         navigator.pop();
                         if (widget.currentRoute != 'active_plans') {
                           navigator.pushReplacement(
-                            MaterialPageRoute(builder: (_) => UserActivePlansScreen()),
+                            MaterialPageRoute(builder: (context) => UserActivePlansScreen()), // FIXED
                           );
                         }
                       },
@@ -276,7 +261,21 @@ class _CustomDrawerState extends State<CustomDrawer> {
                         if (widget.currentRoute != 'deposit') {
                           Navigator.pushReplacement(
                             context,
-                            MaterialPageRoute(builder: (_) => DepositScreen()),
+                            MaterialPageRoute(builder: (context) => DepositScreen()), // FIXED
+                          );
+                        }
+                      },
+                    ),
+                    DrawerMenuItem(
+                      icon: Icons.history,
+                      title: 'Transaction History',
+                      isSelected: widget.currentRoute == 'transactions',
+                      onTap: () {
+                        final navigator = Navigator.of(context);
+                        navigator.pop();
+                        if (widget.currentRoute != 'transactions') {
+                          navigator.pushReplacement(
+                            MaterialPageRoute(builder: (context) => TransactionHistoryScreen()), // FIXED
                           );
                         }
                       },
@@ -290,7 +289,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                         if (widget.currentRoute != 'crypto') {
                           Navigator.pushReplacement(
                             context,
-                            MaterialPageRoute(builder: (_) => CryptoPlanHistoryScreen()),
+                            MaterialPageRoute(builder: (context) => CryptoPlanHistoryScreen()), // FIXED
                           );
                         }
                       },
@@ -304,7 +303,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                         if (widget.currentRoute != 'usdt') {
                           Navigator.pushReplacement(
                             context,
-                            MaterialPageRoute(builder: (_) => UsdtPlanHistoryScreen()),
+                            MaterialPageRoute(builder: (context) => UsdtPlanHistoryScreen()), // FIXED
                           );
                         }
                       },
@@ -320,7 +319,6 @@ class _CustomDrawerState extends State<CustomDrawer> {
                       isSelected: false,
                       onTap: () {
                         Navigator.pop(context);
-                        // Navigate to settings
                       },
                     ),
                     DrawerMenuItem(
@@ -329,7 +327,6 @@ class _CustomDrawerState extends State<CustomDrawer> {
                       isSelected: false,
                       onTap: () {
                         Navigator.pop(context);
-                        // Navigate to help
                       },
                     ),
                   ],

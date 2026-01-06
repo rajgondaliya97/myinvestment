@@ -125,7 +125,7 @@ class _BalanceCardState extends State<BalanceCard> with SingleTickerProviderStat
                   '\$${widget.balance.toStringAsFixed(2)}',
                   fontWeight: FontWeight.w700,
                   color: Colors.white,
-                  fontSize: 32,
+                  fontSize: 25,
                 ),
                 SizedBox(height: 8.h),
                 AppText.small(
@@ -174,7 +174,7 @@ class _BalanceCardState extends State<BalanceCard> with SingleTickerProviderStat
                   // Currency Balances
                   _buildCurrencyItem(
                     'US DOLLAR',
-                    widget.usdBalance,
+                    widget.balance,
                     Icons.attach_money,
                     Color(0xFF00FF00),
                   ),
@@ -194,10 +194,10 @@ class _BalanceCardState extends State<BalanceCard> with SingleTickerProviderStat
                     Icons.diamond,
                     Color(0xFF627EEA),
                   ),
-                  SizedBox(height: 16.h),
+                  SizedBox(height: 5.h),
 
                   // Action Buttons
-                  Row(
+                  /*Row(
                     children: [
                       Expanded(
                         child: _buildActionButton(
@@ -217,7 +217,7 @@ class _BalanceCardState extends State<BalanceCard> with SingleTickerProviderStat
                         ),
                       ),
                     ],
-                  ),
+                  ),*/
                 ],
               ),
             ),
