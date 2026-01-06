@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../utils/app_color.dart';
 import 'custom_app_text.dart';
@@ -10,6 +11,8 @@ class CustomTextField extends StatefulWidget {
   final TextEditingController controller;
   final String? errorText;
   final TextInputType? keyboardType;
+  final ValueChanged<String>? onChanged;
+  final List<TextInputFormatter>? inputFormatters;
 
   const CustomTextField({
     Key? key,
@@ -19,6 +22,8 @@ class CustomTextField extends StatefulWidget {
     required this.controller,
     this.errorText,
     this.keyboardType,
+    this.onChanged,
+    this.inputFormatters,
   }) : super(key: key);
 
   @override
@@ -48,6 +53,8 @@ class _CustomTextFieldState extends State<CustomTextField> {
             controller: widget.controller,
             obscureText: widget.isPassword && _obscureText,
             keyboardType: widget.keyboardType,
+            onChanged: widget.onChanged,
+            inputFormatters: widget.inputFormatters,
             style: TextStyle(color: AppColor.white, fontSize: 16.sp),
             decoration: InputDecoration(
               hintText: widget.hint,

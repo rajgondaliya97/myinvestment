@@ -6,7 +6,6 @@ import '../../../res/app_widget/custom_app_bar.dart';
 import '../../../res/app_widget/custom_app_text.dart';
 import '../../../utils/app_color.dart';
 import '../../../view_model/pan_provider.dart';
-import '../../home/widget/custom_drawer.dart';
 
 class InvestmentCalculatorScreen extends StatefulWidget {
   const InvestmentCalculatorScreen({Key? key}) : super(key: key);
@@ -49,7 +48,7 @@ class _InvestmentCalculatorScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColor.background,
-      appBar: CustomAppBar(title: 'Investment Calculator',),
+      appBar: CustomAppBar(title: 'Investment Calculator',showDrawer: false,),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -64,7 +63,7 @@ class _InvestmentCalculatorScreenState
         ),
         child: Consumer<PlanProvider>(
           builder: (context, planProvider, child) {
-            if (planProvider.isLoading && planProvider.plans!.isEmpty) {
+            if (planProvider.isLoading && (planProvider.plans?.isEmpty ?? true)) {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -85,7 +84,7 @@ class _InvestmentCalculatorScreenState
               return _buildErrorState(planProvider);
             }
 
-            if (planProvider.plans!.isEmpty) {
+            if (planProvider.plans?.isEmpty ?? true) {
               return _buildEmptyState();
             }
 
@@ -123,14 +122,14 @@ class _InvestmentCalculatorScreenState
                     _buildAmountSelector(selectedPlan, minAmount, maxAmount),
                     SizedBox(height: 24.h),
                     _buildProfitDisplay(selectedPlan, profits),
-                    SizedBox(height: 24.h),
+                    /*SizedBox(height: 24.h),
                     AppButton.primary(
                       onPressed: () {},
                       text: 'Start Investment',
                       icon: Icons.rocket_launch,
                       height: 50.h,
                       fontSize: 14.sp,
-                    ),
+                    ),*/
                     SizedBox(height: 20.h),
                   ],
                 ),
@@ -716,48 +715,6 @@ class _InvestmentCalculatorScreenState
             fontWeight: FontWeight.w800,
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildActionButton() {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          // Handle investment
-        },
-        borderRadius: BorderRadius.circular(16.r),
-        child: Ink(
-          decoration: BoxDecoration(
-            gradient: AppColor.primaryGradient,
-            borderRadius: BorderRadius.circular(16.r),
-            boxShadow: [
-              BoxShadow(
-                color: AppColor.primaryColor.withOpacity(0.4),
-                blurRadius: 20,
-                offset: Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Container(
-            width: double.infinity,
-            padding: EdgeInsets.symmetric(vertical: 18.h),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.rocket_launch, color: Colors.white, size: 24.sp),
-                SizedBox(width: 12.w),
-                AppText.large(
-                  'Start Investment',
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }
