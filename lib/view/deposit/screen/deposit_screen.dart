@@ -113,7 +113,7 @@ class _DepositScreenState extends State<DepositScreen> {
         return Scaffold(
           backgroundColor: AppColor.secondaryPrimaryColor,
           appBar: CustomAppBar(title: 'Create Deposit'),
-          drawer: const CustomDrawer(currentRoute: 'home'),
+          drawer: const CustomDrawer(currentRoute: 'deposit'),
           body: Container(
             decoration: BoxDecoration(
               gradient: AppColor.screenGradientBgColor,

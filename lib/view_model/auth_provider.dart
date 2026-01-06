@@ -34,7 +34,8 @@ class AuthController extends ChangeNotifier {
   // Getters
   bool get isLoggedIn => _isLoggedIn;
   UserData? get user => _user;
-  UserProfileModelData? get profileData => _profileData; // NEW: Profile data getter
+  UserProfileModelData? get profileData =>
+      _profileData; // NEW: Profile data getter
   bool get isLoading => _isLoading;
   bool get isInitialized => _isInitialized;
   String? get errorMessage => _errorMessage;
@@ -220,9 +221,15 @@ class AuthController extends ChangeNotifier {
 
         _user = response.data;
 
-        await AppLocalData.setString(LocalDataKey.accessToken, response.token.toString());
+        await AppLocalData.setString(
+          LocalDataKey.accessToken,
+          response.token.toString(),
+        );
         await AppLocalData.setBool(LocalDataKey.isLoggedIn, true);
-        await AppLocalData.setMap(LocalDataKey.userData, response.data?.toJson() ?? {});
+        await AppLocalData.setMap(
+          LocalDataKey.userData,
+          response.data?.toJson() ?? {},
+        );
 
         // 🔥 SET TOKEN IN API SERVICE
         ApiService().setToken(response.token.toString());
@@ -235,15 +242,14 @@ class AuthController extends ChangeNotifier {
         await fetchUserProfile();
 
         return true;
-
       } else {
         print('❌ Status check failed: ${response.status}');
-        _errorMessage = response.message ?? 'Login failed. Please check your credentials.';
+        _errorMessage =
+            response.message ?? 'Login failed. Please check your credentials.';
         _isLoading = false;
         notifyListeners();
         return false;
       }
-
     } on ApiException catch (e) {
       print('❌ ApiException: ${e.message}');
       _errorMessage = e.message;
@@ -260,7 +266,13 @@ class AuthController extends ChangeNotifier {
   }
 
   // Validate register inputs
-  bool _validateRegister(String firstName, String lastName, String email, String password, String confirmPassword) {
+  bool _validateRegister(
+    String firstName,
+    String lastName,
+    String email,
+    String password,
+    String confirmPassword,
+  ) {
     clearRegisterErrors();
     bool isValid = true;
 
@@ -302,8 +314,21 @@ class AuthController extends ChangeNotifier {
     return isValid;
   }
 
-  Future<bool> register(String firstName, String lastName, String email, String password, String confirmPassword, String? referralCode) async {
-    if (!_validateRegister(firstName, lastName, email, password, confirmPassword)) {
+  Future<bool> register(
+    String firstName,
+    String lastName,
+    String email,
+    String password,
+    String confirmPassword,
+    String? referralCode,
+  ) async {
+    if (!_validateRegister(
+      firstName,
+      lastName,
+      email,
+      password,
+      confirmPassword,
+    )) {
       return false;
     }
 
@@ -336,18 +361,19 @@ class AuthController extends ChangeNotifier {
           notifyListeners();
           return true;
         } else {
-          _errorMessage = response.message ?? 'Registration failed. Please try again.';
+          _errorMessage =
+              response.message ?? 'Registration failed. Please try again.';
           _isLoading = false;
           notifyListeners();
           return false;
         }
       } else {
-        _errorMessage = response.message ?? 'Registration failed. Please try again.';
+        _errorMessage =
+            response.message ?? 'Registration failed. Please try again.';
         _isLoading = false;
         notifyListeners();
         return false;
       }
-
     } on ApiException catch (e) {
       _errorMessage = e.message;
       _isLoading = false;
@@ -362,7 +388,18 @@ class AuthController extends ChangeNotifier {
   }
 
   Future<void> logout() async {
+    _isLoading = true;
+    notifyListeners();
+
     try {
+      // Call logout API
+      print('📡 Calling logout API...');
+      final response = await authRepository.userLogout();
+
+      print('📊 Logout Response Status: ${response.status}');
+      print('📊 Logout Message: ${response.message}');
+
+      // Clear local data regardless of API response
       await AppLocalData.remove(LocalDataKey.isLoggedIn);
       await AppLocalData.remove(LocalDataKey.userData);
       await AppLocalData.remove(LocalDataKey.accessToken);
@@ -377,11 +414,42 @@ class AuthController extends ChangeNotifier {
       _showLoginScreen = true;
       clearLoginErrors();
       clearRegisterErrors();
-      notifyListeners();
+
       print('✅ Logout successful');
+    } on ApiException catch (e) {
+      print('⚠️ Logout API error: ${e.message}');
+      // Still clear local data even if API call fails
+      await AppLocalData.remove(LocalDataKey.isLoggedIn);
+      await AppLocalData.remove(LocalDataKey.userData);
+      await AppLocalData.remove(LocalDataKey.accessToken);
+      ApiService().clearToken();
+
+      _user = null;
+      _profileData = null;
+      _isLoggedIn = false;
+      _errorMessage = null;
+      _showLoginScreen = true;
+      clearLoginErrors();
+      clearRegisterErrors();
     } catch (e) {
-      print('❌ Logout error: $e');
+      print('⚠️ Logout error: $e');
+      // Still clear local data even if something goes wrong
+      await AppLocalData.remove(LocalDataKey.isLoggedIn);
+      await AppLocalData.remove(LocalDataKey.userData);
+      await AppLocalData.remove(LocalDataKey.accessToken);
+      ApiService().clearToken();
+
+      _user = null;
+      _profileData = null;
+      _isLoggedIn = false;
+      _errorMessage = null;
+      _showLoginScreen = true;
+      clearLoginErrors();
+      clearRegisterErrors();
     }
+
+    _isLoading = false;
+    notifyListeners();
   }
 
   Future<void> loadUserFromStorage() async {

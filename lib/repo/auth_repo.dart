@@ -1,5 +1,6 @@
 import '../api_services/api_service.dart';
 import '../model/auth_model/login_response_model.dart';
+import '../model/auth_model/logout_model.dart';
 import '../model/auth_model/sing_up_response_model.dart';
 import '../model/auth_model/user_profile_model.dart';
 import '../model/auth_model/user_register_model.dart';
@@ -73,6 +74,15 @@ class AuthRepository {
       );
 
       return UpdateUserProfileModel.fromJson(response);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<LogoutModel> userLogout() async {
+    try {
+      final response = await apiService.get(AppUrl.logoutUrl);
+      return LogoutModel.fromJson(response);
     } catch (e) {
       rethrow;
     }

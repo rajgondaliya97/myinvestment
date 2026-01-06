@@ -78,7 +78,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
       await Provider.of<AuthController>(context, listen: false).logout();
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => AuthWrapper()), // FIXED: Changed _ to context
+        MaterialPageRoute(builder: (context) => AuthWrapper()),
             (route) => false,
       );
     }
