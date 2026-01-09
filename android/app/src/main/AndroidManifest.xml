@@ -12,7 +12,18 @@
     <!-- Camera Feature (optional but recommended) -->
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false"/>
-
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <queries>
+        <package android:name="io.metamask" />
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="metamask" />
+        </intent>
+    </queries>
     <application android:label="Infinite Wealth"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
