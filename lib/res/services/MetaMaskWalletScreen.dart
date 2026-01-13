@@ -1,10 +1,11 @@
+/*
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:myinvestment/res/services/meta_mask_service.dart';
 import 'package:myinvestment/utils/app_color.dart';
 import 'package:provider/provider.dart';
-
+import 'package:qr_flutter/qr_flutter.dart';
 class MetaMaskWalletScreen extends StatefulWidget {
   const MetaMaskWalletScreen({Key? key}) : super(key: key);
 
@@ -146,74 +147,50 @@ class _MetaMaskWalletScreenState extends State<MetaMaskWalletScreen> {
   }
 
   Widget _buildConnectButton(MetaMaskService service) {
-    return ElevatedButton(
-      onPressed: _isLoading
-          ? null
-          : () async {
-        setState(() {
-          _isLoading = true;
-          _statusMessage = 'Opening MetaMask app...';
-        });
-
-        try {
-          await service.connect();
-          setState(() {
-            _statusMessage = 'Successfully connected to MetaMask!';
-          });
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('✅ Wallet connected successfully!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        } catch (e) {
-          setState(() {
-            _statusMessage = 'Connection failed: ${e.toString()}';
-          });
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('❌ Connection failed: $e'),
-              backgroundColor: Colors.red,
-              duration: const Duration(seconds: 5),
-            ),
-          );
-        } finally {
-          setState(() => _isLoading = false);
-        }
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppColor.primaryColor,
-        padding: EdgeInsets.symmetric(vertical: 18.h),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.r),
-        ),
-        elevation: 5,
-      ),
-      child: _isLoading
-          ? SizedBox(
-        height: 24.h,
-        width: 24.w,
-        child: const CircularProgressIndicator(
-          color: Colors.white,
-          strokeWidth: 2,
-        ),
-      )
-          : Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.account_balance_wallet, size: 24.sp),
-          SizedBox(width: 12.w),
-          Text(
-            'Connect MetaMask Wallet',
-            style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.bold,
+    return Column(
+      children: [
+        // Deep Link Button
+        ElevatedButton(
+          onPressed: _isLoading ? null : () => _connectViaDeepLink(service),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColor.primaryColor,
+            padding: EdgeInsets.symmetric(vertical: 18.h),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.r),
             ),
           ),
-        ],
-      ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.account_balance_wallet, size: 24.sp),
+              SizedBox(width: 12.w),
+              Text('Connect via MetaMask App', style: TextStyle(fontSize: 16.sp)),
+            ],
+          ),
+        ),
+
+        SizedBox(height: 16.h),
+
+        // QR Code Button
+        OutlinedButton(
+          onPressed: _isLoading ? null : () => _connectViaQR(service),
+          style: OutlinedButton.styleFrom(
+            padding: EdgeInsets.symmetric(vertical: 18.h),
+            side: BorderSide(color: AppColor.primaryColor),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.qr_code, size: 24.sp),
+              SizedBox(width: 12.w),
+              Text('Connect via QR Code', style: TextStyle(fontSize: 16.sp)),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -479,4 +456,269 @@ class _MetaMaskWalletScreenState extends State<MetaMaskWalletScreen> {
         return 'Chain ID: $chainId';
     }
   }
-}
+
+  Future<void> _connectViaDeepLink(MetaMaskService service) async {
+    setState(() {
+      _isLoading = true;
+      _statusMessage = 'Opening MetaMask app...';
+    });
+
+    try {
+      await service.connect(useQR: false);
+
+      // Connection successful (session was awaited in service)
+      setState(() {
+        _statusMessage = 'Successfully connected!';
+        _isLoading = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Wallet connected successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _statusMessage = 'Connection failed: ${e.toString()}';
+        _isLoading = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Connection failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _connectViaQR(MetaMaskService service) async {
+    try {
+      setState(() => _isLoading = true);
+
+      // Get URI without waiting for connection
+      final uri = await service.connect(useQR: true);
+
+      if (uri == null) {
+        throw Exception('Failed to generate QR code');
+      }
+
+      if (!mounted) return;
+
+      // Show QR dialog with fixed layout
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) => Dialog(
+          backgroundColor: Colors.grey[900],
+          child: Container(
+            width: 350.w,
+            padding: EdgeInsets.all(24.w),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Title
+                Row(
+                  children: [
+                    Icon(Icons.qr_code_2, color: Colors.blue, size: 28.sp),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Text(
+                        'Scan with MetaMask',
+                        style: TextStyle(
+                          fontSize: 20.sp,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                SizedBox(height: 24.h),
+
+                // QR Code
+                Container(
+                  padding: EdgeInsets.all(16.w),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: QrImageView(
+                    data: uri.toString(),
+                    version: QrVersions.auto,
+                    size: 200.w,
+                    backgroundColor: Colors.white,
+                  ),
+                ),
+
+                SizedBox(height: 24.h),
+
+                // Instructions
+                Container(
+                  padding: EdgeInsets.all(16.w),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[800],
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildQRStep('1', 'Open MetaMask app'),
+                      SizedBox(height: 8.h),
+                      _buildQRStep('2', 'Tap the scan QR icon'),
+                      SizedBox(height: 8.h),
+                      _buildQRStep('3', 'Scan this QR code'),
+                      SizedBox(height: 8.h),
+                      _buildQRStep('4', 'Approve the connection'),
+                    ],
+                  ),
+                ),
+
+                SizedBox(height: 20.h),
+
+                // Loading indicator
+                const CircularProgressIndicator(color: Colors.blue),
+                SizedBox(height: 12.h),
+                Text(
+                  'Waiting for approval...',
+                  style: TextStyle(
+                    color: Colors.grey[400],
+                    fontSize: 14.sp,
+                  ),
+                ),
+
+                SizedBox(height: 20.h),
+
+                // Cancel button
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.pop(dialogContext);
+                      setState(() => _isLoading = false);
+                    },
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 14.h),
+                      backgroundColor: Colors.grey[800],
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                    ),
+                    child: const Text('Cancel'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      // Now poll for connection in background
+      _pollForConnection(service);
+
+    } catch (e) {
+      setState(() {
+        _statusMessage = 'QR Code generation failed: $e';
+        _isLoading = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Failed to generate QR: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+// Poll for connection completion
+  Future<void> _pollForConnection(MetaMaskService service) async {
+    const maxAttempts = 60; // 5 minutes
+    int attempts = 0;
+
+    while (attempts < maxAttempts && mounted) {
+      await Future.delayed(const Duration(seconds: 5));
+      attempts++;
+
+      if (service.isConnected) {
+        // Connection successful!
+        if (mounted) {
+          Navigator.pop(context); // Close QR dialog
+
+          setState(() {
+            _statusMessage = 'Successfully connected to MetaMask!';
+            _isLoading = false;
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ Wallet connected successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+        return;
+      }
+    }
+
+    // Timeout
+    if (mounted) {
+      Navigator.pop(context); // Close QR dialog
+
+      setState(() {
+        _statusMessage = 'Connection timeout. Please try again.';
+        _isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('❌ Connection timeout'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Widget _buildQRStep(String number, String text) {
+    return Row(
+      children: [
+        Container(
+          width: 24.w,
+          height: 24.w,
+          decoration: const BoxDecoration(
+            color: Colors.blue,
+            shape: BoxShape.circle,
+          ),
+          child: Center(
+            child: Text(
+              number,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 12.sp,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+        SizedBox(width: 12.w),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 14.sp,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}*/

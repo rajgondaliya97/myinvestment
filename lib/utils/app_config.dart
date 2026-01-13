@@ -43,7 +43,7 @@ class AppConfig {
         return 137;
       case 'bsc':
         return 56;
-      default:
+       default:
         return 1;
     }
   }

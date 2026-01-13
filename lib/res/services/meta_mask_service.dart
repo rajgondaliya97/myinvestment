@@ -1,8 +1,10 @@
+/*
 import 'package:flutter/foundation.dart';
 import 'package:walletconnect_flutter_v2/walletconnect_flutter_v2.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:web3dart/web3dart.dart';
 import 'package:http/http.dart' as http;
+import 'dart:async';
 import '../../utils/app_config.dart';
 
 class MetaMaskService extends ChangeNotifier {
@@ -11,27 +13,28 @@ class MetaMaskService extends ChangeNotifier {
   String? _currentChainId;
   bool _isConnected = false;
   SessionData? _session;
+  Timer? _sessionPollTimer;
+  bool _isWaitingForConnection = false;
 
   String? get currentAddress => _currentAddress;
   String? get currentChainId => _currentChainId;
   bool get isConnected => _isConnected;
   SessionData? get session => _session;
 
-  // Initialize WalletConnect
   Future initialize() async {
-    debugPrint('🔍 [MetaMask] Starting initialization...');
+    debugPrint('🔧 [MetaMask] Starting initialization...');
 
     try {
-      debugPrint('🔍 [MetaMask] Getting project ID from config...');
       final projectId = AppConfig.walletConnectProjectId;
-      debugPrint('🔍 [MetaMask] Project ID length: ${projectId.length}');
+      debugPrint('🔧 [MetaMask] Project ID length: ${projectId.length}');
 
       if (projectId.isEmpty) {
-        debugPrint('❌ [MetaMask] Project ID is empty!');
-        throw Exception('WalletConnect Project ID not configured. Please add it to .env file');
+        throw Exception('WalletConnect Project ID not configured');
       }
 
-      debugPrint('🔍 [MetaMask] Creating Web3App instance...');
+      debugPrint('🔧 [MetaMask] Creating Web3App instance...');
+
+      // 🔥 FIX: Use your app's custom scheme
       _web3App = await Web3App.createInstance(
         projectId: projectId,
         metadata: const PairingMetadata(
@@ -39,42 +42,104 @@ class MetaMaskService extends ChangeNotifier {
           description: 'Secure Investment Platform',
           url: 'https://infinitewealth.com',
           icons: ['https://infinitewealth.com/icon.png'],
+          redirect: Redirect(
+            native: 'infinitewealth://',
+            universal: 'https://infinitewealth.com',
+          ),
         ),
       );
-      debugPrint('🔍 [MetaMask] Web3App instance created successfully');
+      debugPrint('✅ [MetaMask] Web3App created with redirect: infinitewealth://');
 
-      debugPrint('🔍 [MetaMask] Subscribing to events...');
+      // Subscribe to events
       _web3App?.onSessionConnect.subscribe(_onSessionConnect);
       _web3App?.onSessionDelete.subscribe(_onSessionDelete);
       _web3App?.onSessionUpdate.subscribe(_onSessionUpdate);
-      debugPrint('🔍 [MetaMask] Event subscriptions completed');
 
-      debugPrint('🔍 [MetaMask] Checking for existing sessions...');
+      // Check existing sessions
       final sessions = _web3App?.sessions.getAll();
-      debugPrint('🔍 [MetaMask] Found ${sessions?.length ?? 0} existing sessions');
+      debugPrint('🔧 [MetaMask] Found ${sessions?.length ?? 0} existing sessions');
 
       if (sessions != null && sessions.isNotEmpty) {
         _session = sessions.first;
         _updateSessionData(_session!);
-        debugPrint('🔍 [MetaMask] Restored existing session');
       }
 
       debugPrint('✅ [MetaMask] Service initialized successfully');
       notifyListeners();
     } catch (e, stackTrace) {
       debugPrint('❌ [MetaMask] Initialization error: $e');
-      debugPrint('❌ [MetaMask] Stack trace: $stackTrace');
+      debugPrint('❌ Stack trace: $stackTrace');
       rethrow;
     }
   }
 
-  // Connect to MetaMask
-  Future connect() async {  // ADD  ✅
+  void _startSessionPolling() {
+    debugPrint('🔄 Starting session polling...');
+    _isWaitingForConnection = true;
+
+    int pollCount = 0;
+    _sessionPollTimer?.cancel();
+
+    _sessionPollTimer = Timer.periodic(const Duration(seconds: 2), (timer) async {
+      pollCount++;
+
+      if (pollCount > 60) {
+        timer.cancel();
+        _isWaitingForConnection = false;
+        debugPrint('⏱️ Session polling timeout');
+        return;
+      }
+
+      if (!_isWaitingForConnection) {
+        timer.cancel();
+        return;
+      }
+
+      try {
+        final sessions = _web3App?.sessions.getAll();
+
+        if (sessions != null && sessions.isNotEmpty) {
+          final latestSession = sessions.first;
+
+          if (_session == null || _session!.topic != latestSession.topic) {
+            debugPrint('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            debugPrint('✅ NEW SESSION DETECTED VIA POLLING!');
+            debugPrint('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+            _session = latestSession;
+            _updateSessionData(_session!);
+            _isWaitingForConnection = false;
+            timer.cancel();
+
+            debugPrint('✅ Wallet connected via polling: $_currentAddress');
+            debugPrint('✅ Chain ID: $_currentChainId');
+            return;
+          }
+        }
+
+        if (pollCount % 5 == 0) {
+          debugPrint('🔄 Still polling... attempt $pollCount/60');
+        }
+      } catch (e) {
+        debugPrint('⚠️ Polling error: $e');
+      }
+    });
+  }
+
+  void _stopSessionPolling() {
+    _sessionPollTimer?.cancel();
+    _isWaitingForConnection = false;
+    debugPrint('⏹️ Session polling stopped');
+  }
+
+  Future<Uri?> connect({bool useQR = false}) async {
     if (_web3App == null) {
-      throw Exception('MetaMask service not initialized. Call initialize() first.');
+      throw Exception('MetaMask service not initialized');
     }
 
     try {
+      debugPrint('🔗 [MetaMask] Starting connection...');
+
       final ConnectResponse response = await _web3App!.connect(
         requiredNamespaces: {
           'eip155': RequiredNamespace(
@@ -92,64 +157,150 @@ class MetaMaskService extends ChangeNotifier {
       );
 
       final Uri? uri = response.uri;
-
       if (uri == null) {
         throw Exception('Failed to generate WalletConnect URI');
       }
 
-      final String metamaskUrl = 'metamask://wc?uri=${Uri.encodeComponent(uri.toString())}';
+      if (!useQR) {
+        final wcUri = uri.toString();
 
-      debugPrint('🔗 Connecting to MetaMask...');
+        debugPrint('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        debugPrint('🔗 WalletConnect URI Generated:');
+        debugPrint('🔗 URI: $wcUri');
+        debugPrint('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-      try {
-        final canLaunch = await canLaunchUrl(Uri.parse(metamaskUrl));
-        if (canLaunch) {
-          await launchUrl(
-            Uri.parse(metamaskUrl),
-            mode: LaunchMode.externalApplication,
-          );
-          debugPrint('✅ MetaMask app opened');
-        } else {
-          await launchUrl(
-            uri,
-            mode: LaunchMode.externalApplication,
-          );
-          debugPrint('⚠️ Opened WalletConnect modal (MetaMask app not found)');
+        // 🔥 IMPROVED: Try multiple launch methods
+        bool launched = false;
+
+        // Method 1: MetaMask deep link with encoded URI
+        try {
+          final encoded = Uri.encodeComponent(wcUri);
+          final metamaskUri = Uri.parse('metamask://wc?uri=$encoded');
+
+          debugPrint('🔗 Trying Method 1: MetaMask deep link');
+          debugPrint('🔗 URI: $metamaskUri');
+
+          if (await canLaunchUrl(metamaskUri)) {
+            await launchUrl(metamaskUri, mode: LaunchMode.externalApplication);
+            launched = true;
+            debugPrint('✅ Launched via MetaMask deep link');
+          }
+        } catch (e) {
+          debugPrint('⚠️ Method 1 failed: $e');
         }
-      } catch (launchError) {
-        debugPrint('⚠️ Failed to launch URL: $launchError');
-      }
 
-      _session = await response.session.future.timeout(
-        const Duration(minutes: 3),
-        onTimeout: () {
-          throw Exception('Connection timeout. Please try again and approve in MetaMask app.');
-        },
-      );
+        // Method 2: MetaMask universal link (fallback)
+        if (!launched) {
+          try {
+            final encoded = Uri.encodeComponent(wcUri);
+            final universalLink = Uri.parse('https://metamask.app.link/wc?uri=$encoded');
 
-      if (_session != null) {
-        _updateSessionData(_session!);
-        debugPrint('✅ Wallet connected: $_currentAddress');
+            debugPrint('🔗 Trying Method 2: Universal link');
+            debugPrint('🔗 URI: $universalLink');
+
+            await launchUrl(universalLink, mode: LaunchMode.externalApplication);
+            launched = true;
+            debugPrint('✅ Launched via universal link');
+          } catch (e) {
+            debugPrint('⚠️ Method 2 failed: $e');
+          }
+        }
+
+        if (!launched) {
+          throw Exception('Failed to launch MetaMask app');
+        }
+
+        debugPrint('⏳ MetaMask opened - waiting for user approval...');
+        debugPrint('💡 Please approve the connection in MetaMask');
+        debugPrint('💡 Then return to this app (MetaMask should auto-redirect)');
+
+        // Start polling immediately
+        _startSessionPolling();
+
+        // Wait for session with extended timeout
+        try {
+          _session = await response.session.future.timeout(
+            const Duration(minutes: 3),
+            onTimeout: () {
+              // Check if polling found the session
+              if (_session != null && _isConnected) {
+                debugPrint('✅ Session found via polling before timeout');
+                return _session!;
+              }
+
+              // Give user helpful message
+              throw Exception(
+                  'Connection timeout. Did you approve in MetaMask? '
+                      'If yes, please return to this app.'
+              );
+            },
+          );
+
+          _stopSessionPolling();
+
+          if (_session != null) {
+            _updateSessionData(_session!);
+            debugPrint('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            debugPrint('✅ CONNECTION SUCCESSFUL!');
+            debugPrint('✅ Address: $_currentAddress');
+            debugPrint('✅ Chain: $_currentChainId');
+            debugPrint('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          }
+
+          return uri;
+        } catch (e) {
+          _stopSessionPolling();
+
+          // Final check if we got connected via polling
+          if (_isConnected && _session != null) {
+            debugPrint('✅ Connected via polling despite timeout');
+            return uri;
+          }
+
+          debugPrint('❌ Connection failed: $e');
+          rethrow;
+        }
+      } else {
+        // QR Code flow
+        _waitForQRSession(response.session.future);
+        return uri;
       }
     } catch (e) {
-      debugPrint('❌ MetaMask connection error: $e');
+      _stopSessionPolling();
+      debugPrint('❌ Connection error: $e');
       rethrow;
     }
   }
 
-  // Disconnect from MetaMask
+  Future<void> _waitForQRSession(Future<SessionData> sessionFuture) async {
+    try {
+      _session = await sessionFuture.timeout(
+        const Duration(minutes: 5),
+        onTimeout: () => throw Exception('QR code scan timeout'),
+      );
+
+      if (_session != null) {
+        _updateSessionData(_session!);
+        debugPrint('✅ QR connected: $_currentAddress');
+      }
+    } catch (e) {
+      debugPrint('❌ QR error: $e');
+      rethrow;
+    }
+  }
+
   Future disconnect() async {
     if (_web3App == null || _session == null) {
-      debugPrint('⚠️ No active session to disconnect');
       return;
     }
 
     try {
+      _stopSessionPolling();
+
       await _web3App!.disconnectSession(
         topic: _session!.topic,
         reason: Errors.getSdkError(Errors.USER_DISCONNECTED),
       );
-
       _clearSession();
       debugPrint('✅ Wallet disconnected');
     } catch (e) {
@@ -159,15 +310,14 @@ class MetaMaskService extends ChangeNotifier {
     }
   }
 
-  // Send transaction
-  Future sendTransaction({  // ADD  ✅
+  Future sendTransaction({
     required String to,
     required String value,
     String? data,
     int? chainId,
   }) async {
     if (_web3App == null || _session == null || _currentAddress == null) {
-      throw Exception('Not connected to MetaMask. Please connect first.');
+      throw Exception('Not connected to MetaMask');
     }
 
     try {
@@ -192,15 +342,14 @@ class MetaMaskService extends ChangeNotifier {
       debugPrint('✅ Transaction sent: $result');
       return result.toString();
     } catch (e) {
-      debugPrint('❌ Send transaction error: $e');
+      debugPrint('❌ Transaction error: $e');
       rethrow;
     }
   }
 
-  // Sign message
-  Future signMessage(String message) async {  // ADD  ✅
+  Future signMessage(String message) async {
     if (_web3App == null || _session == null || _currentAddress == null) {
-      throw Exception('Not connected to MetaMask. Please connect first.');
+      throw Exception('Not connected to MetaMask');
     }
 
     try {
@@ -216,12 +365,11 @@ class MetaMaskService extends ChangeNotifier {
       debugPrint('✅ Message signed');
       return result.toString();
     } catch (e) {
-      debugPrint('❌ Sign message error: $e');
+      debugPrint('❌ Sign error: $e');
       rethrow;
     }
   }
 
-  // Get balance - FIXED return type ✅
   Future getBalance({String? network}) async {
     if (_currentAddress == null) {
       throw Exception('No wallet connected');
@@ -231,11 +379,10 @@ class MetaMaskService extends ChangeNotifier {
       final rpcUrl = AppConfig.getRpcUrl(network ?? AppConfig.defaultNetwork);
 
       if (AppConfig.infuraProjectId.isEmpty) {
-        throw Exception('Infura Project ID not configured. Please add it to .env file');
+        throw Exception('Infura Project ID not configured');
       }
 
       final client = Web3Client(rpcUrl, http.Client());
-
       final balance = await client.getBalance(
         EthereumAddress.fromHex(_currentAddress!),
       );
@@ -244,12 +391,11 @@ class MetaMaskService extends ChangeNotifier {
       debugPrint('💰 Balance: ${balance.getValueInUnit(EtherUnit.ether)} ETH');
       return balance;
     } catch (e) {
-      debugPrint('❌ Get balance error: $e');
+      debugPrint('❌ Balance error: $e');
       rethrow;
     }
   }
 
-  // Switch chain
   Future switchChain(int chainId) async {
     if (_web3App == null || _session == null) {
       throw Exception('Not connected to MetaMask');
@@ -277,16 +423,28 @@ class MetaMaskService extends ChangeNotifier {
   }
 
   void _onSessionConnect(SessionConnect? event) {
+    debugPrint('');
+    debugPrint('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    debugPrint('🔔 SESSION CONNECT EVENT FIRED!');
+    debugPrint('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
     if (event?.session != null) {
       _session = event!.session;
       _updateSessionData(_session!);
-      debugPrint('📡 Session connected event');
+      _stopSessionPolling();
+
+      debugPrint('✅ Address: $_currentAddress');
+      debugPrint('✅ Chain: $_currentChainId');
+      debugPrint('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+      notifyListeners();
     }
   }
 
   void _onSessionDelete(SessionDelete? event) {
     _clearSession();
-    debugPrint('📡 Session deleted event');
+    _stopSessionPolling();
+    debugPrint('🔔 Session deleted');
   }
 
   void _onSessionUpdate(SessionUpdate? event) {
@@ -296,7 +454,7 @@ class MetaMaskService extends ChangeNotifier {
         if (updatedSession != null) {
           _session = updatedSession;
           _updateSessionData(_session!);
-          debugPrint('📡 Session updated event');
+          debugPrint('🔔 Session updated');
         }
       } catch (e) {
         debugPrint('⚠️ Failed to get updated session: $e');
@@ -323,14 +481,16 @@ class MetaMaskService extends ChangeNotifier {
     _currentAddress = null;
     _currentChainId = null;
     _isConnected = false;
+    _stopSessionPolling();
     notifyListeners();
   }
 
   @override
   void dispose() {
+    _stopSessionPolling();
     _web3App?.onSessionConnect.unsubscribe(_onSessionConnect);
     _web3App?.onSessionDelete.unsubscribe(_onSessionDelete);
     _web3App?.onSessionUpdate.unsubscribe(_onSessionUpdate);
     super.dispose();
   }
-}
+}*/
