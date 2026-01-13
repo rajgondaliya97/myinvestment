@@ -6,6 +6,7 @@ import 'package:myinvestment/res/services/meta_mask_service.dart';
 import 'package:myinvestment/utils/app_color.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+
 class MetaMaskWalletScreen extends StatefulWidget {
   const MetaMaskWalletScreen({Key? key}) : super(key: key);
 
@@ -305,27 +306,31 @@ class _MetaMaskWalletScreenState extends State<MetaMaskWalletScreen> {
               final signature = await service.signMessage('Hello from Infinite Wealth!');
               setState(() => _statusMessage = 'Message signed successfully!');
 
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('✅ Signature: ${signature.substring(0, 20)}...'),
-                  backgroundColor: Colors.green,
-                ),
-              );
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('✅ Signature: ${signature.substring(0, 20)}...'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
             } catch (e) {
               setState(() => _statusMessage = 'Signature failed: $e');
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('❌ Sign failed: $e'),
-                  backgroundColor: Colors.red,
-                ),
-              );
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('❌ Sign failed: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
             }
           },
           icon: Icon(Icons.edit, size: 20.sp),
-          label: Text('Sign Message (Test)'),
+          label: const Text('Sign Message (Test)'),
           style: OutlinedButton.styleFrom(
             padding: EdgeInsets.symmetric(vertical: 14.h),
-            side: BorderSide(color: Colors.blue),
+            side: const BorderSide(color: Colors.blue),
             foregroundColor: Colors.blue,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10.r),
@@ -344,20 +349,24 @@ class _MetaMaskWalletScreenState extends State<MetaMaskWalletScreen> {
           await service.disconnect();
           setState(() => _statusMessage = 'Wallet disconnected');
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('👋 Wallet disconnected'),
-              backgroundColor: Colors.orange,
-            ),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('👋 Wallet disconnected'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
         } catch (e) {
           setState(() => _statusMessage = 'Disconnect failed: $e');
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('❌ Disconnect failed: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('❌ Disconnect failed: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
         }
       },
       icon: Icon(Icons.logout, size: 20.sp),
@@ -400,7 +409,7 @@ class _MetaMaskWalletScreenState extends State<MetaMaskWalletScreen> {
           SizedBox(height: 12.h),
           _buildInstructionItem('1. Install MetaMask app on your device'),
           _buildInstructionItem('2. Create or import a wallet in MetaMask'),
-          _buildInstructionItem('3. Tap "Connect MetaMask Wallet" button'),
+          _buildInstructionItem('3. Tap "Connect via MetaMask App" button'),
           _buildInstructionItem('4. MetaMask app will open automatically'),
           _buildInstructionItem('5. Approve the connection in MetaMask'),
           SizedBox(height: 12.h),
@@ -464,22 +473,14 @@ class _MetaMaskWalletScreenState extends State<MetaMaskWalletScreen> {
     });
 
     try {
-      await service.connect(useQR: false);
+      await service.connect();
 
-      // Connection successful (session was awaited in service)
       setState(() {
-        _statusMessage = 'Successfully connected!';
-        _isLoading = false;
+        _statusMessage = 'Waiting for approval in MetaMask...';
       });
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Wallet connected successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
+      // Poll for connection
+      _pollForConnection(service);
     } catch (e) {
       setState(() {
         _statusMessage = 'Connection failed: ${e.toString()}';
@@ -502,7 +503,7 @@ class _MetaMaskWalletScreenState extends State<MetaMaskWalletScreen> {
       setState(() => _isLoading = true);
 
       // Get URI without waiting for connection
-      final uri = await service.connect(useQR: true);
+      final uri = await service.connect();
 
       if (uri == null) {
         throw Exception('Failed to generate QR code');
@@ -639,7 +640,7 @@ class _MetaMaskWalletScreenState extends State<MetaMaskWalletScreen> {
     }
   }
 
-// Poll for connection completion
+  // Poll for connection completion
   Future<void> _pollForConnection(MetaMaskService service) async {
     const maxAttempts = 60; // 5 minutes
     int attempts = 0;

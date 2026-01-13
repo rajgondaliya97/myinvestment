@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:myinvestment/res/services/ReownWalletScreen.dart';
-import 'package:myinvestment/res/services/reown_wallet_service.dart';
+import 'package:myinvestment/res/services/web_wallet_service.dart';
+import 'package:myinvestment/res/services/wallet_import_screen.dart' hide WalletDashboardScreen;
+import 'package:myinvestment/res/services/wallet_dashboard_screen.dart';
 import 'package:myinvestment/utils/app_config.dart';
 import 'package:myinvestment/res/database/local_database.dart';
 import 'package:myinvestment/res/dependency_locator.dart';
@@ -35,14 +36,14 @@ void main() async {
     await DependencyLocator().init();
     debugPrint('✅ Dependencies initialized');
 
-    // 🔥 FIX: Create service but don't initialize yet (needs context)
-    debugPrint('🔧 Creating Reown Wallet Service...');
-    final reownService = ReownWalletService();
-    debugPrint('✅ Reown Wallet Service created');
+    // Create Web3 Wallet Service
+    debugPrint('🔧 Creating Web3 Wallet Service...');
+    final web3WalletService = Web3WalletService();
+    debugPrint('✅ Web3 Wallet Service created');
 
     debugPrint('✅ All services initialized successfully');
 
-    runApp(MyApp(reownService: reownService));
+    runApp(MyApp(web3WalletService: web3WalletService));
   } catch (e, stackTrace) {
     debugPrint('❌ FATAL ERROR during initialization: $e');
     debugPrint('Stack trace: $stackTrace');
@@ -52,12 +53,12 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  final ReownWalletService? reownService;
+  final Web3WalletService? web3WalletService;
   final String? initializationError;
 
   const MyApp({
     Key? key,
-    this.reownService,
+    this.web3WalletService,
     this.initializationError,
   }) : super(key: key);
 
@@ -100,9 +101,9 @@ class MyApp extends StatelessWidget {
             transactionRepository: DependencyLocator().transactionRepository,
           ),
         ),
-        // Provide Reown Wallet Service
+        // Provide Web3 Wallet Service
         ChangeNotifierProvider.value(
-          value: reownService ?? ReownWalletService(),
+          value: web3WalletService ?? Web3WalletService(),
         ),
       ],
       child: ScreenUtilInit(
@@ -121,7 +122,11 @@ class MyApp extends StatelessWidget {
             ),
             home: initializationError != null
                 ? InitializationErrorScreen(error: initializationError!)
-                : const ReownWalletInitializer(),
+                : const Web3WalletInitializer(),
+            routes: {
+              '/import': (context) => const WalletImportScreen(),
+              '/dashboard': (context) => const WalletDashboardScreen(),
+            },
           );
         },
       ),
@@ -129,37 +134,55 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// 🔥 NEW: Initialize Reown with context
-class ReownWalletInitializer extends StatefulWidget {
-  const ReownWalletInitializer({Key? key}) : super(key: key);
+// Initialize Web3 Wallet and check for saved wallet
+class Web3WalletInitializer extends StatefulWidget {
+  const Web3WalletInitializer({Key? key}) : super(key: key);
 
   @override
-  State<ReownWalletInitializer> createState() => _ReownWalletInitializerState();
+  State<Web3WalletInitializer> createState() => _Web3WalletInitializerState();
 }
 
-class _ReownWalletInitializerState extends State<ReownWalletInitializer> {
+class _Web3WalletInitializerState extends State<Web3WalletInitializer> {
   bool _isInitializing = true;
   String? _error;
 
   @override
   void initState() {
     super.initState();
-    _initializeReown();
+    _initializeWallet();
   }
 
-  Future<void> _initializeReown() async {
+  Future<void> _initializeWallet() async {
     try {
-      final reownService = Provider.of<ReownWalletService>(context, listen: false);
+      final walletService = Provider.of<Web3WalletService>(context, listen: false);
 
-      debugPrint('🔧 Initializing Reown with context...');
-      await reownService.initialize(context);
-      debugPrint('✅ Reown initialized');
+      debugPrint('🔧 Initializing Web3 Wallet service...');
+      await walletService.initialize();
+      debugPrint('✅ Web3 Wallet service initialized');
 
-      setState(() {
-        _isInitializing = false;
-      });
-    } catch (e) {
-      debugPrint('❌ Reown initialization failed: $e');
+      // Check if wallet is already connected (from saved key)
+      if (walletService.isConnected) {
+        debugPrint('✅ Found saved wallet, navigating to dashboard');
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => const WalletDashboardScreen(),
+            ),
+          );
+        }
+      } else {
+        debugPrint('ℹ️ No saved wallet found, showing import screen');
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => const WalletImportScreen(),
+            ),
+          );
+        }
+      }
+    } catch (e, stackTrace) {
+      debugPrint('❌ Wallet initialization failed: $e');
+      debugPrint('Stack trace: $stackTrace');
       setState(() {
         _error = e.toString();
         _isInitializing = false;
@@ -182,7 +205,7 @@ class _ReownWalletInitializerState extends State<ReownWalletInitializer> {
                 'Initializing Wallet Service...',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 14,
+                  fontSize: 14.sp,
                 ),
               ),
             ],
@@ -195,7 +218,13 @@ class _ReownWalletInitializerState extends State<ReownWalletInitializer> {
       return InitializationErrorScreen(error: _error!);
     }
 
-    return const ReownWalletScreen();
+    // This should not be reached as we navigate away
+    return const Scaffold(
+      backgroundColor: Colors.black,
+      body: Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
   }
 }
 
@@ -221,10 +250,10 @@ class InitializationErrorScreen extends StatelessWidget {
                 size: 80,
               ),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 'Initialization Failed',
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 24.sp,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
@@ -233,8 +262,8 @@ class InitializationErrorScreen extends StatelessWidget {
               Text(
                 error,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 14,
+                style: TextStyle(
+                  fontSize: 14.sp,
                   color: Colors.white70,
                 ),
               ),
@@ -242,11 +271,18 @@ class InitializationErrorScreen extends StatelessWidget {
               ElevatedButton(
                 onPressed: () {
                   // Restart app
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (context) => const Web3WalletInitializer(),
+                    ),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 32.w,
+                    vertical: 16.h,
+                  ),
                 ),
                 child: const Text('Retry'),
               ),
