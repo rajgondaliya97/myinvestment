@@ -607,33 +607,368 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey[900],
-        title: Text(isUsdt ? 'Send USDT' : 'Send ETH'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
+        title: Row(
           children: [
-            TextField(
-              controller: toController,
-              decoration: InputDecoration(
-                labelText: 'To Address',
-                hintText: '0x...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-              ),
+            Icon(
+              isUsdt ? Icons.monetization_on : Icons.send,
+              color: isUsdt ? Colors.green : Colors.blue,
             ),
-            SizedBox(height: 16.h),
-            TextField(
-              controller: amountController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                labelText: isUsdt ? 'Amount (USDT)' : 'Amount (ETH)',
-                hintText: isUsdt ? '10.00' : '0.01',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-              ),
-            ),
+            SizedBox(width: 8.w),
+            Text(isUsdt ? 'Send USDT' : 'Send ${_getNativeTokenSymbol(service)}'),
           ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Available Balance Display
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: Colors.black,
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: Colors.grey[800]!),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Available:',
+                      style: TextStyle(
+                        color: Colors.grey[400],
+                        fontSize: 12.sp,
+                      ),
+                    ),
+                    Text(
+                      isUsdt ? '$_usdtBalance USDT' : '$_balance ${_getNativeTokenSymbol(service)}',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 16.h),
+
+              // To Address Input
+              Text(
+                'Recipient Address',
+                style: TextStyle(
+                  color: Colors.grey[400],
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              SizedBox(height: 8.h),
+              TextField(
+                controller: toController,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 13.sp,
+                  fontFamily: 'monospace',
+                ),
+                decoration: InputDecoration(
+                  hintText: '0x...',
+                  hintStyle: TextStyle(
+                    color: Colors.grey[600],
+                    fontFamily: 'monospace',
+                  ),
+                  filled: true,
+                  fillColor: Colors.black,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                    borderSide: BorderSide(color: Colors.grey[800]!),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                    borderSide: BorderSide(color: Colors.grey[800]!),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                    borderSide: const BorderSide(color: Colors.blue),
+                  ),
+                  suffixIcon: IconButton(
+                    icon: Icon(Icons.paste, color: Colors.blue, size: 20.sp),
+                    onPressed: () async {
+                      final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
+                      if (clipboardData?.text != null) {
+                        toController.text = clipboardData!.text!;
+                      }
+                    },
+                  ),
+                ),
+              ),
+              SizedBox(height: 16.h),
+
+              // Amount Input
+              Text(
+                'Amount',
+                style: TextStyle(
+                  color: Colors.grey[400],
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              SizedBox(height: 8.h),
+              TextField(
+                controller: amountController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.bold,
+                ),
+                decoration: InputDecoration(
+                  hintText: isUsdt ? '0.00' : '0.0000',
+                  hintStyle: TextStyle(color: Colors.grey[600]),
+                  filled: true,
+                  fillColor: Colors.black,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                    borderSide: BorderSide(color: Colors.grey[800]!),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                    borderSide: BorderSide(color: Colors.grey[800]!),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                    borderSide: const BorderSide(color: Colors.blue),
+                  ),
+                  suffixIcon: Padding(
+                    padding: EdgeInsets.only(right: 12.w),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            // Set max amount
+                            if (isUsdt) {
+                              amountController.text = _usdtBalance;
+                            } else {
+                              amountController.text = _balance;
+                            }
+                          },
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.blue,
+                            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                          ),
+                          child: Text(
+                            'MAX',
+                            style: TextStyle(
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          isUsdt ? 'USDT' : _getNativeTokenSymbol(service),
+                          style: TextStyle(
+                            color: Colors.grey[400],
+                            fontSize: 12.sp,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              SizedBox(height: 16.h),
+
+              // Warning Message
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: Colors.orange.withOpacity(0.5)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.warning_amber, color: Colors.orange, size: 16.sp),
+                    SizedBox(width: 8.w),
+                    Expanded(
+                      child: Text(
+                        'Double-check the address. Transactions cannot be reversed!',
+                        style: TextStyle(
+                          color: Colors.orange[200],
+                          fontSize: 11.sp,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // Validate inputs
+              if (toController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('❌ Please enter recipient address')),
+                );
+                return;
+              }
+              if (amountController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('❌ Please enter amount')),
+                );
+                return;
+              }
+
+              // Close current dialog and show confirmation
+              Navigator.pop(context);
+              _showConfirmationDialog(
+                service,
+                toController.text.trim(),
+                amountController.text.trim(),
+                isUsdt: isUsdt,
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isUsdt ? Colors.green : Colors.blue,
+            ),
+            child: const Text('Continue'),
+          ),
+        ],
+      ),
+    );
+  }
+  void _showConfirmationDialog(
+      Web3WalletService service,
+      String toAddress,
+      String amount,
+      {required bool isUsdt}
+      ) {
+    final tokenSymbol = isUsdt ? 'USDT' : _getNativeTokenSymbol(service);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: Row(
+          children: [
+            Icon(Icons.info_outline, color: Colors.orange),
+            SizedBox(width: 8.w),
+            const Text('Confirm Transaction'),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Amount
+              _buildConfirmationRow(
+                'Amount',
+                '$amount $tokenSymbol',
+                Colors.green,
+                Icons.attach_money,
+              ),
+              SizedBox(height: 12.h),
+
+              // To Address
+              _buildConfirmationRow(
+                'To',
+                '${toAddress.substring(0, 10)}...${toAddress.substring(toAddress.length - 8)}',
+                Colors.blue,
+                Icons.person,
+              ),
+              SizedBox(height: 12.h),
+
+              // From Address
+              _buildConfirmationRow(
+                'From',
+                '${service.address!.substring(0, 10)}...${service.address!.substring(service.address!.length - 8)}',
+                Colors.grey,
+                Icons.account_balance_wallet,
+              ),
+              SizedBox(height: 12.h),
+
+              // Network
+              _buildConfirmationRow(
+                'Network',
+                _getNetworkDisplayName(service.currentNetwork),
+                Colors.orange,
+                Icons.network_check,
+              ),
+              SizedBox(height: 16.h),
+
+              // Gas Fee Warning
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: Colors.blue.withOpacity(0.5)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.local_gas_station, color: Colors.blue, size: 16.sp),
+                        SizedBox(width: 8.w),
+                        Text(
+                          'Network Fee',
+                          style: TextStyle(
+                            color: Colors.blue,
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      'Current gas price: $_gasPrice Gwei\nYou will need ${_getNativeTokenSymbol(service)} to pay for gas fees.',
+                      style: TextStyle(
+                        color: Colors.blue[200],
+                        fontSize: 11.sp,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 16.h),
+
+              // Final Warning
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: Colors.red.withOpacity(0.5)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.warning, color: Colors.red, size: 16.sp),
+                    SizedBox(width: 8.w),
+                    Expanded(
+                      child: Text(
+                        'This action cannot be undone. Please verify all details carefully.',
+                        style: TextStyle(
+                          color: Colors.red[200],
+                          fontSize: 11.sp,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -644,16 +979,124 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
             onPressed: () async {
               Navigator.pop(context);
               if (isUsdt) {
-                await _sendUsdt(service, toController.text, amountController.text);
+                await _sendUsdt(service, toAddress, amount);
               } else {
-                await _sendTransaction(service, toController.text, amountController.text);
+                await _sendTransaction(service, toAddress, amount);
               }
             },
-            child: const Text('Send'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red[700],
+            ),
+            child: const Text('Confirm & Send'),
           ),
         ],
       ),
     );
+  }
+  Widget _buildConfirmationRow(String label, String value, Color color, IconData icon) {
+    return Container(
+      padding: EdgeInsets.all(12.w),
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(8.r),
+        border: Border.all(color: Colors.grey[800]!),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 20.sp),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: Colors.grey[400],
+                    fontSize: 11.sp,
+                  ),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  value,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  Future<void> _sendUsdt(Web3WalletService service, String to, String amount) async {
+    if (to.isEmpty || amount.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('❌ Please fill all fields')),
+      );
+      return;
+    }
+
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(color: Colors.green),
+            SizedBox(height: 16.h),
+            Text(
+              'Sending USDT...',
+              style: TextStyle(color: Colors.white, fontSize: 14.sp),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              'Please wait, do not close the app',
+              style: TextStyle(color: Colors.grey[400], fontSize: 12.sp),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+
+    setState(() => _statusMessage = 'Sending USDT transaction...');
+
+    try {
+      final txHash = await service.sendUsdt(
+        toAddress: to,
+        amount: amount,
+      );
+
+      // Close loading dialog
+      Navigator.pop(context);
+
+      setState(() => _statusMessage = 'USDT sent! Hash: ${txHash.substring(0, 10)}...');
+
+      // Show success dialog
+      _showSuccessDialog(
+        title: '✅ USDT Sent Successfully!',
+        message: 'Your USDT has been sent.',
+        txHash: txHash,
+        network: service.currentNetwork!,
+      );
+
+      await _loadWalletData();
+    } catch (e) {
+      // Close loading dialog
+      Navigator.pop(context);
+
+      setState(() => _statusMessage = 'USDT transaction failed: $e');
+
+      // Show error dialog
+      _showErrorDialog('Transaction Failed', e.toString());
+    }
   }
 
   Future<void> _sendTransaction(Web3WalletService service, String to, String amount) async {
@@ -664,7 +1107,33 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
       return;
     }
 
-    setState(() => _statusMessage = 'Sending ETH transaction...');
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(color: Colors.blue),
+            SizedBox(height: 16.h),
+            Text(
+              'Sending ${_getNativeTokenSymbol(service)}...',
+              style: TextStyle(color: Colors.white, fontSize: 14.sp),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              'Please wait, do not close the app',
+              style: TextStyle(color: Colors.grey[400], fontSize: 12.sp),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+
+    setState(() => _statusMessage = 'Sending transaction...');
 
     try {
       final txHash = await service.sendTransaction(
@@ -672,57 +1141,28 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
         amountInEther: amount,
       );
 
+      // Close loading dialog
+      Navigator.pop(context);
+
       setState(() => _statusMessage = 'Transaction sent! Hash: ${txHash.substring(0, 10)}...');
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('✅ Transaction sent: ${txHash.substring(0, 20)}...')),
-        );
-      }
+      // Show success dialog
+      _showSuccessDialog(
+        title: '✅ Transaction Sent Successfully!',
+        message: 'Your ${_getNativeTokenSymbol(service)} has been sent.',
+        txHash: txHash,
+        network: service.currentNetwork!,
+      );
 
       await _loadWalletData();
     } catch (e) {
+      // Close loading dialog
+      Navigator.pop(context);
+
       setState(() => _statusMessage = 'Transaction failed: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('❌ Transaction failed: $e')),
-        );
-      }
-    }
-  }
 
-  Future<void> _sendUsdt(Web3WalletService service, String to, String amount) async {
-    if (to.isEmpty || amount.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('❌ Please fill all fields')),
-      );
-      return;
-    }
-
-    setState(() => _statusMessage = 'Sending USDT transaction...');
-
-    try {
-      final txHash = await service.sendUsdt(
-        toAddress: to,
-        amount: amount,
-      );
-
-      setState(() => _statusMessage = 'USDT sent! Hash: ${txHash.substring(0, 10)}...');
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('✅ USDT sent: ${txHash.substring(0, 20)}...')),
-        );
-      }
-
-      await _loadWalletData();
-    } catch (e) {
-      setState(() => _statusMessage = 'USDT transaction failed: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('❌ USDT transaction failed: $e')),
-        );
-      }
+      // Show error dialog
+      _showErrorDialog('Transaction Failed', e.toString());
     }
   }
 
@@ -826,5 +1266,179 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
         );
       }
     }
+  }
+  void _showSuccessDialog({
+    required String title,
+    required String message,
+    required String txHash,
+    required String network,
+  }) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: Row(
+          children: [
+            const Icon(Icons.check_circle, color: Colors.green, size: 30),
+            SizedBox(width: 8.w),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(color: Colors.green),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              message,
+              style: TextStyle(color: Colors.white, fontSize: 14.sp),
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              'Transaction Hash:',
+              style: TextStyle(color: Colors.grey[400], fontSize: 12.sp),
+            ),
+            SizedBox(height: 8.h),
+            Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(color: Colors.grey[800]!),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '${txHash.substring(0, 10)}...${txHash.substring(txHash.length - 8)}',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12.sp,
+                        fontFamily: 'monospace',
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.copy, color: Colors.blue, size: 18.sp),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: txHash));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('📋 Transaction hash copied!')),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              // Open block explorer
+              final explorerUrl = _getTransactionExplorerUrl(network, txHash);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('View on explorer: $explorerUrl')),
+              );
+            },
+            child: const Text('View on Explorer'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            child: const Text('Done'),
+          ),
+        ],
+      ),
+    );
+  }
+  void _showErrorDialog(String title, String error) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: Row(
+          children: [
+            const Icon(Icons.error, color: Colors.red, size: 30),
+            SizedBox(width: 8.w),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Error Details:',
+              style: TextStyle(color: Colors.grey[400], fontSize: 12.sp),
+            ),
+            SizedBox(height: 8.h),
+            Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(color: Colors.red.withOpacity(0.5)),
+              ),
+              child: Text(
+                error,
+                style: TextStyle(
+                  color: Colors.red[200],
+                  fontSize: 12.sp,
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red[700]),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getNativeTokenSymbol(Web3WalletService service) {
+    switch (service.currentNetwork?.toLowerCase()) {
+      case 'bsc':
+        return 'BNB';
+      case 'polygon':
+        return 'MATIC';
+      case 'ethereum':
+      case 'mainnet':
+      default:
+        return 'ETH';
+    }
+  }
+
+  String _getTransactionExplorerUrl(String network, String txHash) {
+    String baseUrl;
+    switch (network.toLowerCase()) {
+      case 'bsc':
+        baseUrl = 'https://bscscan.com';
+        break;
+      case 'polygon':
+        baseUrl = 'https://polygonscan.com';
+        break;
+      case 'ethereum':
+      case 'mainnet':
+      default:
+        baseUrl = 'https://etherscan.io';
+    }
+    return '$baseUrl/tx/$txHash';
   }
 }
