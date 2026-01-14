@@ -1,4 +1,4 @@
-import 'dart:typed_data'; // ADD THIS
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:reown_walletkit/reown_walletkit.dart';
 import 'package:web3dart/web3dart.dart';
@@ -20,7 +20,61 @@ class Web3WalletService extends ChangeNotifier {
   static const String _privateKeyKey = 'wallet_private_key';
   static const String _networkKey = 'selected_network';
 
-  // Convert EthereumAddress to String manually
+  // USDT Contract Addresses (UPDATED with correct addresses)
+  static const Map<String, String> _usdtContractAddresses = {
+    'ethereum': '0xdAC17F958D2ee523a2206206994597C13D831ec7', // Ethereum Mainnet USDT
+    'bsc': '0x55d398326f99059fF775485246999027B3197955', // BSC USDT (Binance-Peg USDT)
+    'polygon': '0xc2132D05D31c914a87C6611C10748AEb04B58e8F', // Polygon USDT
+    'sepolia': '0x7169D38820dfd117C3FA1f22a697dBA58d90BA06', // Sepolia Testnet
+    'goerli': '0x509Ee0d083DdF8AC028f2a56731412edD63223B9', // Goerli Testnet
+  };
+
+  // Token decimals per network
+  static const Map<String, int> _usdtDecimals = {
+    'ethereum': 6, // Ethereum USDT has 6 decimals
+    'bsc': 18, // BSC USDT has 18 decimals
+    'polygon': 6, // Polygon USDT has 6 decimals
+    'sepolia': 6,
+    'goerli': 6,
+  };
+
+  // ERC-20 ABI for balanceOf and decimals
+  static const String _erc20Abi = '''
+  [
+    {
+      "constant": true,
+      "inputs": [{"name": "_owner", "type": "address"}],
+      "name": "balanceOf",
+      "outputs": [{"name": "balance", "type": "uint256"}],
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "decimals",
+      "outputs": [{"name": "", "type": "uint8"}],
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "symbol",
+      "outputs": [{"name": "", "type": "string"}],
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {"name": "_to", "type": "address"},
+        {"name": "_value", "type": "uint256"}
+      ],
+      "name": "transfer",
+      "outputs": [{"name": "", "type": "bool"}],
+      "type": "function"
+    }
+  ]
+  ''';
+
   String? get address => _address?.toString();
   bool get isConnected => _isConnected;
   String? get currentNetwork => _currentNetwork;
@@ -35,6 +89,8 @@ class Web3WalletService extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       _currentNetwork = prefs.getString(_networkKey) ?? AppConfig.defaultNetwork;
 
+      debugPrint('📍 [Web3Wallet] Current Network: $_currentNetwork');
+
       // Initialize Web3 client
       _initializeClient(_currentNetwork!);
 
@@ -43,6 +99,7 @@ class Web3WalletService extends ChangeNotifier {
       if (savedKey != null && savedKey.isNotEmpty) {
         await _loadWalletFromPrivateKey(savedKey);
         debugPrint('✅ [Web3Wallet] Auto-loaded saved wallet');
+        debugPrint('📍 Address: ${_address?.toString()}');
       }
 
       debugPrint('✅ [Web3Wallet] Service initialized');
@@ -57,6 +114,7 @@ class Web3WalletService extends ChangeNotifier {
     final rpcUrl = AppConfig.getRpcUrl(network);
     _client = Web3Client(rpcUrl, http.Client());
     debugPrint('🌐 [Web3Wallet] Client initialized for $network');
+    debugPrint('🌐 [Web3Wallet] RPC URL: $rpcUrl');
   }
 
   /// Import wallet using private key
@@ -93,43 +151,6 @@ class Web3WalletService extends ChangeNotifier {
     }
   }
 
-  /// Import wallet using mnemonic phrase (12/24 words)
-  Future<void> importWalletFromMnemonic(String mnemonic, {bool saveKey = true}) async {
-    try {
-      debugPrint('🔐 [Web3Wallet] Importing wallet from mnemonic...');
-
-      // Create credentials from mnemonic
-      final credentials = await _generateFromMnemonic(mnemonic);
-      _credentials = credentials;
-      _address = credentials.address;
-      _isConnected = true;
-
-      // Save private key if requested
-      if (saveKey) {
-        final privateKey = credentials.privateKey;
-        final hexKey = bytesToHex(privateKey);
-        await _secureStorage.write(key: _privateKeyKey, value: hexKey);
-        debugPrint('💾 [Web3Wallet] Private key saved to secure storage');
-      }
-
-      debugPrint('✅ [Web3Wallet] Wallet imported from mnemonic');
-      debugPrint('✅ Address: ${_address.toString()}');
-
-      notifyListeners();
-    } catch (e) {
-      debugPrint('❌ [Web3Wallet] Mnemonic import error: $e');
-      rethrow;
-    }
-  }
-
-  /// Generate wallet from mnemonic
-  Future<EthPrivateKey> _generateFromMnemonic(String mnemonic) async {
-    // Note: web3dart doesn't have built-in mnemonic support
-    // You'll need to use bip39 package for this
-    // For now, this is a placeholder
-    throw UnimplementedError('Please use private key import or add bip39 package for mnemonic support');
-  }
-
   /// Load wallet from saved private key
   Future<void> _loadWalletFromPrivateKey(String privateKey) async {
     try {
@@ -142,7 +163,7 @@ class Web3WalletService extends ChangeNotifier {
     }
   }
 
-  /// Get wallet balance
+  /// Get wallet balance (ETH/BNB/Native token)
   Future<EtherAmount> getBalance() async {
     if (!_isConnected || _address == null || _client == null) {
       throw Exception('Wallet not connected');
@@ -150,11 +171,25 @@ class Web3WalletService extends ChangeNotifier {
 
     try {
       final balance = await _client!.getBalance(_address!);
-      debugPrint('💰 [Web3Wallet] Balance: ${balance.getValueInUnit(EtherUnit.ether)} ETH');
+      final nativeSymbol = _getNativeSymbol(_currentNetwork!);
+      debugPrint('💰 [Web3Wallet] Balance: ${balance.getValueInUnit(EtherUnit.ether)} $nativeSymbol');
       return balance;
     } catch (e) {
       debugPrint('❌ [Web3Wallet] Balance error: $e');
       rethrow;
+    }
+  }
+
+  String _getNativeSymbol(String network) {
+    switch (network) {
+      case 'ethereum':
+        return 'ETH';
+      case 'bsc':
+        return 'BNB';
+      case 'polygon':
+        return 'MATIC';
+      default:
+        return 'ETH';
     }
   }
 
@@ -164,7 +199,167 @@ class Web3WalletService extends ChangeNotifier {
     return balance.getValueInUnit(EtherUnit.ether).toStringAsFixed(4);
   }
 
-  /// Send ETH transaction
+  /// Get USDT balance for current network
+  Future<String> getUsdtBalance() async {
+    if (!_isConnected || _address == null || _client == null) {
+      throw Exception('Wallet not connected');
+    }
+
+    try {
+      final contractAddress = _usdtContractAddresses[_currentNetwork];
+      if (contractAddress == null) {
+        debugPrint('⚠️ [Web3Wallet] USDT not supported on $_currentNetwork');
+        throw Exception('USDT not supported on $_currentNetwork');
+      }
+
+      final decimals = _usdtDecimals[_currentNetwork] ?? 6;
+
+      debugPrint('🪙 [Web3Wallet] Getting USDT balance...');
+      debugPrint('📍 Network: $_currentNetwork');
+      debugPrint('📍 Contract: $contractAddress');
+      debugPrint('📍 Decimals: $decimals');
+      debugPrint('📍 Address: ${_address.toString()}');
+
+      // Create contract instance
+      final contract = DeployedContract(
+        ContractAbi.fromJson(_erc20Abi, 'ERC20'),
+        EthereumAddress.fromHex(contractAddress),
+      );
+
+      // Get balanceOf function
+      final balanceFunction = contract.function('balanceOf');
+
+      // Call the contract
+      final result = await _client!.call(
+        contract: contract,
+        function: balanceFunction,
+        params: [_address!],
+      );
+
+      // Parse balance
+      final balance = result[0] as BigInt;
+
+      debugPrint('📊 [Web3Wallet] Raw balance: $balance');
+
+      // Convert to decimal based on network
+      final divisor = BigInt.from(10).pow(decimals);
+      final balanceInUsdt = balance / divisor;
+
+      debugPrint('💵 [Web3Wallet] USDT Balance: $balanceInUsdt USDT');
+
+      return balanceInUsdt.toStringAsFixed(2);
+    } catch (e) {
+      debugPrint('❌ [Web3Wallet] USDT balance error: $e');
+      rethrow;
+    }
+  }
+
+  /// Get ERC-20 token balance (generic)
+  Future<String> getTokenBalance({
+    required String contractAddress,
+    int decimals = 18,
+  }) async {
+    if (!_isConnected || _address == null || _client == null) {
+      throw Exception('Wallet not connected');
+    }
+
+    try {
+      debugPrint('🪙 [Web3Wallet] Getting token balance for $contractAddress...');
+
+      // Create contract instance
+      final contract = DeployedContract(
+        ContractAbi.fromJson(_erc20Abi, 'ERC20'),
+        EthereumAddress.fromHex(contractAddress),
+      );
+
+      // Get balanceOf function
+      final balanceFunction = contract.function('balanceOf');
+
+      // Call the contract
+      final result = await _client!.call(
+        contract: contract,
+        function: balanceFunction,
+        params: [_address!],
+      );
+
+      // Parse balance
+      final balance = result[0] as BigInt;
+      final balanceInToken = balance / BigInt.from(10).pow(decimals);
+
+      debugPrint('💰 [Web3Wallet] Token Balance: $balanceInToken');
+
+      return balanceInToken.toStringAsFixed(decimals > 6 ? 6 : decimals);
+    } catch (e) {
+      debugPrint('❌ [Web3Wallet] Token balance error: $e');
+      rethrow;
+    }
+  }
+
+  /// Send USDT
+  Future<String> sendUsdt({
+    required String toAddress,
+    required String amount,
+  }) async {
+    if (!_isConnected || _credentials == null || _client == null) {
+      throw Exception('Wallet not connected');
+    }
+
+    try {
+      final contractAddress = _usdtContractAddresses[_currentNetwork];
+      if (contractAddress == null) {
+        throw Exception('USDT not supported on $_currentNetwork');
+      }
+
+      final decimals = _usdtDecimals[_currentNetwork] ?? 6;
+
+      debugPrint('📤 [Web3Wallet] Sending USDT...');
+      debugPrint('To: $toAddress');
+      debugPrint('Amount: $amount USDT');
+      debugPrint('Decimals: $decimals');
+
+      // Create contract instance
+      final contract = DeployedContract(
+        ContractAbi.fromJson(_erc20Abi, 'ERC20'),
+        EthereumAddress.fromHex(contractAddress),
+      );
+
+      // Get transfer function
+      final transferFunction = contract.function('transfer');
+
+      // Convert amount to smallest unit based on decimals
+      final amountInSmallestUnit = BigInt.from(double.parse(amount) * pow(10, decimals));
+
+      debugPrint('📊 Amount in smallest unit: $amountInSmallestUnit');
+
+      // Send transaction
+      final transaction = Transaction.callContract(
+        contract: contract,
+        function: transferFunction,
+        parameters: [
+          EthereumAddress.fromHex(toAddress),
+          amountInSmallestUnit,
+        ],
+      );
+
+      final chainId = await _getChainId();
+
+      final txHash = await _client!.sendTransaction(
+        _credentials!,
+        transaction,
+        chainId: chainId,
+      );
+
+      debugPrint('✅ [Web3Wallet] USDT sent!');
+      debugPrint('✅ Hash: $txHash');
+
+      return txHash;
+    } catch (e) {
+      debugPrint('❌ [Web3Wallet] USDT send error: $e');
+      rethrow;
+    }
+  }
+
+  /// Send native token (ETH/BNB) transaction
   Future<String> sendTransaction({
     required String toAddress,
     required String amountInEther,
@@ -179,7 +374,7 @@ class Web3WalletService extends ChangeNotifier {
     try {
       debugPrint('📤 [Web3Wallet] Sending transaction...');
       debugPrint('To: $toAddress');
-      debugPrint('Amount: $amountInEther ETH');
+      debugPrint('Amount: $amountInEther ${_getNativeSymbol(_currentNetwork!)}');
 
       final amount = EtherAmount.fromBigInt(
         EtherUnit.ether,
@@ -263,82 +458,6 @@ class Web3WalletService extends ChangeNotifier {
     }
   }
 
-  /// Estimate gas for transaction
-  Future<BigInt> estimateGas({
-    required String toAddress,
-    String? value,
-    String? data,
-  }) async {
-    if (_client == null || _address == null) {
-      throw Exception('Wallet not connected');
-    }
-
-    try {
-      final transaction = Transaction(
-        from: _address,
-        to: EthereumAddress.fromHex(toAddress),
-        value: value != null
-            ? EtherAmount.fromBigInt(EtherUnit.wei, BigInt.parse(value))
-            : EtherAmount.zero(),
-        data: data != null ? hexToBytes(data) : null,
-      );
-
-      final gasEstimate = await _client!.estimateGas(
-        sender: _address,
-        to: EthereumAddress.fromHex(toAddress),
-        value: transaction.value,
-        data: transaction.data,
-      );
-
-      debugPrint('⛽ [Web3Wallet] Estimated gas: $gasEstimate');
-      return gasEstimate;
-    } catch (e) {
-      debugPrint('❌ [Web3Wallet] Gas estimation error: $e');
-      rethrow;
-    }
-  }
-
-  /// Get transaction receipt
-  Future<TransactionReceipt?> getTransactionReceipt(String txHash) async {
-    if (_client == null) {
-      throw Exception('Client not initialized');
-    }
-
-    try {
-      final receipt = await _client!.getTransactionReceipt(txHash);
-
-      if (receipt != null) {
-        debugPrint('📜 [Web3Wallet] Transaction receipt retrieved');
-        debugPrint('Status: ${receipt.status == true ? "Success" : "Failed"}'); // FIX: Proper null check
-      }
-
-      return receipt;
-    } catch (e) {
-      debugPrint('❌ [Web3Wallet] Receipt error: $e');
-      rethrow;
-    }
-  }
-
-  /// Get transaction by hash
-  Future<TransactionInformation?> getTransaction(String txHash) async {
-    if (_client == null) {
-      throw Exception('Client not initialized');
-    }
-
-    try {
-      final tx = await _client!.getTransactionByHash(txHash);
-
-      if (tx != null) {
-        debugPrint('📄 [Web3Wallet] Transaction retrieved');
-      }
-
-      return tx;
-    } catch (e) {
-      debugPrint('❌ [Web3Wallet] Get transaction error: $e');
-      rethrow;
-    }
-  }
-
   /// Switch network
   Future<void> switchNetwork(String network) async {
     try {
@@ -369,24 +488,8 @@ class Web3WalletService extends ChangeNotifier {
       final chainId = await _client!.getChainId();
       return chainId.toInt();
     } catch (e) {
-      debugPrint('⚠️ [Web3Wallet] Chain ID error, using default');
-      return 1; // Default to Ethereum mainnet
-    }
-  }
-
-  /// Get current block number
-  Future<int> getBlockNumber() async {
-    if (_client == null) {
-      throw Exception('Client not initialized');
-    }
-
-    try {
-      final blockNumber = await _client!.getBlockNumber();
-      debugPrint('🔢 [Web3Wallet] Current block: $blockNumber');
-      return blockNumber;
-    } catch (e) {
-      debugPrint('❌ [Web3Wallet] Block number error: $e');
-      rethrow;
+      debugPrint('⚠️ [Web3Wallet] Chain ID error, using configured value');
+      return AppConfig.getChainId(_currentNetwork ?? 'bsc');
     }
   }
 
@@ -418,19 +521,26 @@ class Web3WalletService extends ChangeNotifier {
     }
   }
 
-  /// Export private key (use with caution!)
-  Future<String> exportPrivateKey() async {
-    if (_credentials == null) {
-      throw Exception('No wallet connected');
-    }
-
-    debugPrint('⚠️ [Web3Wallet] Exporting private key - USE WITH CAUTION!');
-    return bytesToHex(_credentials!.privateKey, include0x: true);
-  }
-
   @override
   void dispose() {
     _client?.dispose();
     super.dispose();
+  }
+}
+
+// Helper function for pow
+num pow(num x, num exponent) {
+  return x.toDouble().pow(exponent.toInt());
+}
+
+// Extension for pow
+extension on double {
+  double pow(int exponent) {
+    if (exponent == 0) return 1.0;
+    double result = 1.0;
+    for (int i = 0; i < exponent; i++) {
+      result *= this;
+    }
+    return result;
   }
 }

@@ -16,8 +16,10 @@ class WalletDashboardScreen extends StatefulWidget {
 
 class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
   String _balance = '0.0000';
+  String _usdtBalance = '0.00';
   String _gasPrice = '0';
   bool _isLoadingBalance = false;
+  bool _isLoadingUsdt = false;
   String _statusMessage = '';
 
   @override
@@ -27,12 +29,15 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
   }
 
   Future<void> _loadWalletData() async {
-    setState(() => _isLoadingBalance = true);
+    setState(() {
+      _isLoadingBalance = true;
+      _isLoadingUsdt = true;
+    });
 
     try {
       final walletService = Provider.of<Web3WalletService>(context, listen: false);
 
-      // Get balance
+      // Get ETH balance
       final balanceStr = await walletService.getBalanceInEther();
 
       // Get gas price
@@ -44,10 +49,26 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
         _gasPrice = gasPriceGwei.toStringAsFixed(2);
         _isLoadingBalance = false;
       });
+
+      // Get USDT balance
+      try {
+        final usdtBalance = await walletService.getUsdtBalance();
+        setState(() {
+          _usdtBalance = usdtBalance;
+          _isLoadingUsdt = false;
+        });
+      } catch (e) {
+        debugPrint('Error loading USDT: $e');
+        setState(() {
+          _usdtBalance = '0.00';
+          _isLoadingUsdt = false;
+        });
+      }
     } catch (e) {
       setState(() {
         _statusMessage = 'Failed to load data: $e';
         _isLoadingBalance = false;
+        _isLoadingUsdt = false;
       });
     }
   }
@@ -82,8 +103,13 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Balance Card
+                  // Balance Cards
                   _buildBalanceCard(walletService),
+
+                  SizedBox(height: 12.h),
+
+                  // USDT Balance Card
+                  _buildUsdtBalanceCard(walletService),
 
                   SizedBox(height: 20.h),
 
@@ -134,53 +160,142 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
   }
 
   Widget _buildBalanceCard(Web3WalletService service) {
+    // Get the native token symbol based on network
+    String getNativeTokenSymbol() {
+      switch (service.currentNetwork?.toLowerCase()) {
+        case 'bsc':
+          return 'BNB';
+        case 'polygon':
+          return 'MATIC';
+        case 'ethereum':
+        case 'mainnet':
+        default:
+          return 'ETH';
+      }
+    }
+
+    final nativeSymbol = getNativeTokenSymbol();
+
     return Container(
-      padding: EdgeInsets.all(24.w),
+      padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.blue.shade700, Colors.blue.shade900],
+          colors: service.currentNetwork == 'bsc'
+              ? [Colors.amber.shade700, Colors.amber.shade900]
+              : [Colors.blue.shade700, Colors.blue.shade900],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.withValues(alpha: 0.3),
+            color: (service.currentNetwork == 'bsc' ? Colors.amber : Colors.blue)
+                .withValues(alpha: 0.3),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Total Balance',
-            style: TextStyle(
-              fontSize: 14.sp,
-              color: Colors.white70,
-            ),
+          Row(
+            children: [
+              Icon(Icons.account_balance_wallet, size: 20.sp, color: Colors.white70),
+              SizedBox(width: 8.w),
+              Text(
+                '$nativeSymbol Balance',
+                style: TextStyle(
+                  fontSize: 13.sp,
+                  color: Colors.white70,
+                ),
+              ),
+            ],
           ),
           SizedBox(height: 12.h),
           _isLoadingBalance
-              ? const CircularProgressIndicator(color: Colors.white)
+              ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
               : Text(
-            '$_balance ETH',
+            '$_balance $nativeSymbol',
             style: TextStyle(
-              fontSize: 36.sp,
+              fontSize: 28.sp,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
           SizedBox(height: 8.h),
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.local_gas_station, size: 14.sp, color: Colors.white70),
+              Icon(Icons.local_gas_station, size: 12.sp, color: Colors.white70),
               SizedBox(width: 4.w),
               Text(
                 'Gas: $_gasPrice Gwei',
                 style: TextStyle(
-                  fontSize: 12.sp,
+                  fontSize: 11.sp,
+                  color: Colors.white70,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUsdtBalanceCard(Web3WalletService service) {
+    return Container(
+      padding: EdgeInsets.all(20.w),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.green.shade700, Colors.green.shade900],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.green.withValues(alpha: 0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.monetization_on, size: 20.sp, color: Colors.white70),
+              SizedBox(width: 8.w),
+              Text(
+                'USDT Balance',
+                style: TextStyle(
+                  fontSize: 13.sp,
+                  color: Colors.white70,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          _isLoadingUsdt
+              ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+              : Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                '\$$_usdtBalance',
+                style: TextStyle(
+                  fontSize: 28.sp,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Text(
+                'USDT',
+                style: TextStyle(
+                  fontSize: 14.sp,
                   color: Colors.white70,
                 ),
               ),
@@ -192,7 +307,6 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
   }
 
   Widget _buildAddressCard(Web3WalletService service) {
-    // FIX: Format address to show first 6 and last 4 characters
     String formatAddress(String? address) {
       if (address == null || address.length < 10) return address ?? 'N/A';
       return '${address.substring(0, 6)}...${address.substring(address.length - 4)}';
@@ -312,19 +426,55 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
   }
 
   Widget _buildActionButtons(Web3WalletService service) {
+    String getNativeTokenSymbol() {
+      switch (service.currentNetwork?.toLowerCase()) {
+        case 'bsc':
+          return 'BNB';
+        case 'polygon':
+          return 'MATIC';
+        case 'ethereum':
+        case 'mainnet':
+        default:
+          return 'ETH';
+      }
+    }
+
+    final nativeSymbol = getNativeTokenSymbol();
+
     return Column(
       children: [
-        // Send Transaction Button
+        // Send Native Token Button
         SizedBox(
           width: double.infinity,
           child: OutlinedButton.icon(
-            onPressed: () => _showSendDialog(service),
+            onPressed: () => _showSendDialog(service, isUsdt: false),
             icon: Icon(Icons.send, size: 20.sp),
-            label: const Text('Send ETH'),
+            label: Text('Send $nativeSymbol'),
             style: OutlinedButton.styleFrom(
               padding: EdgeInsets.symmetric(vertical: 16.h),
-              side: const BorderSide(color: Colors.blue),
-              foregroundColor: Colors.blue,
+              side: BorderSide(
+                color: service.currentNetwork == 'bsc' ? Colors.amber : Colors.blue,
+              ),
+              foregroundColor: service.currentNetwork == 'bsc' ? Colors.amber : Colors.blue,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+            ),
+          ),
+        ),
+        SizedBox(height: 12.h),
+
+        // Send USDT Button
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () => _showSendDialog(service, isUsdt: true),
+            icon: Icon(Icons.monetization_on, size: 20.sp),
+            label: const Text('Send USDT'),
+            style: OutlinedButton.styleFrom(
+              padding: EdgeInsets.symmetric(vertical: 16.h),
+              side: const BorderSide(color: Colors.green),
+              foregroundColor: Colors.green,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12.r),
               ),
@@ -342,8 +492,8 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
             label: const Text('Sign Message'),
             style: OutlinedButton.styleFrom(
               padding: EdgeInsets.symmetric(vertical: 16.h),
-              side: const BorderSide(color: Colors.green),
-              foregroundColor: Colors.green,
+              side: const BorderSide(color: Colors.orange),
+              foregroundColor: Colors.orange,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12.r),
               ),
@@ -449,7 +599,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     );
   }
 
-  void _showSendDialog(Web3WalletService service) {
+  void _showSendDialog(Web3WalletService service, {required bool isUsdt}) {
     final toController = TextEditingController();
     final amountController = TextEditingController();
 
@@ -457,7 +607,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey[900],
-        title: const Text('Send ETH'),
+        title: Text(isUsdt ? 'Send USDT' : 'Send ETH'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -476,8 +626,8 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
               controller: amountController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
-                labelText: 'Amount (ETH)',
-                hintText: '0.01',
+                labelText: isUsdt ? 'Amount (USDT)' : 'Amount (ETH)',
+                hintText: isUsdt ? '10.00' : '0.01',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8.r),
                 ),
@@ -493,11 +643,11 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
-              await _sendTransaction(
-                service,
-                toController.text,
-                amountController.text,
-              );
+              if (isUsdt) {
+                await _sendUsdt(service, toController.text, amountController.text);
+              } else {
+                await _sendTransaction(service, toController.text, amountController.text);
+              }
             },
             child: const Text('Send'),
           ),
@@ -514,7 +664,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
       return;
     }
 
-    setState(() => _statusMessage = 'Sending transaction...');
+    setState(() => _statusMessage = 'Sending ETH transaction...');
 
     try {
       final txHash = await service.sendTransaction(
@@ -530,13 +680,47 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
         );
       }
 
-      // Refresh balance
       await _loadWalletData();
     } catch (e) {
       setState(() => _statusMessage = 'Transaction failed: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('❌ Transaction failed: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _sendUsdt(Web3WalletService service, String to, String amount) async {
+    if (to.isEmpty || amount.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('❌ Please fill all fields')),
+      );
+      return;
+    }
+
+    setState(() => _statusMessage = 'Sending USDT transaction...');
+
+    try {
+      final txHash = await service.sendUsdt(
+        toAddress: to,
+        amount: amount,
+      );
+
+      setState(() => _statusMessage = 'USDT sent! Hash: ${txHash.substring(0, 10)}...');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('✅ USDT sent: ${txHash.substring(0, 20)}...')),
+        );
+      }
+
+      await _loadWalletData();
+    } catch (e) {
+      setState(() => _statusMessage = 'USDT transaction failed: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('❌ USDT transaction failed: $e')),
         );
       }
     }
