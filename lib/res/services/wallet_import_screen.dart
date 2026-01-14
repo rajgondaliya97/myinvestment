@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:myinvestment/res/services/wallet_dashboard_screen.dart';
 import 'package:myinvestment/res/services/web_wallet_service.dart';
 import 'package:myinvestment/utils/app_color.dart';
 import 'package:provider/provider.dart';
@@ -647,29 +648,6 @@ class _WalletImportScreenState extends State<WalletImportScreen>
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// Wallet Dashboard Screen (placeholder)
-class WalletDashboardScreen extends StatelessWidget {
-  const WalletDashboardScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: AppColor.screenGradientBgColor,
-        ),
-        child: Center(
-          child: AppText(
-            'Wallet Dashboard - Coming Soon',
-            fontSize: 18.sp,
-            color: AppColor.white,
-          ),
-        ),
       ),
     );
   }
