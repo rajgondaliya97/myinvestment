@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:myinvestment/res/services/wallet_dashboard_screen.dart';
 import 'package:myinvestment/res/services/web_wallet_service.dart';
 import 'package:myinvestment/utils/app_color.dart';
 import 'package:provider/provider.dart';
@@ -68,11 +67,38 @@ class _WalletImportScreenState extends State<WalletImportScreen>
       );
 
       if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => const WalletDashboardScreen(),
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Text(
+                    'Wallet connected successfully!',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: AppColor.success,
+            duration: Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.r),
+            ),
           ),
         );
+
+        // Wait a moment for the success message to show
+        await Future.delayed(Duration(milliseconds: 500));
+
+        // Navigate back to home screen - Provider will auto-update the UI
+        Navigator.of(context).pop();
       }
     } catch (e) {
       setState(() {
@@ -94,7 +120,11 @@ class _WalletImportScreenState extends State<WalletImportScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(title: AppConst.appName,showBackButton: true,showDrawer: false,),
+      appBar: CustomAppBar(
+        title: AppConst.appName,
+        showBackButton: true,
+        showDrawer: false,
+      ),
       body: Container(
         decoration: BoxDecoration(gradient: AppColor.screenGradientBgColor),
         child: SafeArea(
@@ -162,7 +192,7 @@ class _WalletImportScreenState extends State<WalletImportScreen>
         ),
         SizedBox(height: 24.h),
         AppText.medium(
-           'Import Your Wallet',
+          'Import Your Wallet',
           fontSize: 20,
           fontWeight: FontWeight.bold,
           color: AppColor.white,
@@ -170,8 +200,7 @@ class _WalletImportScreenState extends State<WalletImportScreen>
         ),
         SizedBox(height: 12.h),
         AppText.medium(
-           'Securely import your wallet using your MetaMask private key',
-      //    fontSize: 14.sp,
+          'Securely import your wallet using your MetaMask private key',
           color: AppColor.grey300.withOpacity(0.7),
           textAlign: TextAlign.center,
           maxLines: 2,
@@ -222,7 +251,7 @@ class _WalletImportScreenState extends State<WalletImportScreen>
                 ),
                 SizedBox(width: 12.w),
                 AppText(
-                   'Private Key',
+                  'Private Key',
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
                   color: AppColor.white,
@@ -244,6 +273,7 @@ class _WalletImportScreenState extends State<WalletImportScreen>
               child: TextField(
                 controller: _privateKeyController,
                 maxLines: _obscureKey ? 1 : 3,
+                obscureText: _obscureKey,
                 style: TextStyle(
                   fontSize: 13.sp,
                   fontFamily: 'monospace',
@@ -251,6 +281,7 @@ class _WalletImportScreenState extends State<WalletImportScreen>
                   letterSpacing: 0.5,
                 ),
                 decoration: InputDecoration(
+                  hintText: 'Enter your private key',
                   hintStyle: TextStyle(
                     color: AppColor.grey300.withOpacity(0.3),
                     fontFamily: 'monospace',
@@ -327,7 +358,7 @@ class _WalletImportScreenState extends State<WalletImportScreen>
           SizedBox(width: 12.w),
           Expanded(
             child: AppText(
-               _errorMessage,
+              _errorMessage,
               color: AppColor.error,
               fontSize: 13.sp,
               fontWeight: FontWeight.w500,
@@ -372,9 +403,7 @@ class _WalletImportScreenState extends State<WalletImportScreen>
                     ),
                     borderRadius: BorderRadius.circular(6.r),
                     border: Border.all(
-                      color: _saveKey
-                          ? AppColor.primaryColor
-                          : AppColor.grey500,
+                      color: _saveKey ? AppColor.primaryColor : AppColor.grey500,
                       width: 2,
                     ),
                   ),
@@ -392,14 +421,14 @@ class _WalletImportScreenState extends State<WalletImportScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       AppText(
-                         'Remember this wallet',
+                        'Remember this wallet',
                         fontSize: 15.sp,
                         fontWeight: FontWeight.w600,
                         color: AppColor.white,
                       ),
                       SizedBox(height: 4.h),
                       AppText(
-                         'Private key will be encrypted and stored securely',
+                        'Private key will be encrypted and stored securely',
                         fontSize: 12.sp,
                         color: AppColor.grey300.withOpacity(0.6),
                         maxLines: 2,
@@ -459,7 +488,7 @@ class _WalletImportScreenState extends State<WalletImportScreen>
                 ),
                 SizedBox(width: 12.w),
                 AppText(
-                   'Import Wallet',
+                  'Import Wallet',
                   fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
                   color: AppColor.white,
@@ -509,7 +538,7 @@ class _WalletImportScreenState extends State<WalletImportScreen>
               ),
               SizedBox(width: 12.w),
               AppText(
-                 'Security Warning',
+                'Security Warning',
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
                 color: AppColor.warning,
@@ -548,7 +577,7 @@ class _WalletImportScreenState extends State<WalletImportScreen>
           SizedBox(width: 12.w),
           Expanded(
             child: AppText(
-               text,
+              text,
               fontSize: 13.sp,
               color: AppColor.white.withOpacity(0.9),
             ),
@@ -591,7 +620,7 @@ class _WalletImportScreenState extends State<WalletImportScreen>
               SizedBox(width: 12.w),
               Expanded(
                 child: AppText(
-                   'How to get your private key',
+                  'How to get your private key',
                   fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
                   color: AppColor.white,
@@ -632,7 +661,7 @@ class _WalletImportScreenState extends State<WalletImportScreen>
             ),
             child: Center(
               child: AppText(
-                 number,
+                number,
                 color: AppColor.white,
                 fontSize: 14.sp,
                 fontWeight: FontWeight.bold,
@@ -642,7 +671,7 @@ class _WalletImportScreenState extends State<WalletImportScreen>
           SizedBox(width: 16.w),
           Expanded(
             child: AppText(
-               text,
+              text,
               color: AppColor.white.withOpacity(0.85),
               fontSize: 14.sp,
             ),
