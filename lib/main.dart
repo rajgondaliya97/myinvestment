@@ -128,7 +128,7 @@ class MyApp extends StatelessWidget {
               '/import': (context) => const WalletImportScreen(),
               '/dashboard': (context) => const WalletDashboardScreen(),
             },*/
-            home: WalletImportScreen(),
+            home: AuthWrapper(),
           );
         },
       ),

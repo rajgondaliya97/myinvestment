@@ -124,10 +124,7 @@ class _DepositScreenState extends State<DepositScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // ============ BALANCE CARD ============
-                  BalanceCard(
-                    balance: homeProvider.balance,
-                    profitPercentage: homeProvider.profitPercentage,
-                  ),
+                  BalanceCard(),
                   SizedBox(height: 20.h),
 
                   // ============ CHOOSE BALANCE ============
