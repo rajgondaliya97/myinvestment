@@ -5,7 +5,6 @@ import 'package:myinvestment/res/services/web_wallet_service.dart';
 import 'package:myinvestment/utils/app_color.dart';
 import 'package:provider/provider.dart';
 import 'package:reown_walletkit/reown_walletkit.dart';
-import 'package:web3dart/web3dart.dart';
 
 class WalletDashboardScreen extends StatefulWidget {
   const WalletDashboardScreen({Key? key}) : super(key: key);

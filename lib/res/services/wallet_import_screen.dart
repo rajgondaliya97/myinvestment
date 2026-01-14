@@ -5,6 +5,10 @@ import 'package:myinvestment/res/services/web_wallet_service.dart';
 import 'package:myinvestment/utils/app_color.dart';
 import 'package:provider/provider.dart';
 
+import '../../utils/app_constent.dart';
+import '../app_widget/custom_app_bar.dart';
+import '../app_widget/custom_app_text.dart';
+
 class WalletImportScreen extends StatefulWidget {
   const WalletImportScreen({Key? key}) : super(key: key);
 
@@ -12,16 +16,33 @@ class WalletImportScreen extends StatefulWidget {
   State<WalletImportScreen> createState() => _WalletImportScreenState();
 }
 
-class _WalletImportScreenState extends State<WalletImportScreen> {
+class _WalletImportScreenState extends State<WalletImportScreen>
+    with SingleTickerProviderStateMixin {
   final _privateKeyController = TextEditingController();
   bool _isLoading = false;
   bool _obscureKey = true;
   bool _saveKey = true;
   String _errorMessage = '';
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+    _animationController.forward();
+  }
 
   @override
   void dispose() {
     _privateKeyController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -37,7 +58,8 @@ class _WalletImportScreenState extends State<WalletImportScreen> {
     });
 
     try {
-      final walletService = Provider.of<Web3WalletService>(context, listen: false);
+      final walletService =
+      Provider.of<Web3WalletService>(context, listen: false);
 
       await walletService.importWalletFromPrivateKey(
         _privateKeyController.text.trim(),
@@ -45,7 +67,6 @@ class _WalletImportScreenState extends State<WalletImportScreen> {
       );
 
       if (mounted) {
-        // Navigate to wallet screen
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (context) => const WalletDashboardScreen(),
@@ -72,283 +93,463 @@ class _WalletImportScreenState extends State<WalletImportScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Import Wallet'),
-        backgroundColor: AppColor.primaryColor,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(20.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Header Icon
-            Center(
-              child: Container(
-                padding: EdgeInsets.all(24.w),
-                decoration: BoxDecoration(
-                  color: AppColor.primaryColor.withOpacity(0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.account_balance_wallet,
-                  size: 60.sp,
-                  color: AppColor.primaryColor,
-                ),
-              ),
-            ),
-
-            SizedBox(height: 24.h),
-
-            // Title
-            Text(
-              'Import Your Wallet',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 24.sp,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-
-            SizedBox(height: 12.h),
-
-            // Description
-            Text(
-              'Enter your MetaMask private key to access your wallet',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: Colors.grey[400],
-              ),
-            ),
-
-            SizedBox(height: 32.h),
-
-            // Private Key Input
-            Container(
-              padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
-                color: Colors.grey[900],
-                borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(
-                  color: _errorMessage.isNotEmpty
-                      ? Colors.red
-                      : Colors.grey[800]!,
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.key, color: Colors.blue, size: 20.sp),
-                      SizedBox(width: 8.w),
-                      Text(
-                        'Private Key',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          color: Colors.grey[400],
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 12.h),
-                  TextField(
-                    controller: _privateKeyController,
-                    obscureText: _obscureKey,
-                    maxLines: _obscureKey ? 1 : 3,
-                    style: TextStyle(
-                      fontSize: 13.sp,
-                      fontFamily: 'monospace',
-                      color: Colors.white,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: '0x1234567890abcdef...',
-                      hintStyle: TextStyle(
-                        color: Colors.grey[600],
-                        fontFamily: 'monospace',
-                      ),
-                      border: InputBorder.none,
-                      suffixIcon: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: Icon(
-                              _obscureKey ? Icons.visibility : Icons.visibility_off,
-                              size: 20.sp,
-                              color: Colors.grey[400],
-                            ),
-                            onPressed: () {
-                              setState(() => _obscureKey = !_obscureKey);
-                            },
-                          ),
-                          IconButton(
-                            icon: Icon(
-                              Icons.paste,
-                              size: 20.sp,
-                              color: Colors.blue,
-                            ),
-                            onPressed: _pasteFromClipboard,
-                          ),
+      appBar: CustomAppBar(title: AppConst.appName,showBackButton: true,showDrawer: false,),
+      body: Container(
+        decoration: BoxDecoration(gradient: AppColor.screenGradientBgColor),
+        child: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: EdgeInsets.symmetric(horizontal: 20.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        SizedBox(height: 20.h),
+                        _buildHeaderSection(),
+                        SizedBox(height: 32.h),
+                        _buildPrivateKeyInput(),
+                        if (_errorMessage.isNotEmpty) ...[
+                          SizedBox(height: 16.h),
+                          _buildErrorMessage(),
                         ],
-                      ),
+                        SizedBox(height: 24.h),
+                        _buildSaveKeyOption(),
+                        SizedBox(height: 32.h),
+                        _buildImportButton(),
+                        SizedBox(height: 32.h),
+                        _buildSecurityWarning(),
+                        SizedBox(height: 24.h),
+                        _buildHowToSection(),
+                        SizedBox(height: 32.h),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
-
-            if (_errorMessage.isNotEmpty) ...[
-              SizedBox(height: 12.h),
-              Container(
-                padding: EdgeInsets.all(12.w),
-                decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: Colors.red),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.error_outline, color: Colors.red, size: 20.sp),
-                    SizedBox(width: 8.w),
-                    Expanded(
-                      child: Text(
-                        _errorMessage,
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontSize: 12.sp,
-                        ),
-                      ),
-                    ),
-                  ],
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
 
-            SizedBox(height: 20.h),
-
-            // Save Key Checkbox
-            Container(
-              padding: EdgeInsets.all(12.w),
-              decoration: BoxDecoration(
-                color: Colors.grey[900],
-                borderRadius: BorderRadius.circular(8.r),
+  Widget _buildHeaderSection() {
+    return Column(
+      children: [
+        Container(
+          padding: EdgeInsets.all(20.w),
+          decoration: BoxDecoration(
+            gradient: AppColor.primaryGradient,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: AppColor.primaryColor.withOpacity(0.4),
+                blurRadius: 30,
+                spreadRadius: 5,
               ),
-              child: CheckboxListTile(
-                value: _saveKey,
-                onChanged: (value) {
-                  setState(() => _saveKey = value ?? true);
-                },
-                title: Text(
-                  'Remember this wallet',
-                  style: TextStyle(fontSize: 14.sp, color: Colors.white),
-                ),
-                subtitle: Text(
-                  'Private key will be encrypted and stored securely',
-                  style: TextStyle(fontSize: 12.sp, color: Colors.grey[500]),
-                ),
-                contentPadding: EdgeInsets.zero,
-                controlAffinity: ListTileControlAffinity.leading,
-                activeColor: Colors.blue,
-              ),
-            ),
+            ],
+          ),
+          child: Icon(
+            Icons.account_balance_wallet_rounded,
+            size: 30.sp,
+            color: AppColor.white,
+          ),
+        ),
+        SizedBox(height: 24.h),
+        AppText.medium(
+           'Import Your Wallet',
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: AppColor.white,
+          textAlign: TextAlign.center,
+        ),
+        SizedBox(height: 12.h),
+        AppText.medium(
+           'Securely import your wallet using your MetaMask private key',
+      //    fontSize: 14.sp,
+          color: AppColor.grey300.withOpacity(0.7),
+          textAlign: TextAlign.center,
+          maxLines: 2,
+        ),
+      ],
+    );
+  }
 
-            SizedBox(height: 32.h),
-
-            // Import Button
-            ElevatedButton(
-              onPressed: _isLoading ? null : _importWallet,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColor.primaryColor,
-                padding: EdgeInsets.symmetric(vertical: 18.h),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-              ),
-              child: _isLoading
-                  ? SizedBox(
-                height: 20.h,
-                width: 20.h,
-                child: const CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2,
-                ),
-              )
-                  : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.import_export, size: 20.sp),
-                  SizedBox(width: 8.w),
-                  Text(
-                    'Import Wallet',
-                    style: TextStyle(fontSize: 16.sp),
+  Widget _buildPrivateKeyInput() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: AppColor.cardGradientBgColor,
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(
+          color: _errorMessage.isNotEmpty
+              ? AppColor.error
+              : AppColor.primaryColor.withOpacity(0.3),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: _errorMessage.isNotEmpty
+                ? AppColor.error.withOpacity(0.2)
+                : AppColor.primaryColor.withOpacity(0.15),
+            blurRadius: 20,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 12.h),
+            child: Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(8.w),
+                  decoration: BoxDecoration(
+                    gradient: AppColor.primaryGradient,
+                    borderRadius: BorderRadius.circular(10.r),
                   ),
-                ],
-              ),
+                  child: Icon(
+                    Icons.key_rounded,
+                    color: AppColor.white,
+                    size: 18.sp,
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                AppText(
+                   'Private Key',
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                  color: AppColor.white,
+                ),
+              ],
             ),
-
-            SizedBox(height: 32.h),
-
-            // Security Warning
-            Container(
-              padding: EdgeInsets.all(16.w),
+          ),
+          Padding(
+            padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 20.h),
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
               decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.1),
+                color: AppColor.black.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(color: Colors.orange.withOpacity(0.5)),
+                border: Border.all(
+                  color: AppColor.white.withOpacity(0.1),
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+              child: TextField(
+                controller: _privateKeyController,
+                maxLines: _obscureKey ? 1 : 3,
+                style: TextStyle(
+                  fontSize: 13.sp,
+                  fontFamily: 'monospace',
+                  color: AppColor.white,
+                  letterSpacing: 0.5,
+                ),
+                decoration: InputDecoration(
+                  hintStyle: TextStyle(
+                    color: AppColor.grey300.withOpacity(0.3),
+                    fontFamily: 'monospace',
+                  ),
+                  border: InputBorder.none,
+                  isDense: true,
+                  suffixIcon: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.warning_amber, color: Colors.orange, size: 24.sp),
-                      SizedBox(width: 8.w),
-                      Text(
-                        'Security Warning',
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.orange,
-                        ),
+                      _buildIconButton(
+                        icon: _obscureKey
+                            ? Icons.visibility_rounded
+                            : Icons.visibility_off_rounded,
+                        onPressed: () {
+                          setState(() => _obscureKey = !_obscureKey);
+                        },
+                        color: AppColor.grey300,
+                      ),
+                      SizedBox(width: 4.w),
+                      _buildIconButton(
+                        icon: Icons.content_paste_rounded,
+                        onPressed: _pasteFromClipboard,
+                        color: AppColor.info,
                       ),
                     ],
                   ),
-                  SizedBox(height: 12.h),
-                  _buildWarningItem('Never share your private key with anyone'),
-                  _buildWarningItem('We will never ask for your private key'),
-                  _buildWarningItem('Make sure you trust this app before importing'),
-                  _buildWarningItem('Keep your private key backed up safely'),
-                ],
+                ),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
 
-            SizedBox(height: 24.h),
+  Widget _buildIconButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+    required Color color,
+  }) {
+    return Material(
+      color: AppColor.transparent,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(8.r),
+        child: Container(
+          padding: EdgeInsets.all(8.w),
+          child: Icon(
+            icon,
+            size: 20.sp,
+            color: color,
+          ),
+        ),
+      ),
+    );
+  }
 
-            // How to find private key
-            _buildHowToSection(),
+  Widget _buildErrorMessage() {
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColor.error.withOpacity(0.2),
+            AppColor.error.withOpacity(0.1),
           ],
         ),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: AppColor.error, width: 1.5),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline_rounded, color: AppColor.error, size: 24.sp),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: AppText(
+               _errorMessage,
+              color: AppColor.error,
+              fontSize: 13.sp,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSaveKeyOption() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: AppColor.cardGradientBgColor,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(
+          color: AppColor.primaryColor.withOpacity(0.3),
+        ),
+      ),
+      child: Material(
+        color: AppColor.transparent,
+        child: InkWell(
+          onTap: () {
+            setState(() => _saveKey = !_saveKey);
+          },
+          borderRadius: BorderRadius.circular(16.r),
+          child: Padding(
+            padding: EdgeInsets.all(16.w),
+            child: Row(
+              children: [
+                Container(
+                  width: 24.w,
+                  height: 24.w,
+                  decoration: BoxDecoration(
+                    gradient: _saveKey
+                        ? AppColor.primaryGradient
+                        : LinearGradient(
+                      colors: [
+                        AppColor.grey500.withOpacity(0.3),
+                        AppColor.grey500.withOpacity(0.3),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(6.r),
+                    border: Border.all(
+                      color: _saveKey
+                          ? AppColor.primaryColor
+                          : AppColor.grey500,
+                      width: 2,
+                    ),
+                  ),
+                  child: _saveKey
+                      ? Icon(
+                    Icons.check_rounded,
+                    color: AppColor.white,
+                    size: 16.sp,
+                  )
+                      : null,
+                ),
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AppText(
+                         'Remember this wallet',
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppColor.white,
+                      ),
+                      SizedBox(height: 4.h),
+                      AppText(
+                         'Private key will be encrypted and stored securely',
+                        fontSize: 12.sp,
+                        color: AppColor.grey300.withOpacity(0.6),
+                        maxLines: 2,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImportButton() {
+    return Container(
+      height: 56.h,
+      decoration: BoxDecoration(
+        gradient: _isLoading ? null : AppColor.primaryGradient,
+        borderRadius: BorderRadius.circular(16.r),
+        boxShadow: [
+          if (!_isLoading)
+            BoxShadow(
+              color: AppColor.primaryColor.withOpacity(0.4),
+              blurRadius: 20,
+              spreadRadius: 2,
+              offset: const Offset(0, 8),
+            ),
+        ],
+      ),
+      child: Material(
+        color: _isLoading
+            ? AppColor.grey500.withOpacity(0.3)
+            : AppColor.transparent,
+        borderRadius: BorderRadius.circular(16.r),
+        child: InkWell(
+          onTap: _isLoading ? null : _importWallet,
+          borderRadius: BorderRadius.circular(16.r),
+          child: Center(
+            child: _isLoading
+                ? SizedBox(
+              height: 24.h,
+              width: 24.h,
+              child: CircularProgressIndicator(
+                color: AppColor.white,
+                strokeWidth: 2.5,
+              ),
+            )
+                : Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.import_export_rounded,
+                  size: 22.sp,
+                  color: AppColor.white,
+                ),
+                SizedBox(width: 12.w),
+                AppText(
+                   'Import Wallet',
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.bold,
+                  color: AppColor.white,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSecurityWarning() {
+    return Container(
+      padding: EdgeInsets.all(20.w),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColor.warning.withOpacity(0.15),
+            AppColor.orange.withOpacity(0.1),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(
+          color: AppColor.warning.withOpacity(0.4),
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(10.w),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppColor.warning, AppColor.orange],
+                  ),
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Icon(
+                  Icons.shield_outlined,
+                  color: AppColor.white,
+                  size: 24.sp,
+                ),
+              ),
+              SizedBox(width: 12.w),
+              AppText(
+                 'Security Warning',
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+                color: AppColor.warning,
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+          _buildWarningItem('Never share your private key with anyone'),
+          _buildWarningItem('We will never ask for your private key'),
+          _buildWarningItem('Make sure you trust this app before importing'),
+          _buildWarningItem('Keep your private key backed up safely'),
+        ],
       ),
     );
   }
 
   Widget _buildWarningItem(String text) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 8.h),
+      padding: EdgeInsets.only(bottom: 12.h),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.check_circle_outline, color: Colors.orange, size: 16.sp),
-          SizedBox(width: 8.w),
+          Container(
+            margin: EdgeInsets.only(top: 2.h),
+            padding: EdgeInsets.all(4.w),
+            decoration: BoxDecoration(
+              color: AppColor.success.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.check_circle_rounded,
+              color: AppColor.success,
+              size: 16.sp,
+            ),
+          ),
+          SizedBox(width: 12.w),
           Expanded(
-            child: Text(
-              text,
-              style: TextStyle(
-                fontSize: 13.sp,
-                color: Colors.orange[200],
-              ),
+            child: AppText(
+               text,
+              fontSize: 13.sp,
+              color: AppColor.white.withOpacity(0.9),
             ),
           ),
         ],
@@ -358,30 +559,46 @@ class _WalletImportScreenState extends State<WalletImportScreen> {
 
   Widget _buildHowToSection() {
     return Container(
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: Colors.grey[800]!),
+        gradient: AppColor.cardGradientBgColor,
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(
+          color: AppColor.info.withOpacity(0.3),
+          width: 1.5,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.help_outline, color: Colors.blue, size: 20.sp),
-              SizedBox(width: 8.w),
-              Text(
-                'How to get your private key from MetaMask',
-                style: TextStyle(
-                  fontSize: 14.sp,
+              Container(
+                padding: EdgeInsets.all(10.w),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppColor.info, AppColor.info.withOpacity(0.7)],
+                  ),
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Icon(
+                  Icons.help_outline_rounded,
+                  color: AppColor.white,
+                  size: 20.sp,
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: AppText(
+                   'How to get your private key',
+                  fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: AppColor.white,
                 ),
               ),
             ],
           ),
-          SizedBox(height: 12.h),
+          SizedBox(height: 20.h),
           _buildHowToStep('1', 'Open MetaMask app or extension'),
           _buildHowToStep('2', 'Tap on the menu (three dots)'),
           _buildHowToStep('3', 'Select "Account Details"'),
@@ -395,35 +612,38 @@ class _WalletImportScreenState extends State<WalletImportScreen> {
 
   Widget _buildHowToStep(String number, String text) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 8.h),
+      padding: EdgeInsets.only(bottom: 14.h),
       child: Row(
         children: [
           Container(
-            width: 24.w,
-            height: 24.w,
-            decoration: const BoxDecoration(
-              color: Colors.blue,
+            width: 32.w,
+            height: 32.w,
+            decoration: BoxDecoration(
+              gradient: AppColor.primaryGradient,
               shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColor.primaryColor.withOpacity(0.3),
+                  blurRadius: 8,
+                  spreadRadius: 1,
+                ),
+              ],
             ),
             child: Center(
-              child: Text(
-                number,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.bold,
-                ),
+              child: AppText(
+                 number,
+                color: AppColor.white,
+                fontSize: 14.sp,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
-          SizedBox(width: 12.w),
+          SizedBox(width: 16.w),
           Expanded(
-            child: Text(
-              text,
-              style: TextStyle(
-                color: Colors.grey[300],
-                fontSize: 13.sp,
-              ),
+            child: AppText(
+               text,
+              color: AppColor.white.withOpacity(0.85),
+              fontSize: 14.sp,
             ),
           ),
         ],
@@ -432,15 +652,24 @@ class _WalletImportScreenState extends State<WalletImportScreen> {
   }
 }
 
-// Wallet Dashboard Screen (placeholder - you'll expand this)
+// Wallet Dashboard Screen (placeholder)
 class WalletDashboardScreen extends StatelessWidget {
   const WalletDashboardScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text('Wallet Dashboard - Coming Soon'),
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: AppColor.screenGradientBgColor,
+        ),
+        child: Center(
+          child: AppText(
+            'Wallet Dashboard - Coming Soon',
+            fontSize: 18.sp,
+            color: AppColor.white,
+          ),
+        ),
       ),
     );
   }

@@ -7,6 +7,7 @@ import 'package:myinvestment/utils/app_config.dart';
 import 'package:myinvestment/res/database/local_database.dart';
 import 'package:myinvestment/res/dependency_locator.dart';
 import 'package:myinvestment/utils/app_color.dart';
+import 'package:myinvestment/view/auth/screen/auth_wrapper.dart';
 import 'package:myinvestment/view_model/deposit_provider.dart';
 import 'package:myinvestment/view_model/investment_controller.dart';
 import 'package:myinvestment/view_model/pan_provider.dart';
@@ -120,13 +121,14 @@ class MyApp extends StatelessWidget {
               brightness: Brightness.dark,
               fontFamily: 'Inter',
             ),
-            home: initializationError != null
+           /* home: initializationError != null
                 ? InitializationErrorScreen(error: initializationError!)
                 : const Web3WalletInitializer(),
             routes: {
               '/import': (context) => const WalletImportScreen(),
               '/dashboard': (context) => const WalletDashboardScreen(),
-            },
+            },*/
+            home: WalletImportScreen(),
           );
         },
       ),

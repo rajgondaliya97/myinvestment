@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:myinvestment/utils/app_color.dart';
+import 'package:myinvestment/res/services/web_wallet_service.dart';
+import 'package:myinvestment/res/services/wallet_import_screen.dart'
+    hide WalletDashboardScreen;
 import 'package:provider/provider.dart';
 
 import '../../../res/app_widget/custom_app_bar.dart';
@@ -13,7 +16,7 @@ import '../../wallte/screen/add_waller_screen.dart';
 import '../../wallte/screen/withdraw_amount_screen.dart';
 import '../widget/balance_card_widget.dart';
 import '../widget/calculator_card.dart';
-import '../widget/profit_chart_card.dart';
+import '../widget/connect_wallet_card.dart';
 import '../widget/custom_drawer.dart';
 import 'investment_calculator_screen.dart';
 
@@ -39,7 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       // Load user from storage and fetch profile
       authController.loadUserFromStorage();
-      authController.fetchUserProfile(); // 🔥 Fetch profile data
+      authController.fetchUserProfile();
 
       // Fetch dashboard data from API
       homeProvider.fetchDashboardData();
@@ -50,228 +53,229 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final authController = Provider.of<AuthController>(context);
     final homeProvider = Provider.of<HomeProvider>(context);
+    final walletService = Provider.of<Web3WalletService>(context);
 
-    // 🔥 Get user data from profileData (API) instead of local storage
+    // Get user data from profileData (API) instead of local storage
     final userName = authController.profileData != null
-        ? '${authController.profileData!.firstName ?? ''} ${authController.profileData!.lastName ?? ''}'.trim()
+        ? '${authController.profileData!.firstName ?? ''} ${authController.profileData!.lastName ?? ''}'
+              .trim()
         : authController.user?.user?.name ?? 'User';
 
-    final userEmail = authController.profileData?.email ??
+    final userEmail =
+        authController.profileData?.email ??
         authController.user?.user?.email ??
         'user@example.com';
 
-   // final profileImage = authController.profileData?.profileImage ?? '';
-
     return Scaffold(
       backgroundColor: AppColor.secondaryPrimaryColor,
-      appBar: CustomAppBar(
-        title: AppConst.appName,
-     //   profileImageUrl: profileImage,
-      ),
+      appBar: CustomAppBar(title: AppConst.appName),
       drawer: CustomDrawer(currentRoute: 'home'),
       body: Container(
-        decoration: BoxDecoration(
-          gradient: AppColor.screenGradientBgColor,
-        ),
+        decoration: BoxDecoration(gradient: AppColor.screenGradientBgColor),
         child: RefreshIndicator(
           onRefresh: () async {
-            // 🔥 Refresh both user profile and dashboard data
             await authController.fetchUserProfile();
             await homeProvider.refreshData();
           },
           color: AppColor.primaryColor,
           backgroundColor: AppColor.secondaryPrimaryColor,
-          child: (homeProvider.isLoading && homeProvider.dashboardData == null) ||
-              (authController.isLoading && authController.profileData == null)
+          child:
+              (homeProvider.isLoading && homeProvider.dashboardData == null) ||
+                  (authController.isLoading &&
+                      authController.profileData == null)
               ? Center(
-            child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(
-                AppColor.primaryColor,
-              ),
-            ),
-          )
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      AppColor.primaryColor,
+                    ),
+                  ),
+                )
               : homeProvider.errorMessage != null &&
-              homeProvider.dashboardData == null
+                    homeProvider.dashboardData == null
               ? Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 60.sp,
-                  color: Colors.grey[400],
-                ),
-                SizedBox(height: 16.h),
-                AppText.medium(
-                  'Failed to load dashboard',
-                  color: Colors.grey[300],
-                ),
-                SizedBox(height: 8.h),
-                AppText.small(
-                  homeProvider.errorMessage ?? 'Unknown error',
-                  color: Colors.grey[500],
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 24.h),
-                Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColor.secondaryPrimaryColor,
-                        AppColor.primaryColor,
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      homeProvider.fetchDashboardData();
-                      authController.fetchUserProfile();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 32.w,
-                        vertical: 12.h,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 60.sp,
+                        color: Colors.grey[400],
                       ),
-                    ),
-                    child: AppText.medium(
-                      'Retry',
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
+                      SizedBox(height: 16.h),
+                      AppText.medium(
+                        'Failed to load dashboard',
+                        color: Colors.grey[300],
+                      ),
+                      SizedBox(height: 8.h),
+                      AppText.small(
+                        homeProvider.errorMessage ?? 'Unknown error',
+                        color: Colors.grey[500],
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 24.h),
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColor.secondaryPrimaryColor,
+                              AppColor.primaryColor,
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            homeProvider.fetchDashboardData();
+                            authController.fetchUserProfile();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 32.w,
+                              vertical: 12.h,
+                            ),
+                          ),
+                          child: AppText.medium(
+                            'Retry',
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
-          )
+                )
               : SingleChildScrollView(
-            physics: AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.all(20.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 🔥 Welcome message with user name from API
-                AppText.medium(
-                  'Welcome back,',
-                  color: Colors.grey[400],
-                  fontSize: 14,
-                ),
-                SizedBox(height: 4.h),
-                AppText.large(
-                  userName.isNotEmpty ? userName : 'User',
-                  fontWeight: FontWeight.w700,
-                ),
-                SizedBox(height: 4.h),
-                // 🔥 User email from API
-                AppText.small(
-                  userEmail,
-                  color: Colors.grey[500],
-                  fontSize: 12,
-                ),
-                SizedBox(height: 24.h),
-
-                // Balance Card with API data
-                BalanceCard(
-                  balance: homeProvider.balance,
-                  profitPercentage: homeProvider.profitPercentage,
-                ),
-                SizedBox(height: 20.h),
-
-                // Dashboard Stats Cards
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildStatCard(
-                        icon: Icons.account_balance_wallet,
-                        label: 'Active Plans',
-                        value: '${homeProvider.activePlans}',
+                  physics: AlwaysScrollableScrollPhysics(),
+                  padding: EdgeInsets.all(20.w),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Welcome message with user name from API
+                      AppText.medium(
+                        'Welcome back,',
+                        color: Colors.grey[400],
+                        fontSize: 14,
                       ),
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: _buildStatCard(
-                        icon: Icons.check_circle,
-                        label: 'Approved',
-                        value: '${homeProvider.totalWithdrawalsApprove}',
+                      SizedBox(height: 4.h),
+                      AppText.large(
+                        userName.isNotEmpty ? userName : 'User',
+                        fontWeight: FontWeight.w700,
                       ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 12.h),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildStatCard(
-                        icon: Icons.receipt_long,
-                        label: 'Total Withdrawals',
-                        value: '${homeProvider.totalWithdrawals}',
+                      SizedBox(height: 4.h),
+                      // User email from API
+                      AppText.small(
+                        userEmail,
+                        color: Colors.grey[500],
+                        fontSize: 12,
                       ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 20.h),
+                      SizedBox(height: 24.h),
 
-                CalculatorCard(
-                  onCalculatorTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            InvestmentCalculatorScreen(),
-                      ),
-                    );
-                  },
-                ),
-                /* SizedBox(height: 20.h),
-                          // Profit Chart Card
-                          ProfitChartCard(
-                            chartData: homeProvider.currentChartData,
-                            selectedPeriod: homeProvider.selectedPeriod,
-                            onPeriodSelected: (period) =>
-                                homeProvider.selectPeriod(period),
-                            isLoading: homeProvider.isLoading,
-                          ),*/
-                SizedBox(height: 20.h),
-
-                // Quick Actions
-                Row(
-                  children: [
-                    Expanded(
-                      child: AppButton.primary(
-                        onPressed: () {
-                          Navigator.push(
+                      // 🔥 WALLET CONNECTION CHECK CARD
+                      if (walletService.isConnected)
+                        ConnectWalletCard(
+                          onTap: () {
+                            Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    AddWalletScreen(),
-                              ));
-                        },
-                        text: 'Deposit',
-                        icon: Icons.add,
+                                builder: (_) => const WalletImportScreen(),
+                              ),
+                            );
+                          },
+                        )
+                      else
+                        BalanceCard(
+                          balance: homeProvider.balance,
+                          profitPercentage: homeProvider.profitPercentage,
+                        ),
+                      SizedBox(height: 20.h),
+
+                      // Dashboard Stats Cards
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildStatCard(
+                              icon: Icons.account_balance_wallet,
+                              label: 'Active Plans',
+                              value: '${homeProvider.activePlans}',
+                            ),
+                          ),
+                          SizedBox(width: 12.w),
+                          Expanded(
+                            child: _buildStatCard(
+                              icon: Icons.check_circle,
+                              label: 'Approved',
+                              value: '${homeProvider.totalWithdrawalsApprove}',
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: AppButton.primary(
-                        onPressed: () {
+                      SizedBox(height: 12.h),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildStatCard(
+                              icon: Icons.receipt_long,
+                              label: 'Total Withdrawals',
+                              value: '${homeProvider.totalWithdrawals}',
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 20.h),
+
+                      CalculatorCard(
+                        onCalculatorTap: () {
                           Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    WithdrawAmountScreen(),
-                              ));
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  InvestmentCalculatorScreen(),
+                            ),
+                          );
                         },
-                        text: 'Withdraw',
-                        icon: Icons.remove,
                       ),
-                    ),
-                  ],
+                      SizedBox(height: 20.h),
+
+                      // Quick Actions
+                      Row(
+                        children: [
+                          Expanded(
+                            child: AppButton.primary(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => AddWalletScreen(),
+                                  ),
+                                );
+                              },
+                              text: 'Deposit',
+                              icon: Icons.add,
+                            ),
+                          ),
+                          SizedBox(width: 12.w),
+                          Expanded(
+                            child: AppButton.primary(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        WithdrawAmountScreen(),
+                                  ),
+                                );
+                              },
+                              text: 'Withdraw',
+                              icon: Icons.remove,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ],
-            ),
-          ),
         ),
       ),
     );
