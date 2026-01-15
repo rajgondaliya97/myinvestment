@@ -117,9 +117,9 @@ class _CustomDrawerState extends State<CustomDrawer> {
 
     if (confirmed == true) {
       // Close drawer first
-      Navigator.pop(context);
+    //  Navigator.pop(context);
 
-      /*// Show loading dialog
+      // Show loading dialog
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -141,7 +141,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
             ),
           ),
         ),
-      );*/
+      );
 
       try {
         // Get wallet service
@@ -153,40 +153,45 @@ class _CustomDrawerState extends State<CustomDrawer> {
           await walletService.disconnect(deleteStoredKey: true);
           debugPrint('✅ [Logout] Wallet disconnected successfully');
         }
-
+        Navigator.pop(context);
         // Perform logout
         await Provider.of<AuthController>(context, listen: false).logout();
-
+        //Navigator.pop(context);
        /* // Close loading dialog
         if (mounted) {
           Navigator.pop(context);
         }*/
 
         // Navigate to auth screen
-        if (mounted) {
+        //if (mounted) {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => AuthWrapper()),
                 (route) => false,
           );
-        }
+        //}
       } catch (e) {
         debugPrint('❌ [Logout] Error: $e');
-
+        Navigator.pop(context);
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => AuthWrapper()),
+              (route) => false,
+        );
         // Close loading dialog
-        if (mounted) {
-          Navigator.pop(context);
-        }
+        //if (mounted) {
+
+       // }
 
         // Show error message
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
+      //  if (mounted) {
+       /*   ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Logout failed: ${e.toString()}'),
               backgroundColor: AppColor.error,
             ),
-          );
-        }
+          );*/
+     //   }
       }
     }
   }

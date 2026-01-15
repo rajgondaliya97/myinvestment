@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
+import 'package:reown_walletkit/reown_walletkit.dart';
 import '../../../res/app_widget/custom_app_bar.dart';
 import '../../../res/app_widget/custom_app_button.dart';
 import '../../../res/app_widget/custom_app_flush_bar.dart';
@@ -35,7 +36,7 @@ class _DepositScreenState extends State<DepositScreen> {
 
   // Client wallet address where deposits will be sent
   // TODO: Replace with your actual client wallet address
-  static const String CLIENT_WALLET_ADDRESS = '0x8d0fac10c3aae4e34a4e83bde920e0a9eda70bfd';
+  static const String CLIENT_WALLET_ADDRESS = '2d1cd96b5afa12a6ffd07d9275796a781430b5e02419f67da4439b3f473bd1a8';
 
   @override
   void initState() {
@@ -104,6 +105,9 @@ class _DepositScreenState extends State<DepositScreen> {
   }
 
   /// ============ VALIDATION BEFORE SUBSCRIBE ============
+  /// Enhanced validation method for deposit_screen.dart
+  /// Replace the existing _validateBeforeSubscribe method with this
+
   Future<bool> _validateBeforeSubscribe(
       DepositProvider depositProvider,
       PlanProvider planProvider,
@@ -146,11 +150,9 @@ class _DepositScreenState extends State<DepositScreen> {
 
     // 4. Check min and max amount
     final minAmount =
-        double.tryParse(planProvider.selectedPlanDetails?.minAmount ?? '0') ??
-            0;
+        double.tryParse(planProvider.selectedPlanDetails?.minAmount ?? '0') ?? 0;
     final maxAmount =
-        double.tryParse(planProvider.selectedPlanDetails?.maxAmount ?? '0') ??
-            0;
+        double.tryParse(planProvider.selectedPlanDetails?.maxAmount ?? '0') ?? 0;
 
     if (amount < minAmount) {
       FlushbarHelper.showError(
@@ -172,37 +174,8 @@ class _DepositScreenState extends State<DepositScreen> {
       return false;
     }
 
-    // 5. Check wallet balance from Web3WalletService
-    if (walletService.isConnected) {
-      try {
-        // Get USDT balance from wallet
-        final usdtBalance = await walletService.getUsdtBalance();
-        final currentBalance = double.tryParse(usdtBalance) ?? 0.0;
-
-        if (currentBalance < amount) {
-          FlushbarHelper.showWarning(
-            context: context,
-            title: 'Insufficient Balance',
-            message:
-            'Your wallet balance (\$${currentBalance.toStringAsFixed(2)} USDT) is less than the deposit amount (\$${amount.toStringAsFixed(2)})',
-            duration: Duration(seconds: 5),
-          );
-          return false;
-        }
-
-        debugPrint('✅ Balance check passed: \$${currentBalance.toStringAsFixed(2)} USDT available');
-      } catch (e) {
-        debugPrint('⚠️ Balance check error: $e');
-        FlushbarHelper.showWarning(
-          context: context,
-          title: 'Balance Check Failed',
-          message: 'Could not verify wallet balance. Error: ${e.toString()}',
-          duration: Duration(seconds: 4),
-        );
-        return false;
-      }
-    } else {
-      // Wallet not connected
+    // 5. Check if wallet is connected
+    if (!walletService.isConnected) {
       FlushbarHelper.showError(
         context: context,
         title: 'Wallet Not Connected',
@@ -212,8 +185,132 @@ class _DepositScreenState extends State<DepositScreen> {
       return false;
     }
 
+    try {
+      // 6. Check USDT balance
+      final usdtBalance = await walletService.getUsdtBalance();
+      final currentBalance = double.tryParse(usdtBalance) ?? 0.0;
+
+      if (currentBalance < amount) {
+        FlushbarHelper.showError(
+          context: context,
+          title: 'Insufficient USDT Balance',
+          message:
+          'Your wallet has \$${currentBalance.toStringAsFixed(2)} USDT. '
+              'You need \$${amount.toStringAsFixed(2)} USDT.',
+          duration: Duration(seconds: 5),
+        );
+        return false;
+      }
+
+      debugPrint('✅ USDT balance check passed: \$${currentBalance.toStringAsFixed(2)} USDT available');
+
+      // 7. Check native token balance for gas fees
+      final nativeBalance = await walletService.getBalance();
+      final nativeBalanceInEther = nativeBalance.getValueInUnit(EtherUnit.ether);
+      final nativeSymbol = _getNativeSymbol(walletService.currentNetwork);
+
+      // Minimum 0.001 native token required for gas
+      const minGasRequired = 0.001;
+
+      if (nativeBalanceInEther < minGasRequired) {
+        FlushbarHelper.showError(
+          context: context,
+          title: 'Insufficient $nativeSymbol for Gas',
+          message:
+          'You need at least $minGasRequired $nativeSymbol to pay for transaction fees. '
+              'Current balance: ${nativeBalanceInEther.toStringAsFixed(6)} $nativeSymbol.\n\n'
+              'Please add $nativeSymbol to your wallet to continue.',
+          duration: Duration(seconds: 7),
+        );
+        return false;
+      }
+
+      debugPrint('✅ Gas balance check passed: ${nativeBalanceInEther.toStringAsFixed(6)} $nativeSymbol available');
+
+      // 8. Estimate gas cost (optional but recommended)
+      try {
+        final gasPrice = await walletService.getGasPrice();
+        final gasPriceGwei = gasPrice.getValueInUnit(EtherUnit.gwei);
+        final estimatedGasCost = (gasPriceGwei * 100000) / 1000000000; // Rough estimate
+
+        debugPrint('⛽ Gas price: $gasPriceGwei Gwei');
+        debugPrint('⛽ Estimated cost: ~${estimatedGasCost.toStringAsFixed(6)} $nativeSymbol');
+
+        if (nativeBalanceInEther < estimatedGasCost) {
+          FlushbarHelper.showWarning(
+            context: context,
+            title: 'Low $nativeSymbol Balance',
+            message:
+            'Your $nativeSymbol balance might not be enough for gas fees. '
+                'Estimated: ${estimatedGasCost.toStringAsFixed(6)} $nativeSymbol, '
+                'Available: ${nativeBalanceInEther.toStringAsFixed(6)} $nativeSymbol',
+            duration: Duration(seconds: 6),
+          );
+
+          // Show confirmation dialog
+          final shouldContinue = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              backgroundColor: AppColor.secondaryPrimaryColor,
+              title: Text(
+                'Low Gas Balance Warning',
+                style: TextStyle(color: AppColor.warning),
+              ),
+              content: Text(
+                'You might not have enough $nativeSymbol for gas fees. Do you want to continue anyway?',
+                style: TextStyle(color: Colors.white),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text('Cancel', style: TextStyle(color: Colors.grey)),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: Text('Continue', style: TextStyle(color: AppColor.warning)),
+                ),
+              ],
+            ),
+          );
+
+          if (shouldContinue != true) {
+            return false;
+          }
+        }
+      } catch (e) {
+        debugPrint('⚠️ Could not estimate gas: $e');
+        // Continue anyway - the actual transaction will handle this
+      }
+
+    } catch (e) {
+      debugPrint('❌ Balance check error: $e');
+      FlushbarHelper.showError(
+        context: context,
+        title: 'Balance Check Failed',
+        message: 'Could not verify wallet balance: ${e.toString()}',
+        duration: Duration(seconds: 4),
+      );
+      return false;
+    }
+
     // All validations passed
+    debugPrint('✅ All validations passed!');
     return true;
+  }
+
+  /// Helper method to get native symbol
+  String _getNativeSymbol(String? network) {
+    switch (network?.toLowerCase()) {
+      case 'bsc':
+        return 'BNB';
+      case 'polygon':
+        return 'MATIC';
+      case 'ethereum':
+      case 'sepolia':
+      case 'goerli':
+      default:
+        return 'ETH';
+    }
   }
 
   /// ============ TRANSFER USDT TO CLIENT ACCOUNT ============

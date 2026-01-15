@@ -478,6 +478,9 @@ class Web3WalletService extends ChangeNotifier {
   }
 
   /// Send USDT on specific network
+  /// Add this method to Web3WalletService class
+
+  /// Send USDT with proper gas estimation and checks
   Future<String> sendUsdt({
     required String toAddress,
     required String amount,
@@ -507,21 +510,69 @@ class Web3WalletService extends ChangeNotifier {
       debugPrint('Amount: $amount USDT');
       debugPrint('Decimals: $decimals');
 
-      // Create contract instance
+      // Step 1: Check native balance for gas
+      final nativeBalance = await connection.client.getBalance(_address!);
+      final nativeSymbol = _getNativeSymbol(targetNetwork!);
+      debugPrint('⛽ [Web3Wallet] Native balance: ${nativeBalance.getValueInUnit(EtherUnit.ether)} $nativeSymbol');
+
+      // Minimum required balance for gas (0.001 BNB/ETH/MATIC)
+      final minGasBalance = EtherAmount.fromInt(EtherUnit.wei, BigInt.from(1000000000000000) as int); // 0.001
+
+      if (nativeBalance.getInWei < minGasBalance.getInWei) {
+        throw Exception(
+            'Insufficient $nativeSymbol for gas fees. '
+                'You have ${nativeBalance.getValueInUnit(EtherUnit.ether).toStringAsFixed(6)} $nativeSymbol. '
+                'Need at least 0.001 $nativeSymbol for transaction fees.'
+        );
+      }
+
+      // Step 2: Create contract instance
       final contract = DeployedContract(
         ContractAbi.fromJson(_erc20Abi, 'ERC20'),
         EthereumAddress.fromHex(contractAddress),
       );
 
-      // Get transfer function
+      // Step 3: Get transfer function
       final transferFunction = contract.function('transfer');
 
-      // Convert amount to smallest unit based on decimals
+      // Step 4: Convert amount to smallest unit
       final amountInSmallestUnit = BigInt.from(double.parse(amount) * pow(10, decimals));
-
       debugPrint('📊 Amount in smallest unit: $amountInSmallestUnit');
 
-      // Send transaction
+      // Step 5: Get current gas price
+      final gasPrice = await connection.client.getGasPrice();
+      debugPrint('⛽ Gas price: ${gasPrice.getValueInUnit(EtherUnit.gwei)} Gwei');
+
+      // Step 6: Estimate gas limit for this transaction
+      final estimatedGas = await connection.client.estimateGas(
+        sender: _address,
+        to: EthereumAddress.fromHex(contractAddress),
+        data: transferFunction.encodeCall([
+          EthereumAddress.fromHex(toAddress),
+          amountInSmallestUnit,
+        ]),
+      );
+
+      // Add 20% buffer to estimated gas
+      final gasLimit = (estimatedGas.toInt() * 1.2).toInt();
+      debugPrint('⛽ Estimated gas: $estimatedGas');
+      debugPrint('⛽ Gas limit (with buffer): $gasLimit');
+
+      // Step 7: Calculate total gas cost
+      final gasCost = gasPrice.getInWei * BigInt.from(gasLimit);
+      final gasCostInEther = EtherAmount.inWei(gasCost).getValueInUnit(EtherUnit.ether);
+      debugPrint('⛽ Estimated gas cost: $gasCostInEther $nativeSymbol');
+
+      // Step 8: Check if user has enough native token for gas
+      if (nativeBalance.getInWei < gasCost) {
+        throw Exception(
+            'Insufficient $nativeSymbol for gas fees. '
+                'Required: ${gasCostInEther.toStringAsFixed(6)} $nativeSymbol, '
+                'Available: ${nativeBalance.getValueInUnit(EtherUnit.ether).toStringAsFixed(6)} $nativeSymbol'
+        );
+      }
+
+      // Step 9: Create and send transaction
       final transaction = Transaction.callContract(
         contract: contract,
         function: transferFunction,
@@ -529,10 +580,13 @@ class Web3WalletService extends ChangeNotifier {
           EthereumAddress.fromHex(toAddress),
           amountInSmallestUnit,
         ],
+        maxGas: gasLimit,
+        gasPrice: gasPrice,
       );
 
-      final chainId = await _getChainId(targetNetwork!);
+      final chainId = await _getChainId(targetNetwork);
 
+      debugPrint('📤 [Web3Wallet] Sending transaction...');
       final txHash = await connection.client.sendTransaction(
         _credentials!,
         transaction,
@@ -541,6 +595,8 @@ class Web3WalletService extends ChangeNotifier {
 
       debugPrint('✅ [Web3Wallet] USDT sent on $targetNetwork!');
       debugPrint('✅ Hash: $txHash');
+      debugPrint('✅ Gas used: ~$gasLimit');
+      debugPrint('✅ Cost: ~$gasCostInEther $nativeSymbol');
 
       return txHash;
     } catch (e) {
