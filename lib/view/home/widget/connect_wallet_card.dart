@@ -15,7 +15,7 @@ class ConnectWalletCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(16.r),
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.all(20.w),
+        padding: EdgeInsets.all(15.w),
         decoration: BoxDecoration(
           gradient: AppColor.cardGradientBgColor,
           borderRadius: BorderRadius.circular(16.r),
@@ -36,7 +36,7 @@ class ConnectWalletCard extends StatelessWidget {
               child: Icon(
                 Icons.account_balance_wallet,
                 color: Colors.white,
-                size: 32.sp,
+                size: 25.sp,
               ),
             ),
 
@@ -50,14 +50,14 @@ class ConnectWalletCard extends StatelessWidget {
                   AppText.large(
                     'Connect Your Wallet',
                     color: Colors.white,
-                    fontSize: 18,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
                   ),
                   SizedBox(height: 4.h),
                   AppText.large(
-                    'Import your MetaMask wallet to manage crypto',
+                    'Import your MetaMask wallet to Deposit',
                     color: Colors.white.withOpacity(0.9),
-                    fontSize: 12,
+                    fontSize: 10,
                   ),
                 ],
               ),

@@ -22,7 +22,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authController = Provider.of<AuthController>(context, listen: false);
+      final authController = Provider.of<AuthController>(
+        context,
+        listen: false,
+      );
       authController.loadUserFromStorage();
       authController.fetchUserProfile(); // Fetch from API
     });
@@ -57,14 +60,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (authController.isLoading && profileData == null) {
       return Scaffold(
         backgroundColor: AppColor.background,
-        appBar: CustomAppBar(title: 'Profile'),
+        appBar: CustomAppBar(
+          title: 'Profile',
+        ),
         drawer: CustomDrawer(currentRoute: 'profile'),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(AppColor.primaryColor),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  AppColor.primaryColor,
+                ),
               ),
               SizedBox(height: 16.h),
               AppText.medium('Loading profile...', color: Colors.grey[400]),
@@ -107,7 +114,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     // Get profile data
-    final fullName = profileData?.name ??
+    final fullName =
+        profileData?.name ??
         '${profileData?.firstName ?? ''} ${profileData?.lastName ?? ''}'.trim();
     final email = profileData?.email ?? 'N/A';
     final phone = profileData?.phone?.toString() ?? 'N/A';
@@ -125,6 +133,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: 'Profile',
         profileImageUrl: profileData?.profile ?? '',
         onProfileTap: () {},
+        actions: [
+          IconButton(
+            icon: Icon(Icons.edit, color: Colors.white, size: 22.sp),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProfileEditScreen(),
+                ),
+              );
+            },
+            tooltip: 'Edit Profile',
+          ),
+          IconButton(
+            icon: Icon(Icons.lock_outline, color: Colors.white, size: 22.sp),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Change password coming soon!'),
+                  backgroundColor: AppColor.primaryColor,
+                ),
+              );
+            },
+            tooltip: 'Change Password',
+          ),
+          SizedBox(width: 8.w),
+        ],
       ),
       drawer: CustomDrawer(currentRoute: 'profile'),
       body: Container(
@@ -198,15 +233,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           if (isVerified)
                             Container(
                               padding: EdgeInsets.symmetric(
-                                  horizontal: 8.w, vertical: 4.h),
+                                horizontal: 8.w,
+                                vertical: 4.h,
+                              ),
                               decoration: BoxDecoration(
                                 color: AppColor.lighterGreen.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(8.r),
                               ),
                               child: Row(
                                 children: [
-                                  Icon(Icons.verified,
-                                      color: AppColor.lighterGreen, size: 14.sp),
+                                  Icon(
+                                    Icons.verified,
+                                    color: AppColor.lighterGreen,
+                                    size: 14.sp,
+                                  ),
                                   SizedBox(width: 4.w),
                                   AppText.small(
                                     'Verified',
@@ -226,35 +266,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         icon: Icons.person_outline,
                       ),
                       Divider(
-                          color: AppColor.primaryColor.withOpacity(0.2), height: 32.h),
+                        color: AppColor.primaryColor.withOpacity(0.2),
+                        height: 32.h,
+                      ),
                       ProfileInfoRow(
                         label: 'Email',
                         value: email,
                         icon: Icons.email_outlined,
                       ),
                       Divider(
-                          color: AppColor.primaryColor.withOpacity(0.2), height: 32.h),
+                        color: AppColor.primaryColor.withOpacity(0.2),
+                        height: 32.h,
+                      ),
                       ProfileInfoRow(
                         label: 'Phone',
                         value: phone,
                         icon: Icons.phone_outlined,
                       ),
                       Divider(
-                          color: AppColor.primaryColor.withOpacity(0.2), height: 32.h),
+                        color: AppColor.primaryColor.withOpacity(0.2),
+                        height: 32.h,
+                      ),
                       ProfileInfoRow(
                         label: 'Country',
                         value: country,
                         icon: Icons.public_outlined,
                       ),
                       Divider(
-                          color: AppColor.primaryColor.withOpacity(0.2), height: 32.h),
+                        color: AppColor.primaryColor.withOpacity(0.2),
+                        height: 32.h,
+                      ),
                       ProfileInfoRow(
                         label: 'Role',
                         value: role,
                         icon: Icons.badge_outlined,
                       ),
                       Divider(
-                          color: AppColor.primaryColor.withOpacity(0.2), height: 32.h),
+                        color: AppColor.primaryColor.withOpacity(0.2),
+                        height: 32.h,
+                      ),
                       ProfileInfoRow(
                         label: 'Member Since',
                         value: memberSince,
@@ -262,8 +312,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       if (lastLogin != 'N/A') ...[
                         Divider(
-                            color: AppColor.primaryColor.withOpacity(0.2),
-                            height: 32.h),
+                          color: AppColor.primaryColor.withOpacity(0.2),
+                          height: 32.h,
+                        ),
                         ProfileInfoRow(
                           label: 'Last Login',
                           value: lastLogin,
@@ -341,7 +392,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         valueColor: AppColor.lighterGreen,
                       ),
                       Divider(
-                          color: AppColor.primaryColor.withOpacity(0.2), height: 32.h),
+                        color: AppColor.primaryColor.withOpacity(0.2),
+                        height: 32.h,
+                      ),
                       ProfileInfoRow(
                         label: 'Referral Code',
                         value: referralCode,
@@ -351,30 +404,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                 ),
-                SizedBox(height: 20.h),
-
-                // Action Buttons
-                AppButton.primary(
-                  onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileEditScreen(),));
-                  },
-                  text: 'Edit Profile',
-                  icon: Icons.edit,
-                ),
-                SizedBox(height: 12.h),
-                AppButton.outlined(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Change password coming soon!'),
-                        backgroundColor: AppColor.primaryColor,
-                      ),
-                    );
-                  },
-                  text: 'Change Password',
-                  icon: Icons.lock_outline,
-                ),
-              ],
+                SizedBox(height: 20.h),],
             ),
           ),
         ),

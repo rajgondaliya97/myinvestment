@@ -39,7 +39,7 @@ class CalculatorCard extends StatelessWidget {
               'Investment Calculator',
               fontWeight: FontWeight.w700,
               color: AppColor.white,
-              fontSize: 20,
+              fontSize: 14,
             ),
 
             SizedBox(height: 8.h),
@@ -48,10 +48,10 @@ class CalculatorCard extends StatelessWidget {
             AppText.medium(
               'Calculate your investment returns and plan your financial future with instant results.',
               color: Colors.white.withOpacity(0.85),
-              fontSize: 14,
+              fontSize: 10,
             ),
 
-            SizedBox(height: 24.h),
+            SizedBox(height: 15.h),
 
             // Button
             Container(

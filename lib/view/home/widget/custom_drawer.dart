@@ -454,26 +454,10 @@ class _CustomDrawerState extends State<CustomDrawer> {
                         }
                       },
                     ),
-                    Divider(
+                   Divider(
                       color: AppColor.primaryColor.withOpacity(0.2),
                       thickness: 1,
                       height: 32.h,
-                    ),
-                    DrawerMenuItem(
-                      icon: Icons.settings_outlined,
-                      title: 'Settings',
-                      isSelected: false,
-                      onTap: () {
-                        Navigator.pop(context);
-                      },
-                    ),
-                    DrawerMenuItem(
-                      icon: Icons.help_outline,
-                      title: 'Help & Support',
-                      isSelected: false,
-                      onTap: () {
-                        Navigator.pop(context);
-                      },
                     ),
                   ],
                 ),

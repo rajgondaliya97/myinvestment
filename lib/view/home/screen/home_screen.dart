@@ -4,6 +4,7 @@ import 'package:myinvestment/utils/app_color.dart';
 import 'package:myinvestment/res/services/web_wallet_service.dart';
 import 'package:myinvestment/res/services/wallet_import_screen.dart'
     hide WalletDashboardScreen;
+import 'package:myinvestment/view/deposit/screen/deposit_screen.dart';
 import 'package:provider/provider.dart';
 
 import '../../../res/app_widget/custom_app_bar.dart';
@@ -86,6 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: CustomAppBar(title: AppConst.appName),
       drawer: CustomDrawer(currentRoute: 'home'),
       body: Container(
+        height: double.infinity,
         decoration: BoxDecoration(gradient: AppColor.screenGradientBgColor),
         child: RefreshIndicator(
           onRefresh: () async {
@@ -175,14 +177,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   userName.isNotEmpty ? userName : 'User',
                   fontWeight: FontWeight.w700,
                 ),
-                SizedBox(height: 4.h),
-                // User email from API
-                AppText.small(
-                  userEmail,
-                  color: Colors.grey[500],
-                  fontSize: 12,
-                ),
-                SizedBox(height: 24.h),
+
+                SizedBox(height: 16.h),
 
                 // 🔥 WALLET CONNECTION CHECK CARD
                 // Provider will automatically rebuild when walletService.isConnected changes
@@ -220,6 +216,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         value: '${homeProvider.totalWithdrawalsApprove}',
                       ),
                     ),
+                    /*SizedBox(width: 12.w),
+                    Expanded(
+                      child: _buildStatCard(
+                        icon: Icons.receipt_long,
+                        label: 'Withdrawals',
+                        value: '${homeProvider.totalWithdrawals}',
+                      ),
+                    ),*/
                   ],
                 ),
                 SizedBox(height: 12.h),
@@ -228,7 +232,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Expanded(
                       child: _buildStatCard(
                         icon: Icons.receipt_long,
-                        label: 'Total Withdrawals',
+                        label: 'Withdrawals',
                         value: '${homeProvider.totalWithdrawals}',
                       ),
                     ),
@@ -258,7 +262,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => AddWalletScreen(),
+                              builder: (context) => DepositScreen(),
                             ),
                           );
                         },
@@ -323,14 +327,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
-                child: Icon(icon, color: AppColor.primaryColor, size: 20.sp),
+                child: Icon(icon, color: AppColor.primaryColor, size: 12.sp),
               ),
             ],
           ),
           SizedBox(height: 12.h),
-          AppText.small(label, color: Colors.grey[400], fontSize: 11),
+          AppText.small(label, color: Colors.grey[400], fontSize: 10,fontWeight: FontWeight.w800,),
           SizedBox(height: 4.h),
-          AppText.large(
+          AppText.medium(
             value,
             fontWeight: FontWeight.w700,
             color: Colors.white,

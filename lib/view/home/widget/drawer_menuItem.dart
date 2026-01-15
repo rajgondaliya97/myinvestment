@@ -67,7 +67,7 @@ class DrawerMenuItem extends StatelessWidget {
           child: Icon(
             icon,
             color: isSelected ? AppColor.lighterGreen : AppColor.grey500,
-            size: 24.sp,
+            size: 22.sp,
           ),
         ),
         title: ShaderMask(
@@ -81,6 +81,7 @@ class DrawerMenuItem extends StatelessWidget {
           child: AppText.medium(
             title,
             color: AppColor.white,
+            fontSize: 12,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
           ),
         ),
