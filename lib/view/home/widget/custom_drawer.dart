@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import '../../../res/app_widget/custom_app_button.dart';
 import '../../../res/app_widget/custom_app_text.dart';
+import '../../../res/services/web_wallet_service.dart';
 import '../../../utils/app_color.dart';
 import '../../../view_model/auth_provider.dart';
 import '../../auth/screen/auth_wrapper.dart';
@@ -48,9 +49,51 @@ class _CustomDrawerState extends State<CustomDrawer> {
           'Logout',
           fontWeight: FontWeight.w700,
         ),
-        content: const AppText.medium(
-          'Are you sure you want to logout?',
-          color: AppColor.grey500,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const AppText.medium(
+              'Are you sure you want to logout?',
+              color: AppColor.grey500,
+            ),
+            SizedBox(height: 12.h),
+            // Show warning if wallet is connected
+            Consumer<Web3WalletService>(
+              builder: (context, walletService, child) {
+                if (walletService.isConnected) {
+                  return Container(
+                    padding: EdgeInsets.all(12.w),
+                    decoration: BoxDecoration(
+                      color: AppColor.warning.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8.r),
+                      border: Border.all(
+                        color: AppColor.warning.withOpacity(0.5),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: AppColor.warning,
+                          size: 20.sp,
+                        ),
+                        SizedBox(width: 8.w),
+                        Expanded(
+                          child: AppText.small(
+                            'Your wallet will be disconnected',
+                            color: AppColor.warning,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                return SizedBox.shrink();
+              },
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -73,13 +116,78 @@ class _CustomDrawerState extends State<CustomDrawer> {
     );
 
     if (confirmed == true) {
+      // Close drawer first
       Navigator.pop(context);
-      await Provider.of<AuthController>(context, listen: false).logout();
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => AuthWrapper()),
-            (route) => false,
-      );
+
+      /*// Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => WillPopScope(
+          onWillPop: () async => false,
+          child: AlertDialog(
+            backgroundColor: AppColor.secondaryPrimaryColor,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(color: AppColor.primaryColor),
+                SizedBox(height: 16.h),
+                AppText.medium(
+                  'Logging out...',
+                  color: AppColor.white,
+                  fontSize: 14,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );*/
+
+      try {
+        // Get wallet service
+        final walletService = Provider.of<Web3WalletService>(context, listen: false);
+
+        // Disconnect wallet if connected
+        if (walletService.isConnected) {
+          debugPrint('🔌 [Logout] Disconnecting wallet...');
+          await walletService.disconnect(deleteStoredKey: true);
+          debugPrint('✅ [Logout] Wallet disconnected successfully');
+        }
+
+        // Perform logout
+        await Provider.of<AuthController>(context, listen: false).logout();
+
+       /* // Close loading dialog
+        if (mounted) {
+          Navigator.pop(context);
+        }*/
+
+        // Navigate to auth screen
+        if (mounted) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => AuthWrapper()),
+                (route) => false,
+          );
+        }
+      } catch (e) {
+        debugPrint('❌ [Logout] Error: $e');
+
+        // Close loading dialog
+        if (mounted) {
+          Navigator.pop(context);
+        }
+
+        // Show error message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Logout failed: ${e.toString()}'),
+              backgroundColor: AppColor.error,
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -200,6 +308,51 @@ class _CustomDrawerState extends State<CustomDrawer> {
                       userEmail,
                       color: AppColor.grey500,
                     ),
+
+                    // Wallet Status Indicator
+                    SizedBox(height: 12.h),
+                    Consumer<Web3WalletService>(
+                      builder: (context, walletService, child) {
+                        if (walletService.isConnected) {
+                          return Container(
+                            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  AppColor.success.withOpacity(0.3),
+                                  AppColor.success.withOpacity(0.1),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(20.r),
+                              border: Border.all(
+                                color: AppColor.success.withOpacity(0.5),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 8.w,
+                                  height: 8.w,
+                                  decoration: BoxDecoration(
+                                    color: AppColor.success,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                SizedBox(width: 6.w),
+                                AppText.small(
+                                  'Wallet Connected',
+                                  color: AppColor.success,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                        return SizedBox.shrink();
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -246,28 +399,25 @@ class _CustomDrawerState extends State<CustomDrawer> {
                         navigator.pop();
                         if (widget.currentRoute != 'active_plans') {
                           navigator.pushReplacement(
-                            MaterialPageRoute(builder: (context) => const UserActivePlansScreen()),
+                            MaterialPageRoute(
+                                builder: (context) => const UserActivePlansScreen()),
                           );
                         }
                       },
                     ),
-
-                    // --- NEW ITEM ADDED HERE ---
                     DrawerMenuItem(
-                      icon: Icons.groups_outlined, // Icon representing Reference/Users
+                      icon: Icons.groups_outlined,
                       title: 'Reference Levels',
                       isSelected: widget.currentRoute == 'reference_levels',
                       onTap: () {
-                        Navigator.pop(context); // Close Drawer
-                        // Using PUSH instead of PushReplacement because the screen has a "Back" button
+                        Navigator.pop(context);
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => const ReferenceLevelsScreen()),
+                          MaterialPageRoute(
+                              builder: (context) => const ReferenceLevelsScreen()),
                         );
                       },
                     ),
-                    // ---------------------------
-
                     DrawerMenuItem(
                       icon: Icons.account_balance_wallet_outlined,
                       title: 'Deposit',
@@ -277,7 +427,8 @@ class _CustomDrawerState extends State<CustomDrawer> {
                         if (widget.currentRoute != 'deposit') {
                           Navigator.pushReplacement(
                             context,
-                            MaterialPageRoute(builder: (context) => const DepositScreen()),
+                            MaterialPageRoute(
+                                builder: (context) => const DepositScreen()),
                           );
                         }
                       },
@@ -291,7 +442,9 @@ class _CustomDrawerState extends State<CustomDrawer> {
                         navigator.pop();
                         if (widget.currentRoute != 'transactions') {
                           navigator.pushReplacement(
-                            MaterialPageRoute(builder: (context) => const TransactionHistoryScreen()),
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                const TransactionHistoryScreen()),
                           );
                         }
                       },
