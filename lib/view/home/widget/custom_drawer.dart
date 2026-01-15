@@ -6,11 +6,10 @@ import '../../../res/app_widget/custom_app_text.dart';
 import '../../../utils/app_color.dart';
 import '../../../view_model/auth_provider.dart';
 import '../../auth/screen/auth_wrapper.dart';
-import '../../crypto/screen/crypto_plan_history_screen.dart';
 import '../../deposit/screen/deposit_screen.dart';
 import '../../profile/screen/profile_screen.dart';
+import '../../reference_code/screen/reference_levels_screen.dart';
 import '../../transaction_history/screen/transaction_history_screen.dart';
-import '../../usdt/screen/usdt_plan_history_screen.dart';
 import '../../user_plan/screen/user_active_plan_screen.dart';
 import '../screen/home_screen.dart';
 import 'drawer_menuItem.dart';
@@ -45,25 +44,25 @@ class _CustomDrawerState extends State<CustomDrawer> {
           borderRadius: BorderRadius.circular(16.r),
           side: BorderSide(color: AppColor.primaryColor.withOpacity(0.3)),
         ),
-        title: AppText.large(
+        title: const AppText.large(
           'Logout',
           fontWeight: FontWeight.w700,
         ),
-        content: AppText.medium(
+        content: const AppText.medium(
           'Are you sure you want to logout?',
           color: AppColor.grey500,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: AppText.medium(
+            child: const AppText.medium(
               'Cancel',
               color: AppColor.grey500,
             ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: AppText.medium(
+            child: const AppText.medium(
               'Logout',
               color: AppColor.primaryColor,
               fontWeight: FontWeight.w700,
@@ -140,7 +139,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                       height: 70.w,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        gradient: LinearGradient(
+                        gradient: const LinearGradient(
                           colors: [
                             AppColor.primaryColor,
                             AppColor.lighterGreen,
@@ -152,13 +151,13 @@ class _CustomDrawerState extends State<CustomDrawer> {
                           BoxShadow(
                             color: AppColor.primaryColor.withOpacity(0.4),
                             blurRadius: 12,
-                            offset: Offset(0, 4),
+                            offset: const Offset(0, 4),
                           ),
                         ],
                       ),
                       child: Container(
                         margin: EdgeInsets.all(3.w),
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           shape: BoxShape.circle,
                           color: AppColor.secondaryPrimaryColor,
                         ),
@@ -185,7 +184,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     ),
                     SizedBox(height: 16.h),
                     ShaderMask(
-                      shaderCallback: (bounds) => LinearGradient(
+                      shaderCallback: (bounds) => const LinearGradient(
                         colors: [AppColor.lighterGreen, AppColor.primaryColor],
                       ).createShader(bounds),
                       child: AppText.large(
@@ -219,7 +218,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                         if (widget.currentRoute != 'home') {
                           Navigator.pushReplacement(
                             context,
-                            MaterialPageRoute(builder: (context) => HomeScreen()), // FIXED
+                            MaterialPageRoute(builder: (context) => HomeScreen()),
                           );
                         }
                       },
@@ -233,7 +232,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                         navigator.pop();
                         if (widget.currentRoute != 'profile') {
                           navigator.pushReplacement(
-                            MaterialPageRoute(builder: (context) => ProfileScreen()), // FIXED
+                            MaterialPageRoute(builder: (context) => ProfileScreen()),
                           );
                         }
                       },
@@ -247,11 +246,28 @@ class _CustomDrawerState extends State<CustomDrawer> {
                         navigator.pop();
                         if (widget.currentRoute != 'active_plans') {
                           navigator.pushReplacement(
-                            MaterialPageRoute(builder: (context) => UserActivePlansScreen()), // FIXED
+                            MaterialPageRoute(builder: (context) => const UserActivePlansScreen()),
                           );
                         }
                       },
                     ),
+
+                    // --- NEW ITEM ADDED HERE ---
+                    DrawerMenuItem(
+                      icon: Icons.groups_outlined, // Icon representing Reference/Users
+                      title: 'Reference Levels',
+                      isSelected: widget.currentRoute == 'reference_levels',
+                      onTap: () {
+                        Navigator.pop(context); // Close Drawer
+                        // Using PUSH instead of PushReplacement because the screen has a "Back" button
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const ReferenceLevelsScreen()),
+                        );
+                      },
+                    ),
+                    // ---------------------------
+
                     DrawerMenuItem(
                       icon: Icons.account_balance_wallet_outlined,
                       title: 'Deposit',
@@ -261,7 +277,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                         if (widget.currentRoute != 'deposit') {
                           Navigator.pushReplacement(
                             context,
-                            MaterialPageRoute(builder: (context) => DepositScreen()), // FIXED
+                            MaterialPageRoute(builder: (context) => const DepositScreen()),
                           );
                         }
                       },
@@ -275,35 +291,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                         navigator.pop();
                         if (widget.currentRoute != 'transactions') {
                           navigator.pushReplacement(
-                            MaterialPageRoute(builder: (context) => TransactionHistoryScreen()), // FIXED
-                          );
-                        }
-                      },
-                    ),
-                    DrawerMenuItem(
-                      icon: Icons.currency_bitcoin,
-                      title: 'Crypto Plans',
-                      isSelected: widget.currentRoute == 'crypto',
-                      onTap: () {
-                        Navigator.pop(context);
-                        if (widget.currentRoute != 'crypto') {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (context) => CryptoPlanHistoryScreen()), // FIXED
-                          );
-                        }
-                      },
-                    ),
-                    DrawerMenuItem(
-                      icon: Icons.account_balance_wallet,
-                      title: 'USDT Plans',
-                      isSelected: widget.currentRoute == 'usdt',
-                      onTap: () {
-                        Navigator.pop(context);
-                        if (widget.currentRoute != 'usdt') {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (context) => UsdtPlanHistoryScreen()), // FIXED
+                            MaterialPageRoute(builder: (context) => const TransactionHistoryScreen()),
                           );
                         }
                       },

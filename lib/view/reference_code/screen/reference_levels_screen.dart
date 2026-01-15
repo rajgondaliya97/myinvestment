@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../../res/app_widget/custom_app_bar.dart';
 import '../../../res/app_widget/custom_app_text.dart';
 import '../../../utils/app_color.dart';
+import '../../../utils/app_constent.dart';
+import '../../home/widget/custom_drawer.dart';
 
 class ReferenceLevelsScreen extends StatefulWidget {
   const ReferenceLevelsScreen({super.key});
@@ -35,16 +38,8 @@ class _ReferenceLevelsScreenState extends State<ReferenceLevelsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppColor.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const AppText.large("Reference Levels"),
-        centerTitle: true,
-      ),
+      appBar: CustomAppBar(title: AppConst.appName),
+      drawer: CustomDrawer(currentRoute: 'reference_levels'),
       body: Container(
         width: double.infinity,
         height: double.infinity,
