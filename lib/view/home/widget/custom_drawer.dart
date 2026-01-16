@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:myinvestment/view/manual_transfer/screen/manual_transfer_screen.dart';
 import 'package:provider/provider.dart';
 import '../../../res/app_widget/custom_app_button.dart';
 import '../../../res/app_widget/custom_app_text.dart';
@@ -434,6 +435,21 @@ class _CustomDrawerState extends State<CustomDrawer> {
                             context,
                             MaterialPageRoute(
                                 builder: (context) => const DepositScreen()),
+                          );
+                        }
+                      },
+                    ),
+                    DrawerMenuItem(
+                      icon: Icons.currency_exchange,
+                      title: 'Transfer',
+                      isSelected: widget.currentRoute == 'transfer',
+                      onTap: () {
+                        Navigator.pop(context);
+                        if (widget.currentRoute != 'transfer') {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const ManualTransferScreen()),
                           );
                         }
                       },
