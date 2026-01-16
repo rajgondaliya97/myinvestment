@@ -262,7 +262,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => DepositScreen(),
+                              builder: (context) => DepositScreen(showDrawerIcon: false,),
                             ),
                           );
                         },

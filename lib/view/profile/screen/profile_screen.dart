@@ -146,7 +146,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             },
             tooltip: 'Edit Profile',
           ),
-          IconButton(
+          /*IconButton(
             icon: Icon(Icons.lock_outline, color: Colors.white, size: 22.sp),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -157,7 +157,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               );
             },
             tooltip: 'Change Password',
-          ),
+          ),*/
           SizedBox(width: 8.w),
         ],
       ),

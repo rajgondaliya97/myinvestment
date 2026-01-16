@@ -22,7 +22,8 @@ import '../widget/success_dialog.dart';
 import '../widget/tariff_card_with_api.dart';
 
 class DepositScreen extends StatefulWidget {
-  const DepositScreen({Key? key}) : super(key: key);
+  final bool showDrawerIcon;
+  const DepositScreen({Key? key, this.showDrawerIcon = true}) : super(key: key);
 
   @override
   State<DepositScreen> createState() => _DepositScreenState();
@@ -457,7 +458,7 @@ class _DepositScreenState extends State<DepositScreen> {
 
         return Scaffold(
           backgroundColor: AppColor.secondaryPrimaryColor,
-          appBar: CustomAppBar(title: 'Create Deposit'),
+          appBar: CustomAppBar(title: 'Create Deposit', showDrawer: widget.showDrawerIcon,showBackButton: !widget.showDrawerIcon,),
           drawer: const CustomDrawer(currentRoute: 'deposit'),
           body: Container(
             decoration: BoxDecoration(
