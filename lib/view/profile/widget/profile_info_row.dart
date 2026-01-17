@@ -83,8 +83,9 @@ class ProfileInfoRow extends StatelessWidget {
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),
-              SizedBox(height: 6.h),
+              SizedBox(height: 4.h),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: valueColor != null
@@ -98,14 +99,14 @@ class ProfileInfoRow extends StatelessWidget {
                       child: AppText.medium(
                         value,
                         color: AppColor.white,
-                        fontSize: 15,
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
                     )
                         : AppText.medium(
                       value,
                       color: AppColor.white,
-                      fontSize: 15,
+                      fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

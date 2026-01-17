@@ -163,6 +163,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       drawer: CustomDrawer(currentRoute: 'profile'),
       body: Container(
+        height: double.infinity,
         decoration: BoxDecoration(gradient: AppColor.screenGradientBgColor),
         child: RefreshIndicator(
           onRefresh: () => authController.fetchUserProfile(),
@@ -224,7 +225,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ).createShader(bounds),
                               child: AppText.medium(
                                 'Personal Information',
-                                fontSize: 18,
+                                fontSize: 16,
                                 fontWeight: FontWeight.w700,
                                 color: AppColor.white,
                               ),
@@ -291,15 +292,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         label: 'Country',
                         value: country,
                         icon: Icons.public_outlined,
-                      ),
-                      Divider(
-                        color: AppColor.primaryColor.withOpacity(0.2),
-                        height: 32.h,
-                      ),
-                      ProfileInfoRow(
-                        label: 'Role',
-                        value: role,
-                        icon: Icons.badge_outlined,
                       ),
                       Divider(
                         color: AppColor.primaryColor.withOpacity(0.2),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../res/app_widget/custom_app_bar.dart';
 import '../../../res/app_widget/custom_app_text.dart';
@@ -20,6 +21,8 @@ class _ManualTransferScreenState extends State<ManualTransferScreen> with Single
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   bool _isCopied = false;
+
+  final String supportEmail = 'info@infinitewealth.uk';
 
   @override
   void initState() {
@@ -73,13 +76,136 @@ class _ManualTransferScreenState extends State<ManualTransferScreen> with Single
     });
   }
 
+  Future<void> _openEmailApp() async {
+    final Uri emailUri = Uri(
+      scheme: 'mailto',
+      path: supportEmail,
+      query: 'subject=Manual Transfer Support Request&body=Hello,%0D%0A%0D%0AI need assistance with my manual transfer.%0D%0A%0D%0ATransaction Details:%0D%0A- Transaction Hash: %0D%0A- Amount: %0D%0A- Investment Plan: %0D%0A%0D%0AThank you.',
+    );
+
+    try {
+      final bool canLaunch = await canLaunchUrl(emailUri);
+
+      if (canLaunch) {
+        await launchUrl(emailUri, mode: LaunchMode.externalApplication);
+      } else {
+        // Fallback: Copy email address and show dialog
+        if (mounted) {
+          _showEmailFallbackDialog();
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        _showEmailFallbackDialog();
+      }
+    }
+  }
+
+  void _showEmailFallbackDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: AppColor.secondaryPrimaryColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+            side: BorderSide(
+              color: AppColor.primaryColor.withOpacity(0.5),
+              width: 1,
+            ),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.email_outlined, color: AppColor.lighterGreen, size: 24.sp),
+              SizedBox(width: 12.w),
+              AppText.bold(
+                'Contact Support',
+                color: AppColor.white,
+                fontSize: 16,
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AppText.small(
+                'No email app found. Copy the email address below and contact us:',
+                color: AppColor.grey300,
+                maxLines: 3,
+              ),
+              SizedBox(height: 16.h),
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: AppColor.black.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(
+                    color: AppColor.primaryColor.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: AppText.small(
+                        supportEmail,
+                        color: AppColor.lighterGreen,
+                        fontSize: 13,
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.copy, color: AppColor.white, size: 18.sp),
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: supportEmail));
+                        Navigator.of(context).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Row(
+                              children: [
+                                Icon(Icons.check_circle, color: AppColor.white, size: 20.sp),
+                                SizedBox(width: 12.w),
+                                const Text('Email address copied!'),
+                              ],
+                            ),
+                            backgroundColor: AppColor.success,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12.r),
+                            ),
+                            margin: EdgeInsets.all(16.w),
+                          ),
+                        );
+                      },
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: AppText.medium(
+                'Close',
+                color: AppColor.primaryColor,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     const platformAddress = '0xe03D72045FAB8146A2aEad9d957d05Bb0813ED69';
 
     return Scaffold(
       backgroundColor: AppColor.background,
-      appBar: CustomAppBar(title: AppConst.appName),
+      appBar: CustomAppBar(title: 'Manual Transfer'),
       drawer: CustomDrawer(currentRoute: 'transfer'),
       body: Container(
         decoration: BoxDecoration(
@@ -593,134 +719,137 @@ class _ManualTransferScreenState extends State<ManualTransferScreen> with Single
   }
 
   Widget _buildSupportCard() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColor.info.withOpacity(0.2),
-            AppColor.secondaryPrimaryColor.withOpacity(0.4),
+    return InkWell(
+      onTap: _openEmailApp,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppColor.info.withOpacity(0.2),
+              AppColor.secondaryPrimaryColor.withOpacity(0.4),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(
+            color: AppColor.info.withOpacity(0.4),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColor.info.withOpacity(0.15),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
           ],
         ),
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(
-          color: AppColor.info.withOpacity(0.4),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColor.info.withOpacity(0.15),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Padding(
-            padding: EdgeInsets.all(20.w),
-            child: Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(14.w),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColor.info,
-                        AppColor.info.withOpacity(0.7),
+        child: Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.all(20.w),
+              child: Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(14.w),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColor.info,
+                          AppColor.info.withOpacity(0.7),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(14.r),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColor.info.withOpacity(0.4),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
                       ],
                     ),
-                    borderRadius: BorderRadius.circular(14.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColor.info.withOpacity(0.4),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+                    child: Icon(
+                      Icons.headset_mic_rounded,
+                      color: AppColor.white,
+                      size: 28.sp,
+                    ),
                   ),
-                  child: Icon(
-                    Icons.headset_mic_rounded,
-                    color: AppColor.white,
-                    size: 28.sp,
+                  SizedBox(width: 16.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AppText.bold(
+                          'Need Help?',
+                          fontSize: 15,
+                          color: AppColor.white,
+                        ),
+                        SizedBox(height: 4.h),
+                        AppText.small(
+                          'Our support team is ready to assist',
+                          color: AppColor.grey300,
+                          fontSize: 11,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                SizedBox(width: 16.w),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AppText.bold(
-                        'Need Help?',
-                        fontSize: 15,
-                        color: AppColor.white,
-                      ),
-                      SizedBox(height: 4.h),
-                      AppText.small(
-                        'Our support team is ready to assist',
-                        color: AppColor.grey300,
-                        fontSize: 11,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          Container(
-            height: 1,
-            margin: EdgeInsets.symmetric(horizontal: 20.w),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.transparent,
-                  AppColor.info.withOpacity(0.3),
-                  Colors.transparent,
                 ],
               ),
             ),
-          ),
 
-          Padding(
-            padding: EdgeInsets.all(20.w),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.email_rounded,
-                  color: AppColor.lighterGreen,
-                  size: 20.sp,
+            Container(
+              height: 1,
+              margin: EdgeInsets.symmetric(horizontal: 20.w),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.transparent,
+                    AppColor.info.withOpacity(0.3),
+                    Colors.transparent,
+                  ],
                 ),
-                SizedBox(width: 12.w),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AppText.small(
-                        'Email Support',
-                        color: AppColor.grey500,
-                        fontSize: 11,
-                      ),
-                      SizedBox(height: 2.h),
-                      AppText.medium(
-                        'info@infinitewealth.uk',
-                        color: AppColor.lighterGreen,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  color: AppColor.grey500,
-                  size: 16.sp,
-                ),
-              ],
+              ),
             ),
-          ),
-        ],
+
+            Padding(
+              padding: EdgeInsets.all(20.w),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.email_rounded,
+                    color: AppColor.lighterGreen,
+                    size: 20.sp,
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AppText.small(
+                          'Email Support',
+                          color: AppColor.grey500,
+                          fontSize: 11,
+                        ),
+                        SizedBox(height: 2.h),
+                        AppText.medium(
+                          supportEmail,
+                          color: AppColor.lighterGreen,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: AppColor.grey500,
+                    size: 16.sp,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
