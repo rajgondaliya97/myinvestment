@@ -159,7 +159,7 @@ class _InvestmentCalculatorScreenState
       child: Column(
         children: [
           Container(
-            padding: EdgeInsets.all(18.w),
+            padding: EdgeInsets.all(14.w),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.15),
               shape: BoxShape.circle,
@@ -167,13 +167,13 @@ class _InvestmentCalculatorScreenState
             child: Icon(
               Icons.calculate_outlined,
               color: Colors.white,
-              size: 30.sp,
+              size: 24.sp,
             ),
           ),
           SizedBox(height: 16.h),
           AppText.large(
             'Investment Calculator',
-            fontSize: 20,
+            fontSize: 16,
             fontWeight: FontWeight.w800,
             color: Colors.white,
           ),
@@ -181,7 +181,7 @@ class _InvestmentCalculatorScreenState
           AppText.small(
             'Calculate your potential returns',
             color: Colors.white.withOpacity(0.85),
-            fontSize: 12,
+            fontSize: 10,
           ),
         ],
       ),
@@ -225,19 +225,19 @@ class _InvestmentCalculatorScreenState
                 child: Icon(
                   Icons.dashboard_customize_rounded,
                   color: AppColor.lighterGreen,
-                  size: 24.sp,
+                  size: 18.sp,
                 ),
               ),
               SizedBox(width: 16.w),
               AppText.large(
                 'Select Investment Plan',
                 fontWeight: FontWeight.w700,
-                fontSize: 16,
+                fontSize: 14,
                 color: Colors.white,
               ),
             ],
           ),
-          SizedBox(height: 20.h),
+          SizedBox(height: 15.h),
           ...planProvider.plans!.map((plan) {
             final isSelected = plan.id == selectedPlanId;
             return GestureDetector(
@@ -249,7 +249,7 @@ class _InvestmentCalculatorScreenState
               },
               child: Container(
                 margin: EdgeInsets.only(bottom: 12.h),
-                padding: EdgeInsets.all(18.w),
+                padding: EdgeInsets.all(12.w),
                 decoration: BoxDecoration(
                   gradient: isSelected
                       ? LinearGradient(
@@ -293,7 +293,7 @@ class _InvestmentCalculatorScreenState
                         color: isSelected
                             ? Colors.white
                             : AppColor.primaryColor,
-                        size: 18.sp,
+                        size: 15.sp,
                       ),
                     ),
                     SizedBox(width: 16.w),
@@ -303,7 +303,7 @@ class _InvestmentCalculatorScreenState
                         children: [
                           AppText.medium(
                             plan.name ?? 'Plan',
-                            fontSize: 15,
+                            fontSize: 12,
                             fontWeight: FontWeight.w700,
                             color: isSelected
                                 ? Colors.white
@@ -315,7 +315,7 @@ class _InvestmentCalculatorScreenState
                             color: isSelected
                                 ? Colors.white.withOpacity(0.85)
                                 : Colors.white.withOpacity(0.6),
-                            fontSize: 12,
+                            fontSize: 10,
                           ),
                           SizedBox(height: 2.h),
                           AppText.small(
@@ -323,7 +323,7 @@ class _InvestmentCalculatorScreenState
                             color: isSelected
                                 ? Colors.white.withOpacity(0.85)
                                 : Colors.white.withOpacity(0.6),
-                            fontSize: 12,
+                            fontSize: 10,
                           ),
                         ],
                       ),
@@ -351,7 +351,7 @@ class _InvestmentCalculatorScreenState
                       ),
                       child: AppText.small(
                         '${plan.dailyRoi}%',
-                        fontSize: 12,
+                        fontSize: 10,
                         fontWeight: FontWeight.w800,
                         color: isSelected
                             ? Colors.white
@@ -409,14 +409,14 @@ class _InvestmentCalculatorScreenState
                 child: Icon(
                   Icons.payments_rounded,
                   color: AppColor.lighterGreen,
-                  size: 24.sp,
+                  size: 18.sp,
                 ),
               ),
               SizedBox(width: 16.w),
               AppText.large(
                 'Investment Amount',
                 fontWeight: FontWeight.w700,
-                fontSize: 16,
+                fontSize: 14,
                 color: Colors.white,
               ),
             ],
@@ -441,17 +441,17 @@ class _InvestmentCalculatorScreenState
                 AppText.small(
                   'Amount',
                   color: Colors.white.withOpacity(0.85),
-                  fontSize: 14,
+                  fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
-                SizedBox(height: 12.h),
+                SizedBox(height: 3.h),
                 ShaderMask(
                   shaderCallback: (bounds) => LinearGradient(
                     colors: [Colors.white, Colors.white.withOpacity(0.95)],
                   ).createShader(bounds),
                   child: AppText.large(
                     '\$${investmentAmount.toStringAsFixed(2)}',
-                    fontSize: 25,
+                    fontSize: 19,
                     fontWeight: FontWeight.w900,
                     color: Colors.white,
                   ),
@@ -459,7 +459,7 @@ class _InvestmentCalculatorScreenState
               ],
             ),
           ),
-          SizedBox(height: 24.h),
+          SizedBox(height: 15.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -519,13 +519,13 @@ class _InvestmentCalculatorScreenState
           AppText.small(
             '$label: ',
             color: Colors.white.withOpacity(0.7),
-            fontSize: 13,
+            fontSize: 11,
             fontWeight: FontWeight.w600,
           ),
           AppText.small(
             '\$${amount.toStringAsFixed(0)}',
             color: AppColor.lighterGreen,
-            fontSize: 13,
+            fontSize: 11,
             fontWeight: FontWeight.w800,
           ),
         ],
@@ -570,19 +570,19 @@ class _InvestmentCalculatorScreenState
                 child: Icon(
                   Icons.analytics_rounded,
                   color: AppColor.lighterGreen,
-                  size: 24.sp,
+                  size: 18.sp,
                 ),
               ),
               SizedBox(width: 16.w),
               AppText.large(
                 'Profit Breakdown',
                 fontWeight: FontWeight.w700,
-                fontSize: 18,
+                fontSize: 14,
                 color: Colors.white,
               ),
             ],
           ),
-          SizedBox(height: 20.h),
+          SizedBox(height: 15.h),
           _buildProfitRow(
             'Daily ROI',
             '${selectedPlan.dailyRoi}%',
@@ -639,7 +639,7 @@ class _InvestmentCalculatorScreenState
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.stars_rounded, color: Colors.white, size: 18.sp),
+                    Icon(Icons.stars_rounded, color: Colors.white, size: 14.sp),
                     SizedBox(width: 3.w),
                     AppText.medium(
                       'TOTAL RETURN',
@@ -652,7 +652,7 @@ class _InvestmentCalculatorScreenState
                 SizedBox(height: 12.h),
                 AppText.large(
                   '\$${profits['totalReturn']}',
-                  fontSize: 25,
+                  fontSize: 18,
                   fontWeight: FontWeight.w900,
                   color: Colors.white,
                 ),
@@ -669,7 +669,7 @@ class _InvestmentCalculatorScreenState
                   child: AppText.small(
                     'After ${selectedPlan.durationDays} days',
                     color: Colors.white.withOpacity(0.95),
-                    fontSize: 12,
+                    fontSize: 10,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -697,21 +697,21 @@ class _InvestmentCalculatorScreenState
               color: color.withOpacity(0.2),
               borderRadius: BorderRadius.circular(10.r),
             ),
-            child: Icon(icon, color: color, size: 20.sp),
+            child: Icon(icon, color: color, size: 18.sp),
           ),
           SizedBox(width: 14.w),
           Expanded(
             child: AppText.medium(
               label,
               color: Colors.white.withOpacity(0.8),
-              fontSize: 15,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
           ),
           AppText.medium(
             value,
             color: Colors.white,
-            fontSize: 16,
+            fontSize: 12,
             fontWeight: FontWeight.w800,
           ),
         ],
