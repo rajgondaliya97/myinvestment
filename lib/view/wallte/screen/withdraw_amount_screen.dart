@@ -272,8 +272,8 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
                         });
                       },
                     ),
+                    /*
                     SizedBox(height: 24.h),
-
                     // Quick Amount Selection
                     AppText.medium(
                       'Quick Select',
@@ -281,14 +281,14 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
                     ),
-                    SizedBox(height: 12.h),
+                    SizedBox(height: 12.h),*/
 
-                    _buildQuickAmountGrid(walletController.availableBalance),
-                    SizedBox(height: 30.h),
+                    //_buildQuickAmountGrid(walletController.availableBalance),
+                    SizedBox(height: 24.h),
 
                     // Warning Card
                     _buildWarningCard(),
-                    SizedBox(height: 30.h),
+                    SizedBox(height: 24.h),
 
                     // Withdraw Button
                     AppButton.primary(
@@ -535,7 +535,7 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
                 ),
                 SizedBox(height: 8.h),
                 AppText.medium(
-                  '• Minimum withdrawal: \$10\n'
+                      '• Withdrawal charge: 10% of the amount\n'
                       '• You can only withdraw available balance\n'
                       '• Locked balance cannot be withdrawn\n'
                       '• Processing time: Instant\n'

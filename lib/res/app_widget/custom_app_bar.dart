@@ -43,12 +43,10 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         )
-            : showBackButton
-            ? IconButton(
+            :  IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white, size: 24.sp),
           onPressed: () => Navigator.pop(context),
-        )
-            : null,
+        ),
         automaticallyImplyLeading: showBackButton, // Show back button when needed
         toolbarHeight: 70.h,
         title: Row(
