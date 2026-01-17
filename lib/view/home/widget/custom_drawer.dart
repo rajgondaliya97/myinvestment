@@ -395,6 +395,21 @@ class _CustomDrawerState extends State<CustomDrawer> {
                           },
                         ),
                         DrawerMenuItem(
+                          icon: Icons.account_balance_wallet_outlined,
+                          title: 'Deposit',
+                          isSelected: widget.currentRoute == 'deposit',
+                          onTap: () {
+                            final navigator = Navigator.of(context);
+                            navigator.pop();
+                            if (widget.currentRoute != 'deposit') {
+                              navigator.pushReplacement(
+                                MaterialPageRoute(
+                                    builder: (context) => const DepositScreen()),
+                              );
+                            }
+                          },
+                        ),
+                        DrawerMenuItem(
                           icon: Icons.trending_up,
                           title: 'My Active Plans',
                           isSelected: widget.currentRoute == 'active_plans',
@@ -405,62 +420,6 @@ class _CustomDrawerState extends State<CustomDrawer> {
                               navigator.pushReplacement(
                                 MaterialPageRoute(
                                     builder: (context) => const UserActivePlansScreen()),
-                              );
-                            }
-                          },
-                        ),
-                        DrawerMenuItem(
-                          icon: Icons.groups_outlined,
-                          title: 'Reference Levels',
-                          isSelected: widget.currentRoute == 'reference_levels',
-                          onTap: () {
-                            Navigator.pop(context);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const ReferenceLevelsScreen()),
-                            );
-                          },
-                        ),
-                        DrawerMenuItem(
-                          icon: Icons.groups_outlined,
-                          title: 'Referral Code',
-                          isSelected: widget.currentRoute == 'referral_code',
-                          onTap: () {
-                            Navigator.pop(context);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const ReferralCodeScreen()),
-                            );
-                          },
-                        ),
-                        DrawerMenuItem(
-                          icon: Icons.account_balance_wallet_outlined,
-                          title: 'Deposit',
-                          isSelected: widget.currentRoute == 'deposit',
-                          onTap: () {
-                            Navigator.pop(context);
-                            if (widget.currentRoute != 'deposit') {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const DepositScreen()),
-                              );
-                            }
-                          },
-                        ),
-                        DrawerMenuItem(
-                          icon: Icons.currency_exchange,
-                          title: 'Manual Transfer',
-                          isSelected: widget.currentRoute == 'transfer',
-                          onTap: () {
-                            Navigator.pop(context);
-                            if (widget.currentRoute != 'transfer') {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const ManualTransferScreen()),
                               );
                             }
                           },
@@ -481,6 +440,53 @@ class _CustomDrawerState extends State<CustomDrawer> {
                             }
                           },
                         ),
+                        DrawerMenuItem(
+                          icon: Icons.groups_outlined,
+                          title: 'Reference Levels',
+                          isSelected: widget.currentRoute == 'reference_levels',
+                          onTap: () {
+                            final navigator = Navigator.of(context);
+                            navigator.pop();
+                            if (widget.currentRoute != 'reference_levels') {
+                              navigator.pushReplacement(
+                                MaterialPageRoute(
+                                    builder: (context) => const ReferenceLevelsScreen()),
+                              );
+                            }
+                          },
+                        ),
+                        DrawerMenuItem(
+                          icon: Icons.person_add_alt_1_outlined,
+                          title: 'Referral Code',
+                          isSelected: widget.currentRoute == 'referral_code',
+                          onTap: () {
+                            final navigator = Navigator.of(context);
+                            navigator.pop();
+                            if (widget.currentRoute != 'referral_code') {
+                              navigator.pushReplacement(
+                                MaterialPageRoute(
+                                    builder: (context) => const ReferralCodeScreen()),
+                              );
+                            }
+                          },
+                        ),
+
+                        DrawerMenuItem(
+                          icon: Icons.currency_exchange,
+                          title: 'Manual Transfer',
+                          isSelected: widget.currentRoute == 'transfer',
+                          onTap: () {
+                            Navigator.pop(context);
+                            if (widget.currentRoute != 'transfer') {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => const ManualTransferScreen()),
+                              );
+                            }
+                          },
+                        ),
+
                         Divider(
                           color: AppColor.primaryColor.withOpacity(0.2),
                           thickness: 1,

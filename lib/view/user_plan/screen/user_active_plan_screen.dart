@@ -24,7 +24,7 @@ class _UserActivePlansScreenState extends State<UserActivePlansScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
 
     // Fetch plans on init
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -121,7 +121,7 @@ class _UserActivePlansScreenState extends State<UserActivePlansScreen>
                     children: [
                       _buildPlansList(planController.activePlans, planController),
                       _buildPlansList(planController.completedPlans, planController),
-                      _buildPlansList(planController.expiredPlans, planController),
+                    //  _buildPlansList(planController.expiredPlans, planController),
                     ],
                   );
                 },
@@ -252,7 +252,7 @@ class _UserActivePlansScreenState extends State<UserActivePlansScreen>
         tabs: [
           Tab(text: 'Active'),
           Tab(text: 'Completed'),
-          Tab(text: 'Expired'),
+          //Tab(text: 'Expired'),
         ],
       ),
     );
@@ -266,10 +266,11 @@ class _UserActivePlansScreenState extends State<UserActivePlansScreen>
     return RefreshIndicator(
       onRefresh: _onRefresh,
       color: AppColor.lighterGreen,
-      backgroundColor: AppColor.secondaryPrimaryColor,
       child: ListView.builder(
         controller: _scrollController,
         padding: EdgeInsets.all(20.w),
+        // Use AlwaysScrollableScrollPhysics to ensure RefreshIndicator works even with few items
+        physics: const AlwaysScrollableScrollPhysics(),
         itemCount: plans.length + (controller.isLoadingMore ? 1 : 0),
         itemBuilder: (context, index) {
           if (index == plans.length) {
