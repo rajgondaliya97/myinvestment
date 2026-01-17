@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../res/app_widget/custom_app_bar.dart';
 import '../../../res/app_widget/custom_app_text.dart';
 import '../../../utils/app_color.dart';
 import '../../../utils/app_constent.dart';
+import '../../../view_model/referral_provider.dart';
 import '../../home/widget/custom_drawer.dart';
 
 class ReferenceLevelsScreen extends StatefulWidget {
@@ -24,15 +26,30 @@ class _ReferenceLevelsScreenState extends State<ReferenceLevelsScreen> {
 
     return {
       "level": levelNumber,
-      "users": List.generate(userCount, (userIndex) => {
-        "name": "User ${levelNumber}-${userIndex + 1}",
-        "id": "REF-${levelNumber}00${userIndex + 1}",
-        "joinDate": "12 Jan 2026",
-        "status": "Active",
-        "earnings": "\$${(userIndex + 1) * 50}.00"
-      }),
+      "users": List.generate(
+        userCount,
+        (userIndex) => {
+          "name": "User ${levelNumber}-${userIndex + 1}",
+          "id": "REF-${levelNumber}00${userIndex + 1}",
+          "joinDate": "12 Jan 2026",
+          "status": "Active",
+          "earnings": "\$${(userIndex + 1) * 50}.00",
+        },
+      ),
     };
   });
+
+  @override
+  void initState() {
+    super.initState();
+    // Call API when screen enters
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ReferralController>(
+        context,
+        listen: false,
+      ).fetchReferralLevels();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,20 +61,35 @@ class _ReferenceLevelsScreenState extends State<ReferenceLevelsScreen> {
         width: double.infinity,
         height: double.infinity,
         // Using your custom screen gradient
-        decoration: BoxDecoration(
-          gradient: AppColor.screenGradientBgColor,
-        ),
+        decoration: BoxDecoration(gradient: AppColor.screenGradientBgColor),
         child: SafeArea(
-          child: ListView.separated(
-            padding: const EdgeInsets.all(16.0),
-            physics: const BouncingScrollPhysics(),
-            itemCount: levelsData.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final data = levelsData[index];
-              return _LevelExpansionTile(
-                level: data['level'],
-                users: data['users'],
+          child: Consumer<ReferralController>(
+            builder: (context, controller, child) {
+              if (controller.isLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (controller.referralData.isEmpty) {
+                return const Center(
+                  child: AppText.medium("No references found yet"),
+                );
+              }
+
+              return ListView.separated(
+                padding: const EdgeInsets.all(16.0),
+                physics: const BouncingScrollPhysics(),
+                itemCount:
+                    controller.referralData.length, // Use real data length
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final levelInfo = controller.referralData[index];
+                  return _LevelExpansionTile(
+                    // Ensure these keys ('level' and 'users') match your API response
+                    level: levelInfo['level'] ?? (index + 1),
+                    users: levelInfo['users'] ?? [],
+                  );
+                },
               );
             },
           ),
@@ -71,10 +103,7 @@ class _LevelExpansionTile extends StatelessWidget {
   final int level;
   final List<dynamic> users;
 
-  const _LevelExpansionTile({
-    required this.level,
-    required this.users,
-  });
+  const _LevelExpansionTile({required this.level, required this.users});
 
   @override
   Widget build(BuildContext context) {
@@ -98,12 +127,12 @@ class _LevelExpansionTile extends StatelessWidget {
           title: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              AppText.bold(
-                "Level $level",
-                fontSize: 18,
-              ),
+              AppText.bold("Level $level", fontSize: 18),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: AppColor.primaryColor.withOpacity(0.4),
                   borderRadius: BorderRadius.circular(20),
@@ -160,11 +189,7 @@ class _UserReferenceCard extends StatelessWidget {
               color: AppColor.primaryColor.withOpacity(0.2),
               border: Border.all(color: AppColor.primaryColor),
             ),
-            child: const Icon(
-              Icons.person,
-              color: AppColor.white,
-              size: 20,
-            ),
+            child: const Icon(Icons.person, color: AppColor.white, size: 20),
           ),
           const SizedBox(width: 12),
 
@@ -176,10 +201,7 @@ class _UserReferenceCard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    AppText.medium(
-                      user['name'],
-                      fontWeight: FontWeight.w600,
-                    ),
+                    AppText.medium(user['name'], fontWeight: FontWeight.w600),
                     AppText.small(
                       user['status'],
                       color: AppColor.success, // Using your semantic color
@@ -191,14 +213,8 @@ class _UserReferenceCard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    AppText.small(
-                      "ID: ${user['id']}",
-                      color: AppColor.grey300,
-                    ),
-                    AppText.small(
-                      user['joinDate'],
-                      color: AppColor.grey500,
-                    ),
+                    AppText.small("ID: ${user['id']}", color: AppColor.grey300),
+                    AppText.small(user['joinDate'], color: AppColor.grey500),
                   ],
                 ),
               ],

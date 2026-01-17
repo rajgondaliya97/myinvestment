@@ -3,6 +3,7 @@ import '../repo/auth_repo.dart';
 import '../repo/home_repo.dart';
 import '../repo/plan_repo.dart';
 import '../repo/profile_repo.dart';
+import '../repo/referral_repo.dart';
 import '../repo/transaction_repo.dart';
 import '../repo/wallet_repo.dart';
 
@@ -18,6 +19,7 @@ class DependencyLocator {
   late WalletRepository walletRepository;
   late HomeRepository homeRepository;
   late TransactionRepository transactionRepository;
+  late ReferralRepository referralRepository;
 
 
   Future<void> init() async {
@@ -28,6 +30,7 @@ class DependencyLocator {
     walletRepository = WalletRepository(apiService: apiService);
     homeRepository = HomeRepository(apiService: apiService);
     transactionRepository = TransactionRepository(apiService: apiService);
+    referralRepository = ReferralRepository(apiService: apiService);
 
     print('✅ All dependencies initialized');
   }

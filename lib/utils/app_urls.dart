@@ -16,5 +16,6 @@ class AppUrl
   static const String withdrawRequestUrl = "api/withdraw_request";
   static const String getTransactionsUrl = "api/get_transactions";
   static const String logoutUrl = "api/logout";
+  static const String myReferralsLevelwise = "api/my_referrals_levelwise";
 
 }

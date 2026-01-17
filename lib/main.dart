@@ -11,6 +11,7 @@ import 'package:myinvestment/view/auth/screen/auth_wrapper.dart';
 import 'package:myinvestment/view_model/deposit_provider.dart';
 import 'package:myinvestment/view_model/investment_controller.dart';
 import 'package:myinvestment/view_model/pan_provider.dart';
+import 'package:myinvestment/view_model/referral_provider.dart';
 import 'package:myinvestment/view_model/transaction_controller.dart';
 import 'package:myinvestment/view_model/user_plan_provoder.dart';
 import 'package:myinvestment/view_model/wallet_controller.dart';
@@ -100,6 +101,11 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => TransactionController(
             transactionRepository: DependencyLocator().transactionRepository,
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ReferralController(
+            referralRepository: DependencyLocator().referralRepository,
           ),
         ),
         // Provide Web3 Wallet Service
