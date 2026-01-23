@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
-import 'package:reown_walletkit/reown_walletkit.dart';
+import 'package:reown_appkit/reown_appkit.dart';  // ✅ Correct package
+import 'package:web3dart/web3dart.dart';
 import '../../../res/app_widget/custom_app_bar.dart';
 import '../../../res/app_widget/custom_app_button.dart';
 import '../../../res/app_widget/custom_app_flush_bar.dart';
-import '../../../res/services/web_wallet_service.dart';
+import '../../../res/services/ReownWalletService.dart';
 import '../../../utils/app_color.dart';
 import '../../../view_model/deposit_provider.dart';
 import '../../../view_model/home_provider.dart';
@@ -112,7 +113,7 @@ class _DepositScreenState extends State<DepositScreen> {
   Future<bool> _validateBeforeSubscribe(
       DepositProvider depositProvider,
       PlanProvider planProvider,
-      Web3WalletService walletService,
+      ReownWalletService walletService,
       ) async {
     // 1. Check if plan is selected
     if (_selectedPlanData == null || planProvider.selectedPlanDetails == null) {
@@ -316,7 +317,7 @@ class _DepositScreenState extends State<DepositScreen> {
 
   /// ============ TRANSFER USDT TO CLIENT ACCOUNT ============
   Future<bool> _transferUsdtToClient(
-      Web3WalletService walletService,
+      ReownWalletService walletService,
       double amount,
       ) async {
     try {
@@ -449,7 +450,7 @@ class _DepositScreenState extends State<DepositScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer4<DepositProvider, HomeProvider, PlanProvider, Web3WalletService>(
+    return Consumer4<DepositProvider, HomeProvider, PlanProvider, ReownWalletService>(
       builder: (context, depositProvider, homeProvider, planProvider, walletService, child) {
         // Get profit values from deposit provider
         final amount = double.tryParse(_amountController.text) ?? 0;
@@ -548,7 +549,7 @@ class _DepositScreenState extends State<DepositScreen> {
   }
 
   /// ============ WALLET STATUS CARD ============
-  Widget _buildWalletStatusCard(Web3WalletService walletService) {
+  Widget _buildWalletStatusCard(ReownWalletService walletService) {
     if (!walletService.isConnected) {
       return Container(
         padding: EdgeInsets.all(16.w),
@@ -663,7 +664,7 @@ class _DepositScreenState extends State<DepositScreen> {
   }
 
   /// ============ VALIDATION MESSAGE WIDGET ============
-  Widget _buildValidationMessage(PlanProvider planProvider, Web3WalletService walletService) {
+  Widget _buildValidationMessage(PlanProvider planProvider, ReownWalletService walletService) {
     final amountText = _amountController.text.trim();
     if (amountText.isEmpty) return SizedBox.shrink();
 
@@ -763,7 +764,7 @@ class _DepositScreenState extends State<DepositScreen> {
   void _handleSubscribeClick(
       DepositProvider depositProvider,
       PlanProvider planProvider,
-      Web3WalletService walletService,
+      ReownWalletService walletService,
       ) async {
     // Step 1: Run all validations (including balance check)
     final isValid = await _validateBeforeSubscribe(

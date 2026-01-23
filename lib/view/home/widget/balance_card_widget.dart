@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:myinvestment/utils/app_color.dart';
-import 'package:myinvestment/res/services/web_wallet_service.dart';
 import 'package:myinvestment/view/home/widget/single_network_details.dart';
 import 'package:provider/provider.dart';
-import 'package:reown_walletkit/reown_walletkit.dart';
+import 'package:web3dart/web3dart.dart';
 import '../../../res/app_widget/custom_app_text.dart';
+import '../../../res/services/ReownWalletService.dart';
 import 'network_data.dart';
 import 'network_selector_sheet.dart';
 
@@ -66,7 +66,7 @@ class _BalanceCardState extends State<BalanceCard>
   Future<void> _loadBalances() async {
     if (!mounted) return;
 
-    final walletService = Provider.of<Web3WalletService>(context, listen: false);
+    final walletService = Provider.of<ReownWalletService>(context, listen: false);
 
     if (!walletService.isConnected) {
       setState(() {
@@ -94,7 +94,7 @@ class _BalanceCardState extends State<BalanceCard>
     }
   }
 
-  Future<void> _loadActiveNetworkBalance(Web3WalletService walletService) async {
+  Future<void> _loadActiveNetworkBalance(ReownWalletService walletService) async {
     try {
       final balance = await walletService.getBalanceInEther();
 
@@ -127,7 +127,7 @@ class _BalanceCardState extends State<BalanceCard>
     }
   }
 
-  Future<void> _loadAllNetworkBalances(Web3WalletService walletService) async {
+  Future<void> _loadAllNetworkBalances(ReownWalletService walletService) async {
     try {
       final nativeBalances = await walletService.getAllBalances();
       final usdtBalances = await walletService.getAllUsdtBalances();
@@ -165,7 +165,7 @@ class _BalanceCardState extends State<BalanceCard>
     });
   }
 
-  void _showNetworkSelector(Web3WalletService walletService) {
+  void _showNetworkSelector(ReownWalletService walletService) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -179,7 +179,7 @@ class _BalanceCardState extends State<BalanceCard>
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<Web3WalletService>(
+    return Consumer<ReownWalletService>(
       builder: (context, walletService, child) {
         if (!walletService.isConnected) {
           return _buildDisconnectedCard();
@@ -214,7 +214,7 @@ class _BalanceCardState extends State<BalanceCard>
     );
   }
 
-  Widget _buildBalanceHeader(Web3WalletService walletService) {
+  Widget _buildBalanceHeader(ReownWalletService walletService) {
     return Padding(
       padding: EdgeInsets.all(20.w),
       child: Column(
@@ -249,7 +249,7 @@ class _BalanceCardState extends State<BalanceCard>
     );
   }
 
-  Widget _buildNetworkBadge(Web3WalletService walletService) {
+  Widget _buildNetworkBadge(ReownWalletService walletService) {
     return GestureDetector(
       onTap: () => _showNetworkSelector(walletService),
       child: Container(
@@ -326,7 +326,7 @@ class _BalanceCardState extends State<BalanceCard>
     );
   }
 
-  Widget _buildBalanceDisplay(Web3WalletService walletService) {
+  Widget _buildBalanceDisplay(ReownWalletService walletService) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -348,7 +348,7 @@ class _BalanceCardState extends State<BalanceCard>
     );
   }
 
-  Widget _buildExpandedDetails(Web3WalletService walletService) {
+  Widget _buildExpandedDetails(ReownWalletService walletService) {
     return SizeTransition(
       sizeFactor: _expandAnimation,
       child: Container(

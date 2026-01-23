@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:myinvestment/utils/app_color.dart';
-import 'package:myinvestment/res/services/web_wallet_service.dart';
-import 'package:myinvestment/res/services/wallet_import_screen.dart'
-    hide WalletDashboardScreen;
+import 'package:myinvestment/res/services/ReownWalletService.dart';  // ✅ Correct import
+import 'package:myinvestment/res/services/MetaMaskConnectScreen.dart';
 import 'package:myinvestment/view/deposit/screen/deposit_screen.dart';
 import 'package:provider/provider.dart';
 
@@ -43,7 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
       listen: false,
     );
     final homeProvider = Provider.of<HomeProvider>(context, listen: false);
-    final walletService = Provider.of<Web3WalletService>(context, listen: false);
+    final walletService = Provider.of<ReownWalletService>(context, listen: false);
 
     // Initialize wallet service first
     try {
@@ -65,7 +64,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final authController = Provider.of<AuthController>(context);
     final homeProvider = Provider.of<HomeProvider>(context);
-    final walletService = Provider.of<Web3WalletService>(context);
+    final walletService = Provider.of<ReownWalletService>(context);
 
     // Get user data from profileData (API) instead of local storage
     final userName = authController.profileData != null
@@ -188,7 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       await Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => const WalletImportScreen(),
+                          builder: (_) => const MetaMaskConnectScreen(),
                         ),
                       );
                       // After returning from wallet import, the provider will auto-update the UI

@@ -4,7 +4,7 @@ import 'package:myinvestment/view/manual_transfer/screen/manual_transfer_screen.
 import 'package:provider/provider.dart';
 import '../../../res/app_widget/custom_app_button.dart';
 import '../../../res/app_widget/custom_app_text.dart';
-import '../../../res/services/web_wallet_service.dart';
+import '../../../res/services/ReownWalletService.dart';
 import '../../../utils/app_color.dart';
 import '../../../view_model/auth_provider.dart';
 import '../../auth/screen/auth_wrapper.dart';
@@ -65,7 +65,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
               color: AppColor.grey500,
             ),
             SizedBox(height: 12.h),
-            Consumer<Web3WalletService>(
+            Consumer<ReownWalletService>(
               builder: (context, walletService, child) {
                 if (walletService.isConnected) {
                   return Container(
@@ -146,7 +146,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
       );
 
       try {
-        final walletService = Provider.of<Web3WalletService>(context, listen: false);
+        final walletService = Provider.of<ReownWalletService>(context, listen: false);
 
         if (walletService.isConnected) {
           debugPrint('🔌 [Logout] Disconnecting wallet...');
@@ -315,7 +315,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                           color: AppColor.grey500,
                         ),
 
-                        Consumer<Web3WalletService>(
+                        Consumer<ReownWalletService>(
                           builder: (context, walletService, child) {
                             if (walletService.isConnected) {
                               return Container(

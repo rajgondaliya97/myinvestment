@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:myinvestment/utils/app_color.dart';
-import 'package:myinvestment/res/services/web_wallet_service.dart';
 import '../../../res/app_widget/custom_app_text.dart';
+import '../../../res/services/ReownWalletService.dart';
 import 'network_data.dart';
 
 class SingleNetworkDetails extends StatelessWidget {
-  final Web3WalletService walletService;
+  final ReownWalletService walletService;
   final String nativeBalance;
   final String usdtBalance;
   final String gasPrice;
@@ -69,7 +69,7 @@ class SingleNetworkDetails extends StatelessWidget {
 }
 
 class AllNetworksDetails extends StatelessWidget {
-  final Web3WalletService walletService;
+  final ReownWalletService walletService;
   final Map<String, double> allNativeBalances;
   final Map<String, double> allUsdtBalances;
 
@@ -309,7 +309,7 @@ class CurrencyItem extends StatelessWidget {
 }
 
 class NetworkInfoRow extends StatelessWidget {
-  final Web3WalletService walletService;
+  final ReownWalletService walletService;
   final String gasPrice;
 
   const NetworkInfoRow({

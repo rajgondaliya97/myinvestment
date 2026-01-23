@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:myinvestment/utils/app_color.dart';
-import 'package:myinvestment/res/services/web_wallet_service.dart';
 import '../../../res/app_widget/custom_app_text.dart';
+import '../../../res/services/ReownWalletService.dart';
 import 'network_data.dart';
 
 class NetworkSelectorSheet extends StatelessWidget {
-  final Web3WalletService walletService;
+  final ReownWalletService walletService;
   final VoidCallback onNetworkChanged;
 
   const NetworkSelectorSheet({
