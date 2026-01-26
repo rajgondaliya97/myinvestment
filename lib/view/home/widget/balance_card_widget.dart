@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:myinvestment/utils/app_color.dart';
 import 'package:myinvestment/view/home/widget/single_network_details.dart';
 import 'package:provider/provider.dart';
+import 'package:reown_appkit/reown_appkit.dart';
 import 'package:web3dart/web3dart.dart';
 import '../../../res/app_widget/custom_app_text.dart';
 import '../../../res/services/ReownWalletService.dart';

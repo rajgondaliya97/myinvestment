@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:web3dart/web3dart.dart';
 import 'package:http/http.dart' as http;
 import 'package:reown_appkit/reown_appkit.dart';
 import 'dart:typed_data';
-import 'dart:convert';
 
 class ReownWalletService extends ChangeNotifier {
   ReownAppKitModal? _appKitModal;
@@ -24,8 +22,6 @@ class ReownWalletService extends ChangeNotifier {
   EthereumAddress? get ethereumAddress => _walletAddress != null
       ? EthereumAddress.fromHex(_walletAddress!)
       : null;
-
-
 
   // ✅ ADD THESE NEW GETTERS
   String? get activeNetwork => currentNetwork;
@@ -98,21 +94,22 @@ class ReownWalletService extends ChangeNotifier {
   ''';
 
   /// Initialize Reown AppKit
+  /// Initialize Reown AppKit
   Future<void> initialize() async {
     debugPrint('🔧 Initializing Reown AppKit...');
 
     try {
       _appKitModal = ReownAppKitModal(
         context: NavigatorKey.navKey.currentContext!,
-        projectId: '53fecf7a847cf88dc6e400066c217f36',
+        projectId: '53fecf7a847cf88dc6e400066c217f36', // Keep your existing project ID
         metadata: const PairingMetadata(
-          name: 'My Investment Wallet',
-          description: 'Multi-chain cryptocurrency wallet',
-          url: 'https://myinvestment.com',
-          icons: ['https://myinvestment.com/icon.png'],
+          name: 'Infinite Wealth',  // ✅ Your app name from AndroidManifest
+          description: 'Multi-chain cryptocurrency investment wallet',
+          url: 'https://infinite-wealth.com',  // Update with your actual domain if you have one
+          icons: ['https://infinite-wealth.com/icon.png'],  // Update with your actual icon URL
           redirect: Redirect(
-            native: 'myinvestment://',
-            universal: 'https://myinvestment.com',
+            native: 'infinitewealth://',  // ✅ Matches your deep link scheme from AndroidManifest
+            universal: 'https://infinite-wealth.com',  // Update with your actual domain
           ),
         ),
         requiredNamespaces: {

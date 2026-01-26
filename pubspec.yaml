@@ -49,7 +49,7 @@ dependencies:
 
   # 🔥 NEW: Reown WalletKit (replaces deprecated walletconnect_flutter_v2)
   mobile_scanner: ^3.5.5
-  reown_appkit: ^1.7.0
+  reown_appkit: ^1.7.4
 
   # 🌐 Web3 & Blockchain (ONLY web3dart needed!)
   web3dart: ^2.7.3
