@@ -410,6 +410,21 @@ class _CustomDrawerState extends State<CustomDrawer> {
                           },
                         ),
                         DrawerMenuItem(
+                          icon: Icons.currency_exchange,
+                          title: 'Manual Transfer',
+                          isSelected: widget.currentRoute == 'transfer',
+                          onTap: () {
+                            Navigator.pop(context);
+                            if (widget.currentRoute != 'transfer') {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => const ManualTransferScreen()),
+                              );
+                            }
+                          },
+                        ),
+                        DrawerMenuItem(
                           icon: Icons.trending_up,
                           title: 'My Active Plans',
                           isSelected: widget.currentRoute == 'active_plans',
@@ -471,21 +486,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                           },
                         ),
 
-                        DrawerMenuItem(
-                          icon: Icons.currency_exchange,
-                          title: 'Manual Transfer',
-                          isSelected: widget.currentRoute == 'transfer',
-                          onTap: () {
-                            Navigator.pop(context);
-                            if (widget.currentRoute != 'transfer') {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const ManualTransferScreen()),
-                              );
-                            }
-                          },
-                        ),
+
 
                         Divider(
                           color: AppColor.primaryColor.withOpacity(0.2),

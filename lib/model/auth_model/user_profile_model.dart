@@ -33,7 +33,7 @@ class UserProfileModelData {
   dynamic country;     // Replaced Null? with dynamic
   dynamic address;     // Replaced Null? with dynamic
   dynamic idProof;     // Replaced Null? with dynamic
-  int? walletBalance;
+  dynamic walletBalance;
   String? role;
   bool? isVerified;
   String? referralCode;

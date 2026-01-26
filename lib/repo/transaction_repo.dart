@@ -12,19 +12,23 @@ class TransactionRepository {
     required int page,
     String? search,
     String? sort,
+    String? isEarning,
   }) async {
     print('🔍 TransactionRepository.getTransactionHistory called');
-    print('🔍 Params - limit: $limit, page: $page, search: $search, sort: $sort');
+    print(
+      '🔍 Params - limit: $limit, page: $page, search: $search, sort: $sort',
+    );
 
     // Your API call here
     final response = await apiService.post(
       AppUrl.getTransactionsUrl,
       body: {
-      'limit': limit,
-      'page': page,
-      'search': search,
-      'sort': sort,
-    },
+        'limit': limit,
+        'page': page,
+        'search': search,
+        'sort': sort,
+        'isEarning': isEarning,
+      },
     );
 
     print('🔍 API Response: $response');

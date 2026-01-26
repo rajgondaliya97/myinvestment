@@ -291,11 +291,14 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
                     SizedBox(height: 24.h),
 
                     // Withdraw Button
-                    AppButton.primary(
-                      onPressed: walletController.isLoading ? null : _withdrawBalance,
-                      text: walletController.isLoading ? 'Processing...' : 'Withdraw Amount',
-                      width: double.infinity,
-                      height: 55,
+                    Opacity(
+                      opacity: walletController.availableBalance < 10 ? 0.4 : 1.0,
+                      child: AppButton.primary(
+                        onPressed: (walletController.isLoading || walletController.availableBalance < 10) ? null : _withdrawBalance,
+                        text: walletController.isLoading ? 'Processing...' : 'Withdraw Amount',
+                        width: double.infinity,
+                        height: 55,
+                      ),
                     ),
                   ],
                 ),
@@ -308,8 +311,9 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
   }
 
   Widget _buildAvailableBalanceCard(WalletController walletController) {
-    final availableBalance = walletController.availableBalance;
+    final originalBalance = walletController.currentBalance;
     final lockedBalance = walletController.lockedBalance;
+    final availableBalance = walletController.availableBalance;
 
     return Container(
       width: double.infinity,
@@ -351,7 +355,7 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
                   ),
                   SizedBox(width: 12.w),
                   AppText.medium(
-                    'Available to Withdraw',
+                    'Wallet Balance',
                     fontSize: 14,
                     color: Colors.white70,
                   ),
@@ -370,7 +374,7 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
           ),
           SizedBox(height: 16.h),
           AppText.large(
-            '\$$availableBalance',
+            '\$$originalBalance',
             fontSize: 25,
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -391,10 +395,12 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
                     size: 16.sp,
                   ),
                   SizedBox(width: 8.w),
-                  AppText.medium(
-                    'Locked in investments: \$$lockedBalance',
-                    fontSize: 12,
-                    color: Colors.white70,
+                  Expanded(
+                    child: AppText.medium(
+                      'Locked: \$$lockedBalance | Available: \$${availableBalance.toStringAsFixed(2)}',
+                      fontSize: 12,
+                      color: Colors.white70,
+                    ),
                   ),
                 ],
               ),
@@ -535,6 +541,7 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
                 ),
                 SizedBox(height: 8.h),
                 AppText.medium(
+                  '• Minimum withdrawal amount is \$10\n'
                       '• Withdrawal charge: 10% of the amount\n'
                       '• You can only withdraw available balance\n'
                       '• Locked balance cannot be withdrawn\n'

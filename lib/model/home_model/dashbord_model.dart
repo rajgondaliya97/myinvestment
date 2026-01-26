@@ -1,8 +1,8 @@
 class DashboardDataModel {
-  int? balance;
-  int? activePlans;
-  int? totalWithdrawalsApprove;
-  int? totalWithdrawals;
+  dynamic balance;
+  dynamic activePlans;
+  dynamic totalWithdrawalsApprove;
+  dynamic totalWithdrawals;
 
   DashboardDataModel(
       {this.balance,

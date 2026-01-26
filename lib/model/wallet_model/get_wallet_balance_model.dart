@@ -23,8 +23,8 @@ class GetWalletBalanceModel {
 }
 
 class GetWalletBalanceModelData {
-  int? balance;
-  int? lockedBalance;
+  dynamic balance;
+  dynamic lockedBalance;
 
   GetWalletBalanceModelData({this.balance, this.lockedBalance});
 

@@ -25,9 +25,9 @@ class WalletController extends ChangeNotifier {
   WithdrawBalanceModelData? get withdrawData => _withdrawData;
 
   // Get current balance
-  int get currentBalance => _balanceData?.balance ?? 0;
-  int get lockedBalance => _balanceData?.lockedBalance ?? 0;
-  int get availableBalance => currentBalance - lockedBalance;
+  dynamic get currentBalance => _balanceData?.balance ?? 0;
+  dynamic get lockedBalance => _balanceData?.lockedBalance ?? 0;
+  dynamic get availableBalance => currentBalance - lockedBalance;
 
   /// Fetch wallet balance
   Future<void> fetchWalletBalance() async {
