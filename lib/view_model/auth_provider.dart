@@ -534,4 +534,42 @@ class AuthController extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
   }
+  Future<bool> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await authRepository.changePassword(
+        oldPassword: oldPassword,
+        newPassword: newPassword,
+      );
+
+      // Based on your app logic where status 0 is success
+      if (response['status'] == 0) {
+        _isLoading = false;
+        _errorMessage = null;
+        notifyListeners();
+        return true;
+      } else {
+        _errorMessage = response['message'] ?? 'Failed to change password';
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+    } on ApiException catch (e) {
+      _errorMessage = e.message;
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _errorMessage = 'An unexpected error occurred';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
 }

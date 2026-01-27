@@ -9,6 +9,7 @@ import '../../../res/app_widget/custom_app_button.dart';
 import '../../../res/app_widget/custom_app_text.dart';
 import '../../../utils/app_color.dart';
 import '../../../view_model/auth_provider.dart';
+import '../../auth/screen/change_password.dart';
 import '../../home/widget/custom_drawer.dart';
 import '../widget/profile_info_row.dart';
 
@@ -146,18 +147,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
             },
             tooltip: 'Edit Profile',
           ),
-          /*IconButton(
+          IconButton(
             icon: Icon(Icons.lock_outline, color: Colors.white, size: 22.sp),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Change password coming soon!'),
-                  backgroundColor: AppColor.primaryColor,
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChangePasswordScreen(),
                 ),
               );
+
             },
             tooltip: 'Change Password',
-          ),*/
+          ),
           SizedBox(width: 8.w),
         ],
       ),

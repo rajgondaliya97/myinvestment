@@ -87,4 +87,23 @@ class AuthRepository {
       rethrow;
     }
   }
+
+  Future<dynamic> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await apiService.post(
+        'api/reset_new_password',
+        body: {
+          'old_password': oldPassword,
+          'new_password': newPassword,
+        },
+      );
+      // Assuming a standard response structure based on your other models
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
 }
