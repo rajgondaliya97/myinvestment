@@ -148,9 +148,9 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                   ],
 
                   // Action Buttons
-                  _buildActionButtons(walletService),
+              //    _buildActionButtons(walletService),
 
-                  SizedBox(height: 20.h),
+              //    SizedBox(height: 20.h),
 
                   // Disconnect Button
                   _buildDisconnectButton(walletService),

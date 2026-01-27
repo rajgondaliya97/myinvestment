@@ -38,7 +38,7 @@ class _DepositScreenState extends State<DepositScreen> {
 
   // Client wallet address where deposits will be sent
   // TODO: Replace with your actual client wallet address
-  static const String CLIENT_WALLET_ADDRESS = '2d1cd96b5afa12a6ffd07d9275796a781430b5e02419f67da4439b3f473bd1a8';
+  static const String CLIENT_WALLET_ADDRESS = '0x42Ac3E3A8D908bbc959408f1266b4489a7FC5Cbe';
 
   @override
   void initState() {
