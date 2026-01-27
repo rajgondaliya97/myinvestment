@@ -21,7 +21,23 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen>
   late TabController _tabController;
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
+  String _selectedSource = 'All';
+  void _onSourceChanged(String? newValue) {
+    if (newValue == null) return;
 
+    setState(() => _selectedSource = newValue);
+
+    // Convert String back to the integer types you requested
+    int? sourceId;
+    if (newValue == 'Self') sourceId = 0;
+    if (newValue == 'Referral') sourceId = 1;
+
+    // Example: notify your provider to fetch filtered results
+    // context.read<TransactionController>().fetchTransactionHistory(
+    //   refresh: true,
+    //   source: sourceId,
+    // );
+  }
   @override
   void initState() {
     super.initState();
@@ -120,7 +136,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen>
     return GestureDetector(
       onTap: () {
         Navigator.pop(context);
-        transactionController.changeSortOrder(sortOrder);
+        //transactionController.changeSortOrder(sortOrder);
       },
       child: Container(
         padding: EdgeInsets.all(16.w),
@@ -277,41 +293,89 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen>
 
   Widget _buildSearchBar() {
     return Container(
-      padding: EdgeInsets.all(20.w),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: AppColor.glassGradient,
-          borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(
-            color: AppColor.primaryColor.withOpacity(0.3),
-            width: 1.5,
-          ),
-        ),
-        child: TextField(
-          controller: _searchController,
-          onChanged: _onSearch,
-          style: TextStyle(color: Colors.white, fontSize: 14.sp),
-          decoration: InputDecoration(
-            hintText: 'Search transactions...',
-            hintStyle: TextStyle(color: Colors.grey[500], fontSize: 14.sp),
-            prefixIcon: Icon(
-              Icons.search,
-              color: Colors.white.withOpacity(0.7),
-              size: 20.sp,
+      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+      child: Row(
+        children: [
+          // Search Bar (Flex 2 takes up more space)
+          Expanded(
+            flex: 2,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: AppColor.glassGradient,
+                borderRadius: BorderRadius.circular(16.r),
+                border: Border.all(
+                  color: AppColor.primaryColor.withOpacity(0.3),
+                  width: 1.5,
+                ),
+              ),
+              child: TextField(
+                controller: _searchController,
+                onChanged: _onSearch,
+                style: TextStyle(color: Colors.white, fontSize: 14.sp),
+                decoration: InputDecoration(
+                  hintText: 'Search...',
+                  hintStyle: TextStyle(color: Colors.grey[500], fontSize: 12.sp),
+                  prefixIcon: Icon(Icons.search, color: Colors.white70, size: 18.sp),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(vertical: 12.h),
+                ),
+              ),
             ),
-            suffixIcon: _searchController.text.isNotEmpty
-                ? IconButton(
-              icon: Icon(Icons.clear, color: Colors.white.withOpacity(0.7)),
-              onPressed: () {
-                _searchController.clear();
-                _onSearch('');
-              },
-            )
-                : null,
-            border: InputBorder.none,
-            contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
           ),
-        ),
+          SizedBox(width: 12.w),
+          // Source Dropdown (Self / Referral)
+          Expanded(
+            flex: 1,
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 12.w),
+              decoration: BoxDecoration(
+                gradient: AppColor.glassGradient,
+                borderRadius: BorderRadius.circular(16.r),
+                border: Border.all(
+                  color: AppColor.primaryColor.withOpacity(0.3),
+                  width: 1.5,
+                ),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _selectedSource,
+                  dropdownColor: AppColor.secondaryPrimaryColor,
+                  icon: Icon(Icons.keyboard_arrow_down, color: AppColor.lighterGreen, size: 20.sp),
+                  style: TextStyle(color: Colors.white, fontSize: 12.sp, fontWeight: FontWeight.w600),
+                  items: ['All', 'Self', 'Referral'].map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  onChanged: (newValue) {
+                    if (newValue == null) return;
+
+                    setState(() {
+                      _selectedSource = newValue;
+                    });
+
+                    // 1. Map String selection to integer IDs
+                    int? sourceId;
+                    if (newValue == 'Self') {
+                      sourceId = 0;
+                    } else if (newValue == 'Referral') {
+                      sourceId = 1;
+                    } else {
+                      sourceId = null; // 'All' removes the filter
+                    }
+
+                    // 2. Pass the data to your controller
+                    context.read<TransactionController>().fetchTransactionHistory(
+                      refresh: true,
+                      source: sourceId, // Ensure your controller supports this parameter
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
