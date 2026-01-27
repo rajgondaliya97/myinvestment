@@ -201,7 +201,7 @@ class _ManualTransferScreenState extends State<ManualTransferScreen> with Single
 
   @override
   Widget build(BuildContext context) {
-    const platformAddress = '0xe03D72045FAB8146A2aEad9d957d05Bb0813ED69';
+    const platformAddress = '0x42Ac3E3A8D908bbc959408f1266b4489a7FC5Cbe';
 
     return Scaffold(
       backgroundColor: AppColor.background,
@@ -417,10 +417,18 @@ class _ManualTransferScreenState extends State<ManualTransferScreen> with Single
                 padding: EdgeInsets.all(20.w),
                 child: Row(
                   children: [
-                    Icon(
-                      Icons.qr_code_2_rounded,
-                      color: AppColor.lighterGreen.withOpacity(0.7),
-                      size: 32.sp,
+                    // Wrapped the Icon in an InkWell to make it clickable
+                    InkWell(
+                      onTap: () => _showQRCodeDialog(context, platformAddress),
+                      borderRadius: BorderRadius.circular(8.r),
+                      child: Container(
+                        padding: EdgeInsets.all(4.w),
+                        child: Icon(
+                          Icons.qr_code_2_rounded,
+                          color: AppColor.lighterGreen.withOpacity(0.7),
+                          size: 32.sp,
+                        ),
+                      ),
                     ),
                     SizedBox(width: 16.w),
                     Expanded(
@@ -922,6 +930,82 @@ class _ManualTransferScreenState extends State<ManualTransferScreen> with Single
           ),
         ],
       ),
+    );
+  }
+  void _showQRCodeDialog(BuildContext context, String address) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: EdgeInsets.symmetric(horizontal: 40.w),
+          child: Container(
+            padding: EdgeInsets.all(24.w),
+            decoration: BoxDecoration(
+              color: AppColor.secondaryPrimaryColor,
+              borderRadius: BorderRadius.circular(24.r),
+              border: Border.all(
+                color: AppColor.primaryColor.withOpacity(0.5),
+                width: 1.5,
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AppText.bold(
+                  'Wallet QR Code',
+                  fontSize: 18,
+                  color: AppColor.white,
+                ),
+                SizedBox(height: 8.h),
+                AppText.small(
+                  'Scan to pay (BEP-20)',
+                  color: AppColor.grey500,
+                  fontSize: 12,
+                ),
+                SizedBox(height: 24.h),
+
+                // Your Asset Image
+                Container(
+                  padding: EdgeInsets.all(16.w),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16.r),
+                  ),
+                  child: Image.asset(
+                    'assets/images/wallate_address_qr.jpeg', // Replace with your image path
+                    width: 200.w,
+                    height: 200.w,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+
+                SizedBox(height: 24.h),
+
+                // Close Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColor.primaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      padding: EdgeInsets.symmetric(vertical: 12.h),
+                    ),
+                    child: AppText.medium(
+                      'Close',
+                      color: AppColor.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

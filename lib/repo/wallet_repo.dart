@@ -38,6 +38,7 @@ class WalletRepository {
   /// Withdraw balance from wallet
   Future<WithdrawBalanceModel> withdrawBalance({
     required int amount,
+    required String address,
     required String transactionMethod,
   }) async {
     try {
@@ -45,7 +46,9 @@ class WalletRepository {
         AppUrl.withdrawRequestUrl,
         body: {
           "amount": amount,
-          "transaction_method":transactionMethod},
+          "address": address,
+          "transaction_method": transactionMethod,
+        },
       );
       return WithdrawBalanceModel.fromJson(response);
     } catch (e) {

@@ -119,15 +119,25 @@ class WalletController extends ChangeNotifier {
   }
 
   /// Withdraw balance from wallet
-  Future<bool> withdrawBalance({required int amount}) async {
+  Future<bool> withdrawBalance({
+    required int amount,
+    required String address,
+    required String transactionMethod,
+  }) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
       print('💸 Withdrawing balance: \$${amount}');
+      print('📍 Address: $address');
+      print('💳 Transaction Method: $transactionMethod');
 
-      final response = await walletRepository.withdrawBalance(amount: amount, transactionMethod: '');
+      final response = await walletRepository.withdrawBalance(
+        amount: amount,
+        address: address,
+        transactionMethod: transactionMethod,
+      );
 
       print('📊 Withdraw Response Status: ${response.status}');
       print('📊 Message: ${response.message}');

@@ -7,6 +7,7 @@ import '../../../res/app_widget/custom_app_button.dart';
 import '../../../res/app_widget/custom_app_flush_bar.dart';
 import '../../../res/app_widget/custom_app_text.dart';
 import '../../../res/app_widget/custom_text_field.dart';
+import '../../../res/services/ReownWalletService.dart';
 import '../../../utils/app_color.dart';
 import '../../../view_model/wallet_controller.dart';
 
@@ -109,6 +110,27 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
       return;
     }
 
+    // Get wallet address from ReownWalletService
+    final reownService = context.read<ReownWalletService>();
+
+    if (!reownService.isConnected) {
+      FlushbarHelper.showError(
+        context: context,
+        message: 'Wallet not connected. Please connect your wallet first.',
+      );
+      return;
+    }
+
+    final walletAddress = reownService.address;
+
+    if (walletAddress == null || walletAddress.isEmpty) {
+      FlushbarHelper.showError(
+        context: context,
+        message: 'Unable to get wallet address. Please reconnect your wallet.',
+      );
+      return;
+    }
+
     // Show confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
@@ -119,12 +141,84 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
           side: BorderSide(color: AppColor.primaryColor.withOpacity(0.3)),
         ),
         title: AppText.large(
-          'Confirm Withdrawal',
+          'Confirm Withdrawal Request',
           fontWeight: FontWeight.w700,
         ),
-        content: AppText.medium(
-          'Are you sure you want to withdraw \$${_amountController.text}?',
-          color: AppColor.grey500,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AppText.medium(
+              'Amount: \$${_amountController.text}',
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+            ),
+            SizedBox(height: 16.h),
+            AppText.medium(
+              'Receiving Wallet Address:',
+              color: AppColor.grey500,
+              fontSize: 12,
+            ),
+            SizedBox(height: 6.h),
+            Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(
+                  color: AppColor.lighterGreen.withOpacity(0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.account_balance_wallet,
+                    color: AppColor.lighterGreen,
+                    size: 16.sp,
+                  ),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: AppText.medium(
+                      '${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}',
+                      color: AppColor.lighterGreen,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 16.h),
+            Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(
+                  color: Colors.blue.withOpacity(0.3),
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    color: Colors.blue,
+                    size: 16.sp,
+                  ),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: AppText.medium(
+                      'Your withdrawal request will be processed by our team and funds will be sent to your wallet within 24-48 hours.',
+                      color: Colors.blue[300],
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -137,7 +231,7 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             child: AppText.medium(
-              'Withdraw',
+              'Submit Request',
               color: AppColor.primaryColor,
               fontWeight: FontWeight.w700,
             ),
@@ -151,12 +245,16 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
     final amount = int.parse(_amountController.text.trim());
     final walletController = context.read<WalletController>();
 
-    final success = await walletController.withdrawBalance(amount: amount);
+    final success = await walletController.withdrawBalance(
+      amount: amount,
+      address: walletAddress,
+      transactionMethod: 'Crypto Wallet',
+    );
 
     if (success && mounted) {
       FlushbarHelper.showSuccess(
         context: context,
-        message: 'Withdrawal successful! Remaining balance: \$${walletController.availableBalance}',
+        message: 'Withdrawal request submitted successfully! Your request will be processed within 24-48 hours.',
       );
 
       // Clear the input
@@ -170,7 +268,7 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
         Navigator.pop(context, true);
       }
     } else if (mounted) {
-      final errorMessage = walletController.errorMessage ?? 'Failed to withdraw balance';
+      final errorMessage = walletController.errorMessage ?? 'Failed to submit withdrawal request';
       FlushbarHelper.showError(
         context: context,
         message: errorMessage,
@@ -214,6 +312,17 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
                   children: [
                     // Available Balance Card
                     _buildAvailableBalanceCard(walletController),
+                    SizedBox(height: 20.h),
+
+                    // Connected Wallet Info Card
+                    Consumer<ReownWalletService>(
+                      builder: (context, reownService, child) {
+                        if (reownService.isConnected && reownService.address != null) {
+                          return _buildWalletInfoCard(reownService.address!);
+                        }
+                        return _buildWalletNotConnectedCard();
+                      },
+                    ),
                     SizedBox(height: 30.h),
 
                     // Amount Input Section
@@ -291,14 +400,11 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
                     SizedBox(height: 24.h),
 
                     // Withdraw Button
-                    Opacity(
-                      opacity: walletController.availableBalance < 10 ? 0.4 : 1.0,
-                      child: AppButton.primary(
-                        onPressed: (walletController.isLoading || walletController.availableBalance < 10) ? null : _withdrawBalance,
-                        text: walletController.isLoading ? 'Processing...' : 'Withdraw Amount',
-                        width: double.infinity,
-                        height: 55,
-                      ),
+                    AppButton.primary(
+                      onPressed: walletController.isLoading ? null : _withdrawBalance,
+                      text: walletController.isLoading ? 'Processing...' : 'Withdraw Amount',
+                      width: double.infinity,
+                      height: 55,
                     ),
                   ],
                 ),
@@ -311,9 +417,8 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
   }
 
   Widget _buildAvailableBalanceCard(WalletController walletController) {
-    final originalBalance = walletController.currentBalance;
-    final lockedBalance = walletController.lockedBalance;
     final availableBalance = walletController.availableBalance;
+    final lockedBalance = walletController.lockedBalance;
 
     return Container(
       width: double.infinity,
@@ -355,7 +460,7 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
                   ),
                   SizedBox(width: 12.w),
                   AppText.medium(
-                    'Wallet Balance',
+                    'Available to Withdraw',
                     fontSize: 14,
                     color: Colors.white70,
                   ),
@@ -374,7 +479,7 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
           ),
           SizedBox(height: 16.h),
           AppText.large(
-            '\$$originalBalance',
+            '\$$availableBalance',
             fontSize: 25,
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -395,12 +500,10 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
                     size: 16.sp,
                   ),
                   SizedBox(width: 8.w),
-                  Expanded(
-                    child: AppText.medium(
-                      'Locked: \$$lockedBalance | Available: \$${availableBalance.toStringAsFixed(2)}',
-                      fontSize: 12,
-                      color: Colors.white70,
-                    ),
+                  AppText.medium(
+                    'Locked in investments: \$$lockedBalance',
+                    fontSize: 12,
+                    color: Colors.white70,
                   ),
                 ],
               ),
@@ -543,10 +646,11 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
                 AppText.medium(
                   '• Minimum withdrawal amount is \$10\n'
                       '• Withdrawal charge: 10% of the amount\n'
+                      '• Funds will be sent to your connected wallet\n'
                       '• You can only withdraw available balance\n'
                       '• Locked balance cannot be withdrawn\n'
-                      '• Processing time: Instant\n'
-                      '• Transaction cannot be reversed',
+                      '• Processing time: 24-48 hours\n'
+                      '• Request cannot be cancelled once submitted',
                   fontSize: 12,
                   color: Colors.grey[400],
                 ),
@@ -620,6 +724,102 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
               fontSize: 14,
               fontWeight: FontWeight.w600,
               color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWalletInfoCard(String walletAddress) {
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColor.lighterGreen.withOpacity(0.2),
+            AppColor.primaryColor.withOpacity(0.1),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(
+          color: AppColor.lighterGreen.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: EdgeInsets.all(10.w),
+            decoration: BoxDecoration(
+              color: AppColor.lighterGreen.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(10.r),
+            ),
+            child: Icon(
+              Icons.account_balance_wallet,
+              color: AppColor.lighterGreen,
+              size: 20.sp,
+            ),
+          ),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppText.medium(
+                  'Withdrawal Address',
+                  fontSize: 12,
+                  color: Colors.white70,
+                ),
+                SizedBox(height: 4.h),
+                AppText.medium(
+                  '${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ],
+            ),
+          ),
+          Icon(
+            Icons.check_circle,
+            color: AppColor.lighterGreen,
+            size: 20.sp,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWalletNotConnectedCard() {
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Colors.orange.withOpacity(0.15),
+            AppColor.secondaryPrimaryColor.withOpacity(0.3),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(
+          color: Colors.orange.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.warning_amber_rounded,
+            color: Colors.orange[300],
+            size: 20.sp,
+          ),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: AppText.medium(
+              'Please connect your wallet to proceed with withdrawal',
+              fontSize: 13,
+              color: Colors.orange[300],
             ),
           ),
         ],
