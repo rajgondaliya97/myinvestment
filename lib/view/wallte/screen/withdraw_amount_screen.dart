@@ -7,7 +7,7 @@ import '../../../res/app_widget/custom_app_button.dart';
 import '../../../res/app_widget/custom_app_flush_bar.dart';
 import '../../../res/app_widget/custom_app_text.dart';
 import '../../../res/app_widget/custom_text_field.dart';
-import '../../../res/services/ReownWalletService.dart';
+// Removed ReownWalletService import as it is no longer needed for address retrieval
 import '../../../utils/app_color.dart';
 import '../../../view_model/wallet_controller.dart';
 
@@ -20,9 +20,11 @@ class WithdrawAmountScreen extends StatefulWidget {
 
 class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
   final TextEditingController _amountController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController(); // Added controller for address
   final List<int> _quickAmounts = [100, 500, 1000, 5000];
   int? _selectedAmount;
   String? _amountError;
+  String? _addressError; // Added error state for address
 
   @override
   void initState() {
@@ -36,6 +38,7 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
   @override
   void dispose() {
     _amountController.dispose();
+    _addressController.dispose(); // Dispose address controller
     super.dispose();
   }
 
@@ -58,78 +61,70 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
     });
   }
 
-  bool _validateAmount() {
+  bool _validateInputs() {
+    bool isValid = true;
     final amount = _amountController.text.trim();
+    final address = _addressController.text.trim();
     final walletController = context.read<WalletController>();
     final availableBalance = walletController.availableBalance;
 
+    // Validate Address
+    if (address.isEmpty) {
+      setState(() {
+        _addressError = 'Please enter a wallet address';
+      });
+      isValid = false;
+    } else {
+      setState(() {
+        _addressError = null;
+      });
+    }
+
+    // Validate Amount
     if (amount.isEmpty) {
       setState(() {
         _amountError = 'Please enter an amount';
       });
-      return false;
+      isValid = false;
+    } else {
+      final numAmount = int.tryParse(amount);
+      if (numAmount == null) {
+        setState(() {
+          _amountError = 'Please enter a valid amount';
+        });
+        isValid = false;
+      } else if (numAmount <= 0) {
+        setState(() {
+          _amountError = 'Amount must be greater than 0';
+        });
+        isValid = false;
+      } else if (numAmount < 10) {
+        setState(() {
+          _amountError = 'Minimum withdrawal amount is \$10';
+        });
+        isValid = false;
+      } else if (numAmount > availableBalance) {
+        setState(() {
+          _amountError = 'Insufficient balance. Available: \$${availableBalance}';
+        });
+        isValid = false;
+      } else {
+        setState(() {
+          _amountError = null;
+        });
+      }
     }
 
-    final numAmount = int.tryParse(amount);
-    if (numAmount == null) {
-      setState(() {
-        _amountError = 'Please enter a valid amount';
-      });
-      return false;
-    }
-
-    if (numAmount <= 0) {
-      setState(() {
-        _amountError = 'Amount must be greater than 0';
-      });
-      return false;
-    }
-
-    if (numAmount < 10) {
-      setState(() {
-        _amountError = 'Minimum withdrawal amount is \$10';
-      });
-      return false;
-    }
-
-    if (numAmount > availableBalance) {
-      setState(() {
-        _amountError = 'Insufficient balance. Available: \$${availableBalance}';
-      });
-      return false;
-    }
-
-    setState(() {
-      _amountError = null;
-    });
-    return true;
+    return isValid;
   }
 
   void _withdrawBalance() async {
-    if (!_validateAmount()) {
+    if (!_validateInputs()) {
       return;
     }
 
-    // Get wallet address from ReownWalletService
-    final reownService = context.read<ReownWalletService>();
-
-    if (!reownService.isConnected) {
-      FlushbarHelper.showError(
-        context: context,
-        message: 'Wallet not connected. Please connect your wallet first.',
-      );
-      return;
-    }
-
-    final walletAddress = reownService.address;
-
-    if (walletAddress == null || walletAddress.isEmpty) {
-      FlushbarHelper.showError(
-        context: context,
-        message: 'Unable to get wallet address. Please reconnect your wallet.',
-      );
-      return;
-    }
+    // Get manually entered wallet address
+    final walletAddress = _addressController.text.trim();
 
     // Show confirmation dialog
     final confirmed = await showDialog<bool>(
@@ -180,10 +175,12 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
                   SizedBox(width: 8.w),
                   Expanded(
                     child: AppText.medium(
-                      '${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}',
+                      walletAddress, // Show manual address
                       color: AppColor.lighterGreen,
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -257,8 +254,9 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
         message: 'Withdrawal request submitted successfully! Your request will be processed within 24-48 hours.',
       );
 
-      // Clear the input
+      // Clear the inputs
       _amountController.clear();
+      _addressController.clear();
       setState(() {
         _selectedAmount = null;
       });
@@ -284,7 +282,7 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColor.secondaryPrimaryColor,
-      appBar: CustomAppBar(title: 'Withdraw Amount',showDrawer: false),
+      appBar: CustomAppBar(title: 'Withdraw Amount', showDrawer: false),
       body: Container(
         height: double.infinity,
         decoration: BoxDecoration(
@@ -314,16 +312,30 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
                     _buildAvailableBalanceCard(walletController),
                     SizedBox(height: 20.h),
 
-                    // Connected Wallet Info Card
-                    Consumer<ReownWalletService>(
-                      builder: (context, reownService, child) {
-                        if (reownService.isConnected && reownService.address != null) {
-                          return _buildWalletInfoCard(reownService.address!);
+                    // ---- Wallet Address Input Section (Manual Entry) ----
+                    AppText.medium(
+                      'Receiving Wallet Address',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                    SizedBox(height: 12.h),
+                    CustomTextField(
+                      hint: 'Enter your wallet address',
+                      icon: Icons.account_balance_wallet,
+                      controller: _addressController,
+                      errorText: _addressError,
+                      onChanged: (value) {
+                        if (_addressError != null) {
+                          setState(() {
+                            _addressError = null;
+                          });
                         }
-                        return _buildWalletNotConnectedCard();
                       },
                     ),
-                    SizedBox(height: 30.h),
+                    // -----------------------------------------------------
+
+                    SizedBox(height: 24.h),
 
                     // Amount Input Section
                     Row(
@@ -381,18 +393,7 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
                         });
                       },
                     ),
-                    /*
-                    SizedBox(height: 24.h),
-                    // Quick Amount Selection
-                    AppText.medium(
-                      'Quick Select',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                    SizedBox(height: 12.h),*/
 
-                    //_buildQuickAmountGrid(walletController.availableBalance),
                     SizedBox(height: 24.h),
 
                     // Warning Card
@@ -514,99 +515,6 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
     );
   }
 
-  Widget _buildQuickAmountGrid(int availableBalance) {
-    // Filter quick amounts to only show amounts less than or equal to available balance
-    final validAmounts = _quickAmounts.where((amount) => amount <= availableBalance).toList();
-
-    if (validAmounts.isEmpty) {
-      return Container(
-        padding: EdgeInsets.all(16.w),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              AppColor.secondaryPrimaryColor.withOpacity(0.8),
-              AppColor.primaryColor.withOpacity(0.2),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(
-            color: Colors.orange.withOpacity(0.3),
-            width: 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.info_outline,
-              color: Colors.orange[300],
-              size: 20.sp,
-            ),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: AppText.medium(
-                'Insufficient balance for quick withdrawals',
-                fontSize: 13,
-                color: Colors.grey[400],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Wrap(
-      spacing: 12.w,
-      runSpacing: 12.h,
-      children: validAmounts.map((amount) {
-        final isSelected = _selectedAmount == amount;
-        return GestureDetector(
-          onTap: () => _selectQuickAmount(amount),
-          child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 14.h),
-            decoration: BoxDecoration(
-              gradient: /*isSelected
-                  ? LinearGradient(
-                colors: [
-                  Colors.orange,
-                  Colors.deepOrange,
-                ],
-              )
-                  : LinearGradient(
-                colors: [
-                  AppColor.secondaryPrimaryColor.withOpacity(0.8),
-                  AppColor.primaryColor.withOpacity(0.2),
-                ],
-              )*/isSelected
-                  ? LinearGradient(
-                colors: [
-                  AppColor.lighterGreen,
-                  AppColor.primaryColor,
-                ],
-              )
-                  : LinearGradient(
-                colors: [
-                  AppColor.secondaryPrimaryColor.withOpacity(0.8),
-                  AppColor.primaryColor.withOpacity(0.2),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(
-                color: AppColor.lighterGreen.withOpacity(0.3),
-                width: isSelected ? 2 : 1,
-              ),
-            ),
-            child: AppText.medium(
-              '\$$amount',
-              fontSize: 16,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-              color: Colors.white,
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
   Widget _buildWarningCard() {
     return Container(
       padding: EdgeInsets.all(16.w),
@@ -646,7 +554,8 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
                 AppText.medium(
                   '• Minimum withdrawal amount is \$10\n'
                       '• Withdrawal charge: 10% of the amount\n'
-                      '• Funds will be sent to your connected wallet\n'
+                      '• Funds will be sent to your provided wallet address\n'
+                      '• Ensure the address is correct on the correct network\n'
                       '• You can only withdraw available balance\n'
                       '• Locked balance cannot be withdrawn\n'
                       '• Processing time: 24-48 hours\n'
@@ -724,102 +633,6 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
               fontSize: 14,
               fontWeight: FontWeight.w600,
               color: Colors.white,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWalletInfoCard(String walletAddress) {
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColor.lighterGreen.withOpacity(0.2),
-            AppColor.primaryColor.withOpacity(0.1),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(
-          color: AppColor.lighterGreen.withOpacity(0.3),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.all(10.w),
-            decoration: BoxDecoration(
-              color: AppColor.lighterGreen.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(10.r),
-            ),
-            child: Icon(
-              Icons.account_balance_wallet,
-              color: AppColor.lighterGreen,
-              size: 20.sp,
-            ),
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AppText.medium(
-                  'Withdrawal Address',
-                  fontSize: 12,
-                  color: Colors.white70,
-                ),
-                SizedBox(height: 4.h),
-                AppText.medium(
-                  '${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ],
-            ),
-          ),
-          Icon(
-            Icons.check_circle,
-            color: AppColor.lighterGreen,
-            size: 20.sp,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWalletNotConnectedCard() {
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.orange.withOpacity(0.15),
-            AppColor.secondaryPrimaryColor.withOpacity(0.3),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(
-          color: Colors.orange.withOpacity(0.3),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.warning_amber_rounded,
-            color: Colors.orange[300],
-            size: 20.sp,
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: AppText.medium(
-              'Please connect your wallet to proceed with withdrawal',
-              fontSize: 13,
-              color: Colors.orange[300],
             ),
           ),
         ],
