@@ -27,7 +27,7 @@ class WalletController extends ChangeNotifier {
   // Get current balance
   dynamic get currentBalance => _balanceData?.balance ?? 0;
   dynamic get lockedBalance => _balanceData?.lockedBalance ?? 0;
-  dynamic get availableBalance => currentBalance - lockedBalance;
+  dynamic get availableBalance => currentBalance;
 
   /// Fetch wallet balance
   Future<void> fetchWalletBalance() async {
@@ -37,6 +37,7 @@ class WalletController extends ChangeNotifier {
 
     try {
       print('📡 Fetching wallet balance...');
+      print('📡 API Request: getWalletBalance()');
 
       final response = await walletRepository.getWalletBalance();
 
@@ -48,8 +49,10 @@ class WalletController extends ChangeNotifier {
       if (response.status == 0 && response.data != null) {
         _balanceData = response.data;
         print('✅ Wallet balance fetched successfully');
-        print('✅ Current Balance: \$${_balanceData?.balance}');
-        print('✅ Locked Balance: \$${_balanceData?.lockedBalance}');
+        print('✅ Current Balance: ${_balanceData?.balance}');
+        print('✅ Locked Balance: ${_balanceData?.lockedBalance}');
+        print('✅ Available Balance (Current - Locked): ${currentBalance - lockedBalance}');
+        print('📊 Balance Data from API: ${response.data}');
 
         _errorMessage = null;
       } else {
@@ -75,7 +78,8 @@ class WalletController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      print('💰 Adding wallet balance: \$${balance}');
+      print('💰 Adding wallet balance: ${balance}');
+      print('📡 API Request: addWalletBalance(balance: $balance)');
 
       final response = await walletRepository.addWalletBalance(balance: balance);
 
@@ -87,7 +91,8 @@ class WalletController extends ChangeNotifier {
         _walletData = response.data;
         print('✅ Wallet balance added successfully');
         print('✅ User ID: ${_walletData?.userId}');
-        print('✅ Current Balance: \$${_walletData?.balance}');
+        print('✅ New Balance from API: ${_walletData?.balance}');
+        print('📊 Add Balance Response Data: ${response.data}');
 
         // Refresh wallet balance after adding
         await fetchWalletBalance();
@@ -129,9 +134,10 @@ class WalletController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      print('💸 Withdrawing balance: \$${amount}');
+      print('💸 Withdrawing balance: ${amount}');
       print('📍 Address: $address');
       print('💳 Transaction Method: $transactionMethod');
+      print('📡 API Request: withdrawBalance(amount: $amount, address: $address, transactionMethod: $transactionMethod)');
 
       final response = await walletRepository.withdrawBalance(
         amount: amount,
@@ -149,8 +155,10 @@ class WalletController extends ChangeNotifier {
         _withdrawData = response.data;
         print('✅ Withdrawal successful');
         print('✅ User ID: ${_withdrawData?.userId}');
-        print('✅ Amount: \$${_withdrawData?.amount}');
-        print('✅ Remaining Balance: \$${_withdrawData?.remainingBalance}');
+        print('✅ Withdrawn Amount from API: ${_withdrawData?.amount}');
+        print('✅ Remaining Balance from API: ${_withdrawData?.remainingBalance}');
+        print('✅ Transaction ID: ${_withdrawData?.transactionId}');
+        print('📊 Withdraw Response Data: ${response.data}');
 
         // Refresh wallet balance after withdrawal
         await fetchWalletBalance();

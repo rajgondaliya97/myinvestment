@@ -21,23 +21,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen>
   late TabController _tabController;
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
-  String _selectedSource = 'All';
-  void _onSourceChanged(String? newValue) {
-    if (newValue == null) return;
-
-    setState(() => _selectedSource = newValue);
-
-    // Convert String back to the integer types you requested
-    int? sourceId;
-    if (newValue == 'Self') sourceId = 0;
-    if (newValue == 'Referral') sourceId = 1;
-
-    // Example: notify your provider to fetch filtered results
-    // context.read<TransactionController>().fetchTransactionHistory(
-    //   refresh: true,
-    //   source: sourceId,
-    // );
-  }
+  String _selectedSource = 'Self'; // Default to Self
   @override
   void initState() {
     super.initState();
@@ -45,13 +29,13 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen>
 
     print('🚀 TransactionHistoryScreen initState called');
 
-    // Fetch transactions on init
+    // Fetch transactions on init with default 'Self' filter
     WidgetsBinding.instance.addPostFrameCallback((_) {
       print('🚀 PostFrameCallback - Attempting to fetch transactions');
       try {
         final controller = context.read<TransactionController>();
         print('🚀 Controller found: ${controller != null}');
-        controller.fetchTransactionHistory(refresh: true);
+        controller.fetchTransactionHistory(refresh: true, source: 0); // Default to Self
       } catch (e) {
         print('❌ Error in PostFrameCallback: $e');
       }
@@ -342,7 +326,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen>
                   dropdownColor: AppColor.secondaryPrimaryColor,
                   icon: Icon(Icons.keyboard_arrow_down, color: AppColor.lighterGreen, size: 20.sp),
                   style: TextStyle(color: Colors.white, fontSize: 12.sp, fontWeight: FontWeight.w600),
-                  items: ['All', 'Self', 'Referral'].map((String value) {
+                  items: ['Self', 'Referral'].map((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
                       child: Text(value),
@@ -355,17 +339,10 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen>
                       _selectedSource = newValue;
                     });
 
-                    // 1. Map String selection to integer IDs
-                    int? sourceId;
-                    if (newValue == 'Self') {
-                      sourceId = 0;
-                    } else if (newValue == 'Referral') {
-                      sourceId = 1;
-                    } else {
-                      sourceId = null; // 'All' removes the filter
-                    }
+                    // Map String selection to integer IDs (0: Self, 1: Referral)
+                    int sourceId = newValue == 'Self' ? 0 : 1;
 
-                    // 2. Pass the data to your controller
+                    // Pass the data to your controller
                     context.read<TransactionController>().fetchTransactionHistory(
                       refresh: true,
                       source: sourceId, // Ensure your controller supports this parameter

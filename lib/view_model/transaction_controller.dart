@@ -15,8 +15,8 @@ class TransactionController extends ChangeNotifier {
   String _searchQuery = '';
   String _sortOrder = 'desc';
 
-  // New State for filtering by source (0: Self, 1: Referral, null: All)
-  int? _selectedSource;
+  // New State for filtering by source (0: Self, 1: Referral)
+  int? _selectedSource = 0; // Default to Self
 
   // Pagination
   int _currentPage = 1;
@@ -164,7 +164,7 @@ class TransactionController extends ChangeNotifier {
     _currentPage = 1;
     _hasMoreData = true;
     _searchQuery = '';
-    _selectedSource = null; // Reset filter
+    _selectedSource = 0; // Reset to Self
     notifyListeners();
   }
 }
