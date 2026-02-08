@@ -162,105 +162,26 @@ class _AppInfoScreenState extends State<AppInfoScreen> {
     print('⏰ Timestamp: ${DateTime.now()}');
     print('═══════════════════════════════════════\n');
 
-    // Parse the JSON message
-    try {
-      // Show a dialog or snackbar
-      _showLoginDetectedDialog(message);
-    } catch (e) {
-      print('❌ Error parsing message: $e');
-    }
-  }
+    // Navigate to AuthWrapper with pushReplacement
+    Navigator.pushReplacementNamed(context, '/auth');
 
-  void _showLoginDetectedDialog(String details) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColor.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        title: Row(
-          children: [
-            Icon(
-              Icons.login_rounded,
-              color: AppColor.primaryColor,
-              size: 28.sp,
-            ),
-            SizedBox(width: 10.w),
-            Text(
-              'Login Detected',
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.bold,
-                color: AppColor.secondaryPrimaryColor,
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Login button clicked!',
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: AppColor.grey500,
-              ),
-            ),
-            SizedBox(height: 10.h),
-            Container(
-              padding: EdgeInsets.all(12.w),
-              decoration: BoxDecoration(
-                color: AppColor.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: Text(
-                details,
-                style: TextStyle(
-                  fontSize: 11.sp,
-                  fontFamily: 'monospace',
-                  color: AppColor.secondaryPrimaryColor,
-                ),
-                maxLines: 10,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'OK',
-              style: TextStyle(
-                color: AppColor.primaryColor,
-                fontSize: 14.sp,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    // Also show a snackbar
+    // Show a snackbar notification before navigation
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            Icon(Icons.check_circle, color: Colors.white, size: 20.sp),
+            Icon(Icons.login, color: Colors.white, size: 20.sp),
             SizedBox(width: 10.w),
             Expanded(
               child: Text(
-                'Login button click detected!',
+                'Navigating to login...',
                 style: TextStyle(fontSize: 13.sp),
               ),
             ),
           ],
         ),
         backgroundColor: AppColor.primaryColor,
-        duration: Duration(seconds: 3),
+        duration: Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10.r),

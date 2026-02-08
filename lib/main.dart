@@ -139,6 +139,7 @@
               routes: {
                 '/connect': (context) => const MetaMaskConnectScreen(),
                 '/dashboard': (context) => const WalletDashboardScreen(),
+                '/auth': (context) => AuthWrapper(),
               },
             );
           },
