@@ -162,10 +162,7 @@ class _AppInfoScreenState extends State<AppInfoScreen> {
     print('⏰ Timestamp: ${DateTime.now()}');
     print('═══════════════════════════════════════\n');
 
-    // Navigate to AuthWrapper with pushReplacement
-    Navigator.pushReplacementNamed(context, '/auth');
-
-    // Show a snackbar notification before navigation
+    // Show snackbar notification
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -174,7 +171,7 @@ class _AppInfoScreenState extends State<AppInfoScreen> {
             SizedBox(width: 10.w),
             Expanded(
               child: Text(
-                'Navigating to login...',
+                'Initializing wallet connection...',
                 style: TextStyle(fontSize: 13.sp),
               ),
             ),
@@ -188,6 +185,9 @@ class _AppInfoScreenState extends State<AppInfoScreen> {
         ),
       ),
     );
+
+    // Navigate to ReownWalletInitializer with pushReplacement
+    Navigator.pushReplacementNamed(context, '/wallet-init');
   }
 
   void _showErrorSnackBar(String message) {
@@ -271,72 +271,6 @@ class _AppInfoScreenState extends State<AppInfoScreen> {
                   ],
                 ),
               ),
-
-            // Back button overlay (bottom left)
-            Positioned(
-              left: 16.w,
-              bottom: 30.h,
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () async {
-                    if (await _goBack()) {
-                      Navigator.pop(context);
-                    }
-                  },
-                  child: Container(
-                    padding: EdgeInsets.all(12.w),
-                    decoration: BoxDecoration(
-                      color: AppColor.secondaryPrimaryColor.withOpacity(0.9),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      Icons.arrow_back,
-                      color: AppColor.white,
-                      size: 24.sp,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            // Refresh button overlay (bottom right)
-            Positioned(
-              right: 16.w,
-              bottom: 30.h,
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: _refreshPage,
-                  child: Container(
-                    padding: EdgeInsets.all(12.w),
-                    decoration: BoxDecoration(
-                      color: AppColor.primaryColor.withOpacity(0.9),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      Icons.refresh,
-                      color: AppColor.white,
-                      size: 24.sp,
-                    ),
-                  ),
-                ),
-              ),
-            ),
           ],
         ),
       ),

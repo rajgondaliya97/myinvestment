@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 
 import '../../../view_model/auth_provider.dart';
 import '../../home/screen/home_screen.dart';
-import '../../informetiv_screens/InformetiveHome_screen.dart';
 import 'login_screen.dart';
 
 class AuthWrapper extends StatefulWidget {
@@ -58,8 +57,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
     // Show home screen if logged in
     if (authController.isLoggedIn) {
-     // return HomeScreen();
-      return InformetiveHomeScreen();
+      return HomeScreen();
     }
 
     // Show login or register screen based on controller state
