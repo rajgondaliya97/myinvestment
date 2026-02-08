@@ -8,6 +8,11 @@
         <string>wc</string>
         <string>https</string>
     </array>
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <true/>
+    </dict>
     <!-- Camera Permission -->
     <key>NSCameraUsageDescription</key>
     <string>We need access to your camera to take profile photos</string>

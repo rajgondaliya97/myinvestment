@@ -54,6 +54,7 @@ dependencies:
   # 🌐 Web3 & Blockchain (ONLY web3dart needed!)
   web3dart: ^2.7.3
   flutter_web3: ^2.1.12
+  webview_flutter: ^4.13.1
 
   # Deep Linking
   app_links: ^6.4.0
