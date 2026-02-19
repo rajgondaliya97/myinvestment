@@ -316,6 +316,32 @@ class ReownWalletService extends ChangeNotifier {
     }
   }
 
+  /// Refresh session state — call this when app resumes from external wallet
+  void refreshSession() {
+    if (_appKitModal == null) return;
+
+    final session = _appKitModal!.session;
+    if (session != null) {
+      final accounts = session.getAccounts() ?? [];
+      if (accounts.isNotEmpty) {
+        final addressParts = accounts.first.split(':');
+        final newChainId = addressParts.length >= 2 ? addressParts[1] : _chainId;
+
+        if (newChainId != _chainId) {
+          _chainId = newChainId;
+          final networkName = _getNetworkNameFromChainId(_chainId);
+          if (networkName != null) {
+            _connectedNetworks.add(networkName);
+          }
+          _initWeb3Client(_chainId!);
+          _saveConnection();
+          debugPrint('🔄 Chain updated on resume: $_chainId');
+          notifyListeners();
+        }
+      }
+    }
+  }
+
   /// Initialize Web3 client for a specific chain
   void _initWeb3Client(String chainId) {
     final rpcUrl = rpcUrls[chainId] ?? rpcUrls['56']!;

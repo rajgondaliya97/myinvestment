@@ -1,3 +1,4 @@
+  import 'package:flutter/foundation.dart';
   import 'package:flutter/material.dart';
   import 'package:flutter_screenutil/flutter_screenutil.dart';
   import 'package:myinvestment/res/services/MetaMaskConnectScreen.dart';
@@ -22,6 +23,9 @@
   import 'view_model/home_provider.dart';
 
   void main() async {
+    // ─── Silence all debug logs to stop terminal noise & improve performance ───
+    debugPrint = (String? message, {int? wrapWidth}) {};
+
     WidgetsFlutterBinding.ensureInitialized();
 
     try {

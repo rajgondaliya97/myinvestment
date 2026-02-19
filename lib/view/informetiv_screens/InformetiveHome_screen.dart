@@ -2281,7 +2281,7 @@ class _HomeScreenState extends State<InformetiveHomeScreen>
     String? date,
   }) {
     return Container(
-      width: double.infinity,
+      width: 280.w,
       decoration: BoxDecoration(
         color: AppColor.white,
         borderRadius: BorderRadius.circular(10.r),

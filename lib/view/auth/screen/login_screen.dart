@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:myinvestment/view/informetiv_screens/InformetiveHome_screen.dart';
 import 'package:provider/provider.dart';
 
 import '../../../res/app_widget/custom_app_button.dart';
@@ -9,7 +10,10 @@ import '../../../res/app_widget/custom_text_field.dart';
 import '../../../view_model/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  /// Optional email to pre-fill (e.g. when navigated from WebView login button)
+  final String? prefillEmail;
+
+  const LoginScreen({Key? key, this.prefillEmail}) : super(key: key);
 
   @override
   _LoginScreenState createState() => _LoginScreenState();
@@ -26,6 +30,10 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
+    // Pre-fill email if provided (from WebView navigation)
+    if (widget.prefillEmail != null && widget.prefillEmail!.isNotEmpty) {
+      _emailController.text = widget.prefillEmail!;
+    }
     // Clear errors when screen is initialized
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<AuthController>(context, listen: false).clearLoginErrors();
@@ -40,21 +48,30 @@ class _LoginScreenState extends State<LoginScreen> {
       _passwordController.text,
     );
 
-    // Show appropriate flushbar
-    if (mounted) {
-      if (success) {
-        FlushbarHelper.showSuccess(
-          context: context,
-          message: 'Welcome back! Login successful.',
-          title: 'Success',
-        );
-      } else {
-        FlushbarHelper.showError(
-          context: context,
-          message: authController.errorMessage ?? 'Login failed',
-          title: 'Login Failed',
+    if (!mounted) return;
+
+    if (success) {
+      FlushbarHelper.showSuccess(
+        context: context,
+        message: 'Welcome back! Login successful.',
+        title: 'Success',
+      );
+
+      // Navigate to home screen, replacing the entire back-stack
+      // so user can't go back to the login screen
+      await Future.delayed(const Duration(milliseconds: 800));
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const InformetiveHomeScreen()),
+          (route) => false,
         );
       }
+    } else {
+      FlushbarHelper.showError(
+        context: context,
+        message: authController.errorMessage ?? 'Login failed',
+        title: 'Login Failed',
+      );
     }
   }
 

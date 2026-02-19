@@ -1,5 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:myinvestment/view/auth/screen/auth_wrapper.dart';
+import 'package:myinvestment/view/auth/screen/login_screen.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:myinvestment/res/app_widget/custom_app_bar.dart';
 import '../../utils/app_color.dart';
@@ -15,6 +19,7 @@ class _AppInfoScreenState extends State<AppInfoScreen> {
   late final WebViewController _controller;
   bool _isLoading = true;
   double _loadingProgress = 0.0;
+  bool _isNavigatingToLogin = false; // Guard: prevent duplicate navigation
 
   @override
   void initState() {
@@ -56,7 +61,29 @@ class _AppInfoScreenState extends State<AppInfoScreen> {
           },
           onNavigationRequest: (NavigationRequest request) {
             print('🔗 Navigation request: ${request.url}');
+
+            // Intercept login page navigations — open app's login screen instead
+            final uri = Uri.tryParse(request.url);
+            if (uri != null) {
+              final path = uri.path.toLowerCase();
+              if (path.contains('login') || path.contains('signin')) {
+                _navigateToLoginScreen();
+                return NavigationDecision.prevent;
+              }
+            }
+
             return NavigationDecision.navigate;
+          },
+          onUrlChange: (UrlChange change) {
+            final url = change.url ?? '';
+            print('🔗 URL changed: $url');
+            final uri = Uri.tryParse(url);
+            if (uri != null) {
+              final path = uri.path.toLowerCase();
+              if (path.contains('login') || path.contains('signin')) {
+                _navigateToLoginScreen();
+              }
+            }
           },
         ),
       )
@@ -68,81 +95,63 @@ class _AppInfoScreenState extends State<AppInfoScreen> {
           _handleLoginClick(message.message);
         },
       )
-      ..loadRequest(Uri.parse('https://infinitewealth.uk'));
+      ..loadRequest(Uri.parse('https://infinitewealth.uk/?isapp=123456'));
   }
 
   Future<void> _injectLoginDetector() async {
-    // JavaScript code to detect login button clicks
+    // JavaScript code to detect login button clicks and send to Flutter
     const String jsCode = '''
       (function() {
+        if (window.__loginDetectorInjected) return;
+        window.__loginDetectorInjected = true;
         console.log('🔍 Injecting login detector...');
-        
-        // Function to handle clicks
-        function handleClick(event) {
-          var element = event.target;
-          var text = element.textContent || element.innerText || '';
-          var href = element.href || '';
+
+        function getLoginData(element) {
+          var text = (element.textContent || element.innerText || '').trim();
+          var href = element.href || element.getAttribute('href') || '';
           var className = element.className || '';
           var id = element.id || '';
-          
-          console.log('👆 Clicked element:', {
-            text: text,
-            href: href,
-            className: className,
-            id: id,
-            tagName: element.tagName
-          });
-          
-          // Check if it's a login-related element
-          var isLoginButton = false;
+
           var lowerText = text.toLowerCase();
-          var lowerClass = className.toLowerCase();
+          var lowerClass = (typeof className === 'string' ? className : '').toLowerCase();
           var lowerId = id.toLowerCase();
           var lowerHref = href.toLowerCase();
-          
-          if (lowerText.includes('login') || 
-              lowerText.includes('log in') || 
-              lowerText.includes('sign in') || 
-              lowerText.includes('signin') ||
-              lowerClass.includes('login') ||
-              lowerId.includes('login') ||
-              lowerHref.includes('login') ||
-              lowerHref.includes('signin')) {
-            isLoginButton = true;
-          }
-          
-          if (isLoginButton) {
-            console.log('✅ LOGIN BUTTON DETECTED!');
-            var data = JSON.stringify({
-              text: text.trim(),
-              href: href,
-              className: className,
-              id: id,
-              timestamp: new Date().toISOString()
-            });
-            
-            // Send message to Flutter
-            if (window.LoginChannel) {
-              window.LoginChannel.postMessage(data);
-            }
-          }
+
+          var isLogin =
+            lowerText === 'login' ||
+            lowerText === 'log in' ||
+            lowerText === 'sign in' ||
+            lowerText === 'signin' ||
+            lowerClass.includes('login') ||
+            lowerId.includes('login') ||
+            lowerHref.includes('/login') ||
+            lowerHref.includes('/signin');
+
+          return isLogin ? { text: text, href: href, className: className, id: id } : null;
         }
-        
-        // Add click listener to document
-        document.addEventListener('click', handleClick, true);
-        
-        // Also monitor specific login elements
-        var loginLinks = document.querySelectorAll('a[href*="login"], a[href*="signin"], button[class*="login"], button[id*="login"]');
-        console.log('🔍 Found ' + loginLinks.length + ' potential login elements');
-        
-        loginLinks.forEach(function(link) {
-          link.addEventListener('click', function(e) {
-            console.log('🎯 Direct login element clicked!');
-            handleClick(e);
-          });
-        });
-        
-        console.log('✅ Login detector injected successfully!');
+
+        function tryNotify(element) {
+          // Walk up up to 3 levels to find the login anchor/button
+          for (var i = 0; i < 4; i++) {
+            if (!element || element === document.body) break;
+            var data = getLoginData(element);
+            if (data) {
+              console.log('✅ LOGIN element found:', data);
+              if (window.LoginChannel) {
+                window.LoginChannel.postMessage(JSON.stringify(data));
+              }
+              return true;
+            }
+            element = element.parentElement;
+          }
+          return false;
+        }
+
+        document.addEventListener('click', function(e) {
+          tryNotify(e.target);
+        }, true);
+
+        console.log('✅ Login detector injected');
       })();
     ''';
 
@@ -157,116 +166,60 @@ class _AppInfoScreenState extends State<AppInfoScreen> {
   void _handleLoginClick(String message) {
     print('\n═══════════════════════════════════════');
     print('🔐 LOGIN BUTTON CLICK DETECTED!');
-    print('═══════════════════════════════════════');
     print('📝 Raw Message: $message');
     print('⏰ Timestamp: ${DateTime.now()}');
     print('═══════════════════════════════════════\n');
 
-    // Parse the JSON message
+    // Parse message to extract any pre-filled email if passed from website
+    String? prefillEmail;
     try {
-      // Show a dialog or snackbar
-      _showLoginDetectedDialog(message);
+      final data = jsonDecode(message) as Map<String, dynamic>;
+      final href = (data['href'] as String? ?? '');
+      final uri = Uri.tryParse(href);
+      prefillEmail = uri?.queryParameters['email'];
+    } catch (_) {}
+
+    _navigateToLoginScreen(prefillEmail: prefillEmail);
+  }
+
+  /// Clear all WebView data — cookies, cache, localStorage
+  Future<void> _clearWebViewData() async {
+    try {
+      // Clear cookies
+      final cookieManager = WebViewCookieManager();
+      await cookieManager.clearCookies();
+      print('🧹 WebView cookies cleared');
+
+      // Clear cache and localStorage via JavaScript
+      await _controller.runJavaScript('''
+        try { localStorage.clear(); } catch(e) {}
+        try { sessionStorage.clear(); } catch(e) {}
+      ''');
+      print('🧹 WebView localStorage/sessionStorage cleared');
     } catch (e) {
-      print('❌ Error parsing message: $e');
+      print('⚠️ Error clearing WebView data: $e');
     }
   }
 
-  void _showLoginDetectedDialog(String details) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColor.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        title: Row(
-          children: [
-            Icon(
-              Icons.login_rounded,
-              color: AppColor.primaryColor,
-              size: 28.sp,
-            ),
-            SizedBox(width: 10.w),
-            Text(
-              'Login Detected',
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.bold,
-                color: AppColor.secondaryPrimaryColor,
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Login button clicked!',
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: AppColor.grey500,
-              ),
-            ),
-            SizedBox(height: 10.h),
-            Container(
-              padding: EdgeInsets.all(12.w),
-              decoration: BoxDecoration(
-                color: AppColor.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: Text(
-                details,
-                style: TextStyle(
-                  fontSize: 11.sp,
-                  fontFamily: 'monospace',
-                  color: AppColor.secondaryPrimaryColor,
-                ),
-                maxLines: 10,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'OK',
-              style: TextStyle(
-                color: AppColor.primaryColor,
-                fontSize: 14.sp,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+  /// Navigate to the app's native Login screen (guarded against duplicate calls)
+  void _navigateToLoginScreen({String? prefillEmail}) {
+    if (_isNavigatingToLogin || !mounted) return;
+    _isNavigatingToLogin = true;
 
-    // Also show a snackbar
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.white, size: 20.sp),
-            SizedBox(width: 10.w),
-            Expanded(
-              child: Text(
-                'Login button click detected!',
-                style: TextStyle(fontSize: 13.sp),
-              ),
+    // Clear WebView data before navigating to login
+    _clearWebViewData().then((_) {
+      if (!mounted) {
+        _isNavigatingToLogin = false;
+        return;
+      }
+      Navigator.of(context)
+          .pushReplacement(
+            MaterialPageRoute(
+              builder: (_) => AuthWrapper(),
             ),
-          ],
-        ),
-        backgroundColor: AppColor.primaryColor,
-        duration: Duration(seconds: 3),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10.r),
-        ),
-      ),
-    );
+          )
+          .then((_) => _isNavigatingToLogin = false);
+    });
   }
 
   void _showErrorSnackBar(String message) {

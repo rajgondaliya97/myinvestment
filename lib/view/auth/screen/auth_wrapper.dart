@@ -58,8 +58,8 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
     // Show home screen if logged in
     if (authController.isLoggedIn) {
-     // return HomeScreen();
-      return InformetiveHomeScreen();
+      return HomeScreen();
+     // return InformetiveHomeScreen();
     }
 
     // Show login or register screen based on controller state

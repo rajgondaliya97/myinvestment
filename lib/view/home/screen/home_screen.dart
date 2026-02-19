@@ -25,15 +25,33 @@ class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // Initialize all services when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeServices();
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // When user returns from external wallet app, re-check wallet session
+    if (state == AppLifecycleState.resumed) {
+      final walletService = Provider.of<ReownWalletService>(context, listen: false);
+      if (walletService.isConnected) {
+        walletService.refreshSession();
+      }
+    }
   }
 
   Future<void> _initializeServices() async {

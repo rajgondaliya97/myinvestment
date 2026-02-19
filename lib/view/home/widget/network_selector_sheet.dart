@@ -5,7 +5,7 @@ import '../../../res/app_widget/custom_app_text.dart';
 import '../../../res/services/ReownWalletService.dart';
 import 'network_data.dart';
 
-class NetworkSelectorSheet extends StatelessWidget {
+class NetworkSelectorSheet extends StatefulWidget {
   final ReownWalletService walletService;
   final VoidCallback onNetworkChanged;
 
@@ -14,6 +14,29 @@ class NetworkSelectorSheet extends StatelessWidget {
     required this.walletService,
     required this.onNetworkChanged,
   }) : super(key: key);
+
+  @override
+  State<NetworkSelectorSheet> createState() => _NetworkSelectorSheetState();
+}
+
+class _NetworkSelectorSheetState extends State<NetworkSelectorSheet> {
+  String? _switchingToNetwork; // tracks which network is being switched to
+
+  @override
+  void initState() {
+    super.initState();
+    widget.walletService.addListener(_onWalletChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.walletService.removeListener(_onWalletChanged);
+    super.dispose();
+  }
+
+  void _onWalletChanged() {
+    if (mounted) setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +60,6 @@ class NetworkSelectorSheet extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            //color: AppColor.primaryColor.withOpacity(0.1),
             blurRadius: 20,
             spreadRadius: 5,
           ),
@@ -140,14 +162,18 @@ class NetworkSelectorSheet extends StatelessWidget {
         itemBuilder: (context, index) {
           final network = NetworkData.availableNetworks[index];
           final networkId = network['id'] as String;
-          final isConnected = walletService.connectedNetworks.contains(networkId);
-          final isActive = networkId == walletService.activeNetwork;
+          final isConnected = widget.walletService.connectedNetworks.contains(networkId);
+          final isActive = networkId == widget.walletService.activeNetwork;
+          final isSwitching = _switchingToNetwork == networkId;
 
           return NetworkCard(
             network: network,
             isActive: isActive,
             isConnected: isConnected,
-            onTap: () => _handleNetworkTap(context, networkId, network, isConnected, isActive),
+            isSwitching: isSwitching,
+            onTap: isActive || isSwitching
+                ? null // already active or in progress — do nothing
+                : () => _handleNetworkTap(context, networkId, network, isConnected),
           );
         },
       ),
@@ -155,47 +181,49 @@ class NetworkSelectorSheet extends StatelessWidget {
   }
 
   Future<void> _handleNetworkTap(
-      BuildContext context,
-      String networkId,
-      Map<String, dynamic> network,
-      bool isConnected,
-      bool isActive,
-      ) async {
-    if (!isConnected) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Connecting to ${network['name']}...'),
-          duration: Duration(seconds: 2),
-          backgroundColor: AppColor.info,
-        ),
-      );
+    BuildContext context,
+    String networkId,
+    Map<String, dynamic> network,
+    bool isConnected,
+  ) async {
+    setState(() => _switchingToNetwork = networkId);
 
-      try {
-        await walletService.addNetwork(networkId);
-        await walletService.switchNetwork(networkId);
-      } catch (e) {
+    try {
+      if (!isConnected) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to connect: $e'),
+            content: Text('Connecting to ${network['name']}...'),
+            duration: Duration(seconds: 2),
+            backgroundColor: AppColor.info,
+          ),
+        );
+        await widget.walletService.addNetwork(networkId);
+      }
+
+      await widget.walletService.switchNetwork(networkId);
+
+      // Successfully switched — close sheet and notify
+      if (mounted) Navigator.pop(context);
+      widget.onNetworkChanged();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Switched to ${network['name']}'),
+          duration: Duration(seconds: 2),
+          backgroundColor: AppColor.success,
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() => _switchingToNetwork = null);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to switch: ${network['name']}'),
             backgroundColor: AppColor.error,
           ),
         );
-        return;
       }
-    } else if (!isActive) {
-      await walletService.switchNetwork(networkId);
     }
-
-    Navigator.pop(context);
-    onNetworkChanged();
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Switched to ${network['name']}'),
-        duration: Duration(seconds: 2),
-        backgroundColor: AppColor.success,
-      ),
-    );
   }
 }
 
@@ -203,13 +231,15 @@ class NetworkCard extends StatelessWidget {
   final Map<String, dynamic> network;
   final bool isActive;
   final bool isConnected;
-  final VoidCallback onTap;
+  final bool isSwitching;
+  final VoidCallback? onTap;
 
   const NetworkCard({
     Key? key,
     required this.network,
     required this.isActive,
     required this.isConnected,
+    this.isSwitching = false,
     required this.onTap,
   }) : super(key: key);
 
@@ -223,48 +253,51 @@ class NetworkCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        margin: EdgeInsets.only(bottom: 14.h),
-        decoration: BoxDecoration(
-          gradient: isActive
-              ? LinearGradient(
-            colors: [
-              networkColor.withOpacity(0.25),
-              networkColor.withOpacity(0.1),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          )
-              : AppColor.cardGradientBgColor,
-          borderRadius: BorderRadius.circular(18.r),
-          border: Border.all(
-            color: isActive
-                ? networkColor.withOpacity(0.6)
-                : AppColor.white.withOpacity(0.1),
-            width: isActive ? 2.w : 1.w,
-          ),
-          boxShadow: isActive
-              ? [
-            BoxShadow(
-              color: networkColor.withOpacity(0.3),
-              blurRadius: 15,
-              spreadRadius: 2,
+      child: Opacity(
+        opacity: isSwitching ? 0.6 : 1.0,
+        child: Container(
+          margin: EdgeInsets.only(bottom: 14.h),
+          decoration: BoxDecoration(
+            gradient: isActive
+                ? LinearGradient(
+                    colors: [
+                      networkColor.withOpacity(0.25),
+                      networkColor.withOpacity(0.1),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : AppColor.cardGradientBgColor,
+            borderRadius: BorderRadius.circular(18.r),
+            border: Border.all(
+              color: isActive
+                  ? networkColor.withOpacity(0.6)
+                  : AppColor.white.withOpacity(0.1),
+              width: isActive ? 2.w : 1.w,
             ),
-          ]
-              : [],
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(16.w),
-          child: Row(
-            children: [
-              _buildNetworkIcon(networkColor, networkIcon),
-              SizedBox(width: 16.w),
-              Expanded(
-                child: _buildNetworkInfo(networkName, networkDesc, networkSymbol, networkColor),
-              ),
-              SizedBox(width: 12.w),
-              _buildStatusIndicator(networkColor),
-            ],
+            boxShadow: isActive
+                ? [
+                    BoxShadow(
+                      color: networkColor.withOpacity(0.3),
+                      blurRadius: 15,
+                      spreadRadius: 2,
+                    ),
+                  ]
+                : [],
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(16.w),
+            child: Row(
+              children: [
+                _buildNetworkIcon(networkColor, networkIcon),
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: _buildNetworkInfo(networkName, networkDesc, networkSymbol, networkColor),
+                ),
+                SizedBox(width: 12.w),
+                _buildStatusIndicator(networkColor),
+              ],
+            ),
           ),
         ),
       ),
@@ -357,6 +390,17 @@ class NetworkCard extends StatelessWidget {
   }
 
   Widget _buildStatusIndicator(Color networkColor) {
+    if (isSwitching) {
+      return SizedBox(
+        width: 36.w,
+        height: 36.w,
+        child: CircularProgressIndicator(
+          strokeWidth: 2.5,
+          valueColor: AlwaysStoppedAnimation<Color>(networkColor),
+        ),
+      );
+    }
+
     return Column(
       children: [
         if (isActive)

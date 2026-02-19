@@ -39,6 +39,9 @@ class _BalanceCardState extends State<BalanceCard>
   Map<String, double> _allNativeBalances = {};
   Map<String, double> _allUsdtBalances = {};
 
+  String? _lastChainId;
+  bool _lastConnected = false;
+
   @override
   void initState() {
     super.initState();
@@ -52,6 +55,25 @@ class _BalanceCardState extends State<BalanceCard>
     );
 
     if (widget.autoRefresh) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _loadBalances();
+      });
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!widget.autoRefresh) return;
+
+    final walletService = Provider.of<ReownWalletService>(context);
+    final currentChainId = walletService.chainId;
+    final currentConnected = walletService.isConnected;
+
+    // Reload balances when chain changes or connection state changes
+    if (currentChainId != _lastChainId || currentConnected != _lastConnected) {
+      _lastChainId = currentChainId;
+      _lastConnected = currentConnected;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _loadBalances();
       });
