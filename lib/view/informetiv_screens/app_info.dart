@@ -20,11 +20,23 @@ class _AppInfoScreenState extends State<AppInfoScreen> {
   bool _isLoading = true;
   double _loadingProgress = 0.0;
   bool _isNavigatingToLogin = false; // Guard: prevent duplicate navigation
+  bool _disposed = false; // Guard: prevent setState after dispose
 
   @override
   void initState() {
     super.initState();
     _initializeWebView();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  // Safe setState — does nothing if widget is already disposed/unmounted
+  void _safeSetState(VoidCallback fn) {
+    if (!_disposed && mounted) setState(fn);
   }
 
   void _initializeWebView() {
@@ -34,33 +46,31 @@ class _AppInfoScreenState extends State<AppInfoScreen> {
       ..setNavigationDelegate(
         NavigationDelegate(
           onPageStarted: (String url) {
-            setState(() {
+            _safeSetState(() {
               _isLoading = true;
               _loadingProgress = 0.0;
             });
-            print('📄 Page started loading: $url');
           },
           onProgress: (int progress) {
-            setState(() {
+            _safeSetState(() {
               _loadingProgress = progress / 100;
             });
-            print('⏳ Loading progress: $progress%');
           },
           onPageFinished: (String url) async {
-            setState(() {
+            _safeSetState(() {
               _isLoading = false;
             });
-            print('✅ Page finished loading: $url');
 
             // Inject JavaScript to detect login button clicks
             await _injectLoginDetector();
           },
           onWebResourceError: (WebResourceError error) {
-            print('❌ Web resource error: ${error.description}');
-            _showErrorSnackBar('Error loading page: ${error.description}');
+            if (!_disposed && mounted) {
+              _showErrorSnackBar('Error loading page: ${error.description}');
+            }
           },
           onNavigationRequest: (NavigationRequest request) {
-            print('🔗 Navigation request: ${request.url}');
+            if (_disposed || !mounted) return NavigationDecision.navigate;
 
             // Intercept login page navigations — open app's login screen instead
             final uri = Uri.tryParse(request.url);
@@ -75,8 +85,8 @@ class _AppInfoScreenState extends State<AppInfoScreen> {
             return NavigationDecision.navigate;
           },
           onUrlChange: (UrlChange change) {
+            if (_disposed || !mounted) return;
             final url = change.url ?? '';
-            print('🔗 URL changed: $url');
             final uri = Uri.tryParse(url);
             if (uri != null) {
               final path = uri.path.toLowerCase();
@@ -203,22 +213,20 @@ class _AppInfoScreenState extends State<AppInfoScreen> {
 
   /// Navigate to the app's native Login screen (guarded against duplicate calls)
   void _navigateToLoginScreen({String? prefillEmail}) {
-    if (_isNavigatingToLogin || !mounted) return;
+    if (_isNavigatingToLogin || _disposed || !mounted) return;
     _isNavigatingToLogin = true;
 
     // Clear WebView data before navigating to login
     _clearWebViewData().then((_) {
-      if (!mounted) {
-        _isNavigatingToLogin = false;
-        return;
-      }
-      Navigator.of(context)
-          .pushReplacement(
-            MaterialPageRoute(
-              builder: (_) => AuthWrapper(),
-            ),
-          )
-          .then((_) => _isNavigatingToLogin = false);
+      if (_disposed || !mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => AuthWrapper(),
+        ),
+      );
+      // Note: no .then() — pushReplacement removes this screen from the stack,
+      // so the widget is disposed immediately after; _isNavigatingToLogin
+      // resets automatically via dispose().
     });
   }
 
